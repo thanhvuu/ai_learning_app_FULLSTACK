@@ -1,7 +1,8 @@
+import 'package:ai_learning_app/screen/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
-import 'register_screen.dart'; // Tí nữa mình tạo file này
+
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -56,7 +57,8 @@ class WelcomeScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
                 onPressed: () {
-                  _completeWelcomeAndNavigate(context, const RegisterScreen());
+                  // Đặt false để nó lật sang mặt ĐĂNG KÝ
+                  _completeWelcomeAndNavigate(context, const LoginScreen(showLoginFirst: false));
                 },
                 child: const Text("BẮT ĐẦU NGAY", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
               ),
@@ -73,7 +75,8 @@ class WelcomeScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
                 onPressed: () {
-                  _completeWelcomeAndNavigate(context, const LoginScreen());
+                  // Đặt true để nó lật sang mặt ĐĂNG NHẬP
+                  _completeWelcomeAndNavigate(context, const LoginScreen(showLoginFirst: true));
                 },
                 child: const Text("TÔI ĐÃ CÓ TÀI KHOẢN", style: TextStyle(color: Colors.greenAccent, fontSize: 16, fontWeight: FontWeight.bold)),
               ),

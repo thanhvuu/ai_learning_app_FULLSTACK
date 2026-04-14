@@ -1,8 +1,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../providers/quiz_provider.dart';
-import '../fdata.dart'; // Nhớ import file dữ liệu giả ở trên
+
+
+//import '../fdata.dart'; // Nhớ import file dữ liệu giả ở trên
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -27,11 +31,14 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   // Hàm xử lý khi bấm nút "Kiểm tra" hoặc "Tiếp tục"
-  void checkAnswer(BuildContext context, QuizProvider quizState) {
+ Future<void> checkAnswer(BuildContext context, QuizProvider quizState) async {
     if (!hasSubmitted) {
       // KIỂM TRA ĐÁP ÁN
       if (selectedOption != null) {
-        bool correct = selectedOption == quizState.questions[currentQuestionIndex]['correctAnswer'];
+        // Lấy đáp án chuẩn từ AI (Ví dụ: "C")
+        String correctAns = quizState.questions[currentQuestionIndex]['correctAnswer'].toString();
+        // Kiểm tra xem đáp án mình chọn (Ví dụ: "C. Ba trang") có bắt đầu bằng chữ "C" không
+        bool correct = selectedOption!.startsWith(correctAns) || selectedOption == correctAns;
         setState(() {
           hasSubmitted = true;
           isCorrect = correct;
@@ -52,23 +59,52 @@ class _QuizScreenState extends State<QuizScreen> {
         }
       }
     } else {
-      //  CHUYỂN SANG CÂU TIẾP THEO (sau khi đã xem kết quả)
-      setState(() {
-        if (currentQuestionIndex <quizState.questions.length - 1) {
+      //chuyen sang cau hoi tip theo
+      if(currentQuestionIndex < quizState.questions.length-1) {
+        setState((){
           currentQuestionIndex++;
-          // Reset lại state cho câu hỏi mới
-          selectedOption = null;
           hasSubmitted = false;
           isCorrect = false;
-        } else {
-          // Hoàn thành bài học -> Chuyển về Home hoặc Summary
-          quizState.updateProgress(1.0); // Chắc chắn là xong
-          Navigator.pop(context); // Tạm thời pop về Home
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Chúc mừng! Bạn đã hoàn thành bài học.")),
-          );
+          selectedOption = null;
+        });
+      } else {
+        //hoan thanh
+        quizState.updateProgress(1.0);
+
+        final String username = "Đặng Thanh Vũ";
+        final String updateUrl = "http://10.0.2.2:8080/api/users/update-progress?username=$username";
+
+        try{
+          //gui yeu cau put den sv springboot
+          var reponse = await http.put(Uri.parse(updateUrl));
+
+          if(reponse.statusCode == 200){
+            //json sv tra ve
+            var data = jsonDecode(utf8.decode(reponse.bodyBytes));
+            int newXp =data['totalXp'];
+            int newStreak = data['streak'];
+
+            //thong bao
+            if(context.mounted){
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content:Text("🎉 Tuyệt vời! Bạn được +20 XP.\nTổng: $newXp XP | Chuỗi: 🔥 $newStreak ngày"),
+                  duration: const Duration(seconds: 5),
+                  backgroundColor: Colors.green,
+                )
+              );
+            }
+          }
         }
-      });
+        catch(e){
+          print('lỗi lưu tiến độ');
+        }
+
+        //tro ve homescreen
+        if(context.mounted){
+          Navigator.pop(context);
+        }
+      }
     }
   }
 
@@ -175,7 +211,11 @@ class _QuizScreenState extends State<QuizScreen> {
                 }
 
                 if (hasSubmitted) {
-                  if (option == currentQuestion['correctAnswer']) {
+                  // Lấy đáp án chuẩn (Ví dụ: "C")
+                  String correctAns = currentQuestion['correctAnswer'].toString();
+
+                  // Kiểm tra linh hoạt: Nếu text của nút (Ví dụ: "C. Ba trang") bắt đầu bằng "C" -> Tô xanh
+                  if (option.toString().startsWith(correctAns) || option.toString() == correctAns) {
                     borderColor = Colors.greenAccent; // Show màu xanh cho đáp án đúng
                   } else if (option == selectedOption) {
                     borderColor = Colors.redAccent; // Show màu đỏ nếu chọn sai
