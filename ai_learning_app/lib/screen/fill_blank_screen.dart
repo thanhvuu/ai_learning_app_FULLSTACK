@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/question_model.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class FillBlankScreen extends StatefulWidget {
   final List<QuestionModel> questions;
@@ -90,58 +92,47 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     QuestionModel currentQ = widget.questions[currentIndex];
     bool isCorrect = _answerController.text.trim().toLowerCase() == currentQ.correctAnswer.toLowerCase();
 
+    // BÍ KÍP MÀU ĐỘNG
+    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FAF5),
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: Text('Câu ${currentIndex + 1}/${widget.questions.length}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-        backgroundColor: Colors.transparent, elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: Row(children: List.generate(3, (i) => Icon(i < hearts ? Icons.favorite : Icons.favorite_border, color: Colors.red))),
-          )
-        ],
+        backgroundColor: Colors.transparent, elevation: 0, iconTheme: IconThemeData(color: textColor),
+        actions: [ Padding(padding: const EdgeInsets.only(right: 15), child: Row(children: List.generate(3, (i) => Icon(i < hearts ? Icons.favorite : Icons.favorite_border, color: Colors.red))))],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text("Gõ từ đúng vào chỗ trống:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Gõ từ đúng vào chỗ trống:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor)),
             const SizedBox(height: 30),
 
-            // --- KHU VỰC CÂU HỎI ---
             Wrap(
-              runSpacing: 10,
-              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(currentQ.sentenceStart, style: const TextStyle(fontSize: 18, height: 1.5)),
+                Text(currentQ.sentenceStart, style: TextStyle(fontSize: 18, height: 1.5, color: textColor)),
                 const SizedBox(width: 8),
-
-                // Ô nhập liệu
                 SizedBox(
                   width: 120,
                   child: TextField(
-                    controller: _answerController,
-                    focusNode: _focusNode,
-                    enabled: !hasChecked,
-                    textAlign: TextAlign.center,
+                    controller: _answerController, focusNode: _focusNode, enabled: !hasChecked, textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8), isDense: true,
                       enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.green[300]!, width: 2)),
                       focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.green, width: 3)),
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 8),
-                Text(currentQ.sentenceEnd, style: const TextStyle(fontSize: 18, height: 1.5)),
+                Text(currentQ.sentenceEnd, style: TextStyle(fontSize: 18, height: 1.5, color: textColor)),
               ],
             ),
-
-            const SizedBox(height: 40),
 
             // --- GIẢI THÍCH (CHỈ HIỆN KHI ĐÃ CHECK) ---
             if (hasChecked)

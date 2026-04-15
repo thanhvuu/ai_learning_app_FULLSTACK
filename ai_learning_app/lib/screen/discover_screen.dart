@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart'; // <--- Import Provider
+import '../providers/theme_provider.dart'; // <--- Import ThemeProvider
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -40,7 +42,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   // --- HÀM VẼ BỤC VINH QUANG CHO TOP 3 ---
-  Widget _buildTop3Podium() {
+  Widget _buildTop3Podium(Color textColor) {
     if (leaderboard.isEmpty) return const SizedBox();
 
     // Trích xuất Top 3 (Kiểm tra an toàn nếu DB chưa đủ 3 người)
@@ -55,22 +57,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Hạng 2 (Bên trái)
-          if (rank2 != null) _buildAvatarItem(rank2, 2, 70, Colors.grey[400]!),
+          if (rank2 != null) _buildAvatarItem(rank2, 2, 70, Colors.grey[400]!, textColor),
           const SizedBox(width: 15),
 
           // Hạng 1 (Chính giữa, To nhất)
-          if (rank1 != null) _buildAvatarItem(rank1, 1, 95, Colors.amber),
+          if (rank1 != null) _buildAvatarItem(rank1, 1, 95, Colors.amber, textColor),
           const SizedBox(width: 15),
 
           // Hạng 3 (Bên phải)
-          if (rank3 != null) _buildAvatarItem(rank3, 3, 70, Colors.orange[800]!),
+          if (rank3 != null) _buildAvatarItem(rank3, 3, 70, Colors.orange[800]!, textColor),
         ],
       ),
     );
   }
 
-  // Widget con: Vẽ từng cái Avatar trên bục
-  Widget _buildAvatarItem(dynamic user, int rank, double size, Color rankColor) {
+  // Widget con: Vẽ từng cái Avatar trên bục (Đã thêm biến textColor)
+  Widget _buildAvatarItem(dynamic user, int rank, double size, Color rankColor, Color textColor) {
     return Column(
       children: [
         Stack(
@@ -84,7 +86,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: rankColor, width: rank == 1 ? 4 : 3),
-                color: Colors.blueAccent, // Chỗ này sau thay bằng ảnh mảng
+                color: Colors.blueAccent, // Chỗ này sau thay bằng ảnh thật
               ),
               child: Icon(Icons.person, color: Colors.white, size: size * 0.6),
             ),
@@ -111,11 +113,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         const SizedBox(height: 8),
         Text(
           user['username'],
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor), // Đổi màu chữ theo Theme
         ),
         Text(
           "${user['totalXp']} XP",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[700], fontSize: 13),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[500], fontSize: 13), // Sửa xanh lá sáng hơn chút cho hợp nền tối
         ),
       ],
     );
@@ -128,33 +130,42 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     int myRank = myIndex >= 0 ? myIndex + 1 : 0;
     int myXp = myIndex >= 0 ? leaderboard[myIndex]['totalXp'] : 0;
 
+    // ==========================================
+    // BÍ KÍP MÀU ĐỘNG
+    // ==========================================
+    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
+    final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color titleColor = isDarkMode ? Colors.greenAccent : const Color(0xFF0F8A50);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FAF5),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Leaderboard', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F8A50))),
-        backgroundColor: const Color(0xFFF4FAF5),
+        title: Text('Leaderboard', style: TextStyle(fontWeight: FontWeight.bold, color: titleColor)),
+        backgroundColor: Colors.transparent, // Để trong suốt để ăn theo màu bgColor
         centerTitle: true,
         elevation: 0,
-        automaticallyImplyLeading: false, // Ẩn nút back
+        automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 15),
             child: Row(
               children: [
-                const Icon(Icons.star, color: Colors.deepPurpleAccent),
+                Icon(Icons.star, color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurpleAccent),
                 const SizedBox(width: 5),
-                const Text("Mùa 12", style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                Text("Mùa 12", style: TextStyle(color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurple, fontWeight: FontWeight.bold)),
               ],
             ),
           )
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F8A50)))
+          ? Center(child: CircularProgressIndicator(color: titleColor))
           : Column(
         children: [
-          // Phần bục vinh quang Top 3
-          _buildTop3Podium(),
+          // Phần bục vinh quang Top 3 (Truyền textColor vào)
+          _buildTop3Podium(textColor),
 
           // Tiêu đề danh sách
           Padding(
@@ -162,8 +173,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Chi tiết thứ hạng", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("Cập nhật 5 phút trước", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                Text("Chi tiết thứ hạng", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                Text("Cập nhật 5 phút trước", style: TextStyle(color: Colors.grey[500], fontSize: 13)),
               ],
             ),
           ),
@@ -172,32 +183,33 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              // Bỏ qua 3 người đầu (hoặc ít hơn nếu DB ít người)
               itemCount: leaderboard.length > 3 ? leaderboard.length - 3 : 0,
               itemBuilder: (context, idx) {
-                int realIndex = idx + 3; // Lấy từ hạng 4 (index 3)
+                int realIndex = idx + 3;
                 final user = leaderboard[realIndex];
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardColor, // Màu nền thẻ động
                     borderRadius: BorderRadius.circular(15),
-                    boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)],
+                    boxShadow: [
+                      BoxShadow(color: isDarkMode ? Colors.black54 : Colors.grey.withOpacity(0.1), blurRadius: 5)
+                    ],
                   ),
                   child: Row(
                     children: [
-                      Text("${realIndex + 1}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)),
+                      Text("${realIndex + 1}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey[500])),
                       const SizedBox(width: 15),
                       const CircleAvatar(radius: 20, backgroundColor: Colors.blueGrey, child: Icon(Icons.person, color: Colors.white, size: 20)),
                       const SizedBox(width: 15),
                       Expanded(
-                        child: Text(user['username'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        child: Text(user['username'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                       ),
-                      Text("${user['totalXp']} XP", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text("${user['totalXp']} XP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor)),
                       const SizedBox(width: 10),
-                      const Icon(Icons.keyboard_arrow_up, color: Colors.green), // Icon xu hướng
+                      const Icon(Icons.keyboard_arrow_up, color: Colors.green),
                     ],
                   ),
                 );
@@ -206,16 +218,16 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           ),
 
           // --- THANH STICKY HIỂN THỊ THỨ HẠNG BẢN THÂN ---
+          // Thanh này mình vẫn giữ màu Xanh lá đậm (hoặc hơi tối đi chút) để nó nổi bật dưới cùng màn hình
           Container(
             margin: const EdgeInsets.all(20),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F8A50),
+              color: isDarkMode ? const Color(0xFF0A5E35) : const Color(0xFF0F8A50), // Tối màu xanh đi 1 chút nếu ở Dark Mode
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
-                // Vòng tròn thứ hạng của mình
                 Container(
                   width: 45,
                   height: 45,
@@ -227,7 +239,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   ),
                 ),
                 const SizedBox(width: 15),
-                // Tên và thông báo
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +254,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     ],
                   ),
                 ),
-                // XP hiện tại
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
