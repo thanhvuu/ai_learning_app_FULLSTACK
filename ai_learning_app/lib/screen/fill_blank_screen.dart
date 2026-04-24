@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/question_model.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase
 
 class FillBlankScreen extends StatefulWidget {
   final List<QuestionModel> questions;
@@ -15,6 +18,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
   int currentIndex = 0;
   int hearts = 3;
   bool hasChecked = false;
+  bool isSavingProgress = false; // Biến trạng thái khi lưu điểm
   final TextEditingController _answerController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -43,7 +47,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
         _loadQuestion();
       });
     } else {
-      _showResultDialog("Hoàn thành! 🎉", "Bạn thật là một thiên tài ngôn ngữ!", true);
+      _showCompletionDialog();
     }
   }
 
@@ -56,33 +60,96 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
       if (userAnswer != correctAnswer) {
         hearts--;
         if (hearts == 0) {
-          _showResultDialog("Hết lượt thử!", "Đừng bỏ cuộc, hãy thử lại nhé!", false);
+          _showGameOverDialog();
         }
       }
     });
   }
 
-  void _showResultDialog(String title, String content, bool isSuccess) {
+  // --- HÀM CỘNG GIỜ HỌC VÀO SPRING BOOT ---
+  Future<void> _addStudyTime() async {
+    const String url = "http://10.0.2.2:8080/api/progress/add-time";
+
+    String username = FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";
+
+    try {
+      await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": username,
+          "minutes": 5 // Thưởng 5 phút học
+        }),
+      );
+    } catch (e) {
+      print("Lỗi cộng giờ học: $e");
+    }
+  }
+
+  // --- DIALOG HẾT TIM ---
+  void _showGameOverDialog() {
     showDialog(
         context: context, barrierDismissible: false,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Icon(isSuccess ? Icons.stars : Icons.heart_broken, color: isSuccess ? Colors.orange : Colors.red, size: 60),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+          title: const Column(
             children: [
-              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              Text(content, textAlign: TextAlign.center),
+              Icon(Icons.heart_broken, color: Colors.red, size: 50),
+              Text("Hết lượt thử!", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ],
           ),
+          content: const Text("Đừng bỏ cuộc, hãy nghỉ ngơi một chút và thử lại nhé!", textAlign: TextAlign.center),
           actions: [
             SizedBox(width: double.infinity, child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: isSuccess ? Colors.green : Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
               onPressed: () { Navigator.pop(context); Navigator.pop(context); },
-              child: const Text("Về trang chủ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text("Về trang chủ", style: TextStyle(color: Colors.white)),
             ))
           ],
+        )
+    );
+  }
+
+  // --- DIALOG HOÀN THÀNH CHIẾN THẮNG ---
+  void _showCompletionDialog() {
+    showDialog(
+        context: context, barrierDismissible: false,
+        builder: (context) => StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Column(
+                  children: [
+                    Icon(Icons.stars, color: Colors.orange, size: 50),
+                    Text("Hoàn thành! 🎉", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                content: const Text("Bạn thật là một thiên tài ngôn ngữ!\nTiến độ học tập của bạn đã được lưu lại.", textAlign: TextAlign.center),
+                actions: [
+                  SizedBox(width: double.infinity, child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        padding: const EdgeInsets.symmetric(vertical: 12)
+                    ),
+                    onPressed: isSavingProgress ? null : () async {
+                      setStateDialog(() => isSavingProgress = true);
+
+                      // Gọi API lưu tiến độ
+                      await _addStudyTime();
+
+                      if (context.mounted) {
+                        Navigator.pop(context); // Đóng Dialog
+                        Navigator.pop(context); // Thoát về Home
+                      }
+                    },
+                    child: isSavingProgress
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text("Về trang chủ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  ))
+                ],
+              );
+            }
         )
     );
   }
@@ -134,12 +201,13 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
               ],
             ),
 
-            // --- GIẢI THÍCH (CHỈ HIỆN KHI ĐÃ CHECK) ---
-            if (hasChecked)
+            // --- GIẢI THÍCH (CHỈ HIỆN KHI ĐÃ CHECK - ĐÃ CẬP NHẬT MÀU ĐỘNG) ---
+            if (hasChecked) ...[
+              const SizedBox(height: 30),
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isCorrect ? Colors.green[50] : Colors.red[50],
+                  color: isCorrect ? (isDarkMode ? Colors.green[900] : Colors.green[50]) : (isDarkMode ? Colors.red[900] : Colors.red[50]),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: isCorrect ? Colors.green : Colors.red),
                 ),
@@ -147,12 +215,13 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(isCorrect ? "Chính xác! 🥳" : "Chưa đúng rồi! Đáp án là: ${currentQ.correctAnswer}",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isCorrect ? Colors.green[800] : Colors.red[800])),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isCorrect ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800]))),
                     const SizedBox(height: 10),
-                    Text(currentQ.explanation, style: const TextStyle(fontSize: 15, height: 1.4)),
+                    Text(currentQ.explanation, style: TextStyle(fontSize: 15, height: 1.4, color: textColor)),
                   ],
                 ),
               ),
+            ]
           ],
         ),
       ),
@@ -167,8 +236,9 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: hasChecked ? (isCorrect ? Colors.green : Colors.red) : const Color(0xFF0F8A50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              disabledBackgroundColor: Colors.grey[300],
             ),
-            child: Text(hasChecked ? "TIẾP TỤC" : "KIỂM TRA", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text(hasChecked ? "TIẾP TỤC" : "KIỂM TRA", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _answerController.text.isEmpty ? Colors.grey[500] : Colors.white)),
           ),
         ),
       ),

@@ -9,6 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "lessons")
 public class Lesson {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,4 +23,11 @@ public class Lesson {
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
     private List<Question> questions;
+
+    // ==========================================
+    // CÁC TRƯỜNG THÊM MỚI CHO TAB "MY LESSONS"
+    // ==========================================
+    private String username;
+    private String quizType; // drag_drop, multiple_choice, fill_blank
+    private int progress;    // 0 đến 100
 }

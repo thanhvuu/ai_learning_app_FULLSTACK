@@ -3,6 +3,9 @@ import 'package:dotted_border/dotted_border.dart';
 import '../models/question_model.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart'; // Thêm import Firebase để lấy tên User
 
 class DragDropQuizScreen extends StatefulWidget {
   final List<QuestionModel> questions;
@@ -18,8 +21,9 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
   String? droppedWord;
   bool hasChecked = false;
   late List<String> currentOptions;
+  bool isSavingProgress = false; // Biến xoay loading khi lưu điểm
 
-  // --- THÊM BIẾN TRÁI TIM ---
+  // --- BIẾN TRÁI TIM ---
   int hearts = 3;
 
   @override
@@ -43,6 +47,22 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     hasChecked = false;
   }
 
+  // --- HÀM KIỂM TRA ĐÁP ÁN ---
+  void _checkAnswer() {
+    if (droppedWord == null) return;
+
+    setState(() {
+      hasChecked = true;
+      // Nếu chọn sai thì trừ tim
+      if (droppedWord != widget.questions[currentIndex].correctAnswer) {
+        hearts--;
+        if (hearts == 0) {
+          _showGameOverDialog();
+        }
+      }
+    });
+  }
+
   void _nextQuestion() {
     if (currentIndex < widget.questions.length - 1) {
       setState(() {
@@ -54,11 +74,32 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     }
   }
 
-  // --- HÀM XỬ LÝ GAME OVER KHI HẾT TIM ---
+  // --- HÀM CỘNG GIỜ HỌC VÀO SPRING BOOT ---
+  Future<void> _addStudyTime() async {
+    const String url = "http://10.0.2.2:8080/api/progress/add-time";
+
+    // Lấy tên thật của người dùng từ Firebase (Hoặc dùng tên mặc định nếu lỗi)
+    String username = FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";
+
+    try {
+      await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": username,
+          "minutes": 5 // Thưởng 5 phút học cho mỗi bài hoàn thành
+        }),
+      );
+    } catch (e) {
+      print("Lỗi cộng giờ học: $e");
+    }
+  }
+
+  // --- DIALOG HẾT TIM ---
   void _showGameOverDialog() {
     showDialog(
         context: context,
-        barrierDismissible: false, // Không cho bấm ra ngoài để tắt
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Column(
@@ -80,8 +121,8 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12)
                 ),
                 onPressed: () {
-                  Navigator.pop(context); // Đóng popup
-                  Navigator.pop(context); // Quay về màn hình Home
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 child: const Text("Về trang chủ", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
@@ -91,27 +132,46 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     );
   }
 
+  // --- DIALOG HOÀN THÀNH CHIẾN THẮNG ---
   void _showCompletionDialog() {
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("Tuyệt vời! 🎉", textAlign: TextAlign.center, style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-          content: const Text("Bạn đã hoàn thành xuất sắc bài học này. Nhận ngay +150 XP!", textAlign: TextAlign.center),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                child: const Text("Trở về trang chủ", style: TextStyle(color: Colors.white)),
-              ),
-            )
-          ],
+        builder: (context) => StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Text("Tuyệt vời! 🎉", textAlign: TextAlign.center, style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                content: const Text("Bạn đã hoàn thành bài học này.\nTiến độ học tập của bạn đã được lưu lại!", textAlign: TextAlign.center),
+                actions: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          padding: const EdgeInsets.symmetric(vertical: 12)
+                      ),
+                      onPressed: isSavingProgress ? null : () async {
+                        setStateDialog(() => isSavingProgress = true);
+
+                        // 1. Gọi API cộng 5 phút học vào Database
+                        await _addStudyTime();
+
+                        // 2. Thoát về trang chủ sau khi cộng giờ thành công
+                        if (context.mounted) {
+                          Navigator.pop(context); // Tắt Dialog
+                          Navigator.pop(context); // Tắt màn hình Quiz
+                        }
+                      },
+                      child: isSavingProgress
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text("Trở về trang chủ", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  )
+                ],
+              );
+            }
         )
     );
   }
@@ -179,7 +239,49 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
               ),
 
               const Spacer(),
-              // ... (Phần nút bấm và kết quả giữ nguyên, màu của nút và kết quả không bị ảnh hưởng bởi DarkMode)
+
+              // --- KHUNG HIỂN THỊ KẾT QUẢ KHI KIỂM TRA ---
+              if (hasChecked)
+                Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                        color: droppedWord == currentQ.correctAnswer ? (isDarkMode ? Colors.green[900] : Colors.green[100]) : (isDarkMode ? Colors.red[900] : Colors.red[100]),
+                        borderRadius: BorderRadius.circular(15)
+                    ),
+                    child: Column(
+                        children: [
+                          Text(
+                              droppedWord == currentQ.correctAnswer ? "Chính xác!" : "Sai rồi! Đáp án đúng: ${currentQ.correctAnswer}",
+                              style: TextStyle(
+                                  color: droppedWord == currentQ.correctAnswer ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800]),
+                                  fontWeight: FontWeight.bold, fontSize: 16
+                              )
+                          ),
+                          if (currentQ.explanation.isNotEmpty) ...[
+                            const SizedBox(height: 5),
+                            Text(currentQ.explanation, style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black87), textAlign: TextAlign.center),
+                          ]
+                        ]
+                    )
+                ),
+
+              const SizedBox(height: 15),
+
+              // --- NÚT BẤM (KIỂM TRA / TIẾP TỤC) ---
+              SizedBox(
+                height: 55,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: droppedWord == null ? Colors.grey : const Color(0xFF0F8A50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+                  ),
+                  onPressed: droppedWord == null ? null : (hasChecked ? _nextQuestion : _checkAnswer),
+                  child: Text(
+                      hasChecked ? "Tiếp tục" : "Kiểm tra",
+                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)
+                  ),
+                ),
+              )
             ],
           ),
         ),
@@ -191,7 +293,7 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: cardColor, // Đổi màu nền khối chữ
+        color: cardColor,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
             color: isDropped ? Colors.green : (cardColor == Colors.white

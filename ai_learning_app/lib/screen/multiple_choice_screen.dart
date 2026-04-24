@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/question_model.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase
 
 class MultipleChoiceScreen extends StatefulWidget {
   final List<QuestionModel> questions;
@@ -17,6 +20,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
   String? selectedAnswer;
   bool hasChecked = false;
   late List<String> currentOptions;
+  bool isSavingProgress = false; // Biến trạng thái khi đang lưu điểm
 
   @override
   void initState() {
@@ -39,29 +43,94 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
         _loadQuestion();
       });
     } else {
-      _showDialog("Tuyệt vời! 🎉", "Bạn đã hoàn thành xuất sắc bài học này.", true);
+      _showCompletionDialog();
     }
   }
 
-  void _showDialog(String title, String content, bool isSuccess) {
+  // --- HÀM CỘNG GIỜ HỌC VÀO SPRING BOOT ---
+  Future<void> _addStudyTime() async {
+    const String url = "http://10.0.2.2:8080/api/progress/add-time";
+
+    String username = FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";
+
+    try {
+      await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": username,
+          "minutes": 5 // Thưởng 5 phút học cho mỗi bài hoàn thành
+        }),
+      );
+    } catch (e) {
+      print("Lỗi cộng giờ học: $e");
+    }
+  }
+
+  // --- DIALOG HẾT TIM ---
+  void _showGameOverDialog() {
     showDialog(
         context: context, barrierDismissible: false,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Column(
+          title: const Column(
             children: [
-              Icon(isSuccess ? Icons.emoji_events : Icons.heart_broken, color: isSuccess ? Colors.green : Colors.red, size: 50),
-              Text(title, style: TextStyle(color: isSuccess ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
+              Icon(Icons.heart_broken, color: Colors.red, size: 50),
+              Text("Hết lượt thử!", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ],
           ),
-          content: Text(content, textAlign: TextAlign.center),
+          content: const Text("Bạn đã hết trái tim ❤️. Hãy nghỉ ngơi và thử sức sau nhé!", textAlign: TextAlign.center),
           actions: [
             SizedBox(width: double.infinity, child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: isSuccess ? Colors.green : Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
               onPressed: () { Navigator.pop(context); Navigator.pop(context); },
               child: const Text("Về trang chủ", style: TextStyle(color: Colors.white)),
             ))
           ],
+        )
+    );
+  }
+
+  // --- DIALOG HOÀN THÀNH CHIẾN THẮNG ---
+  void _showCompletionDialog() {
+    showDialog(
+        context: context, barrierDismissible: false,
+        builder: (context) => StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Column(
+                  children: [
+                    Icon(Icons.emoji_events, color: Colors.green, size: 50),
+                    Text("Tuyệt vời! 🎉", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                content: const Text("Bạn đã hoàn thành bài học này.\nTiến độ học tập của bạn đã được lưu lại!", textAlign: TextAlign.center),
+                actions: [
+                  SizedBox(width: double.infinity, child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        padding: const EdgeInsets.symmetric(vertical: 12)
+                    ),
+                    onPressed: isSavingProgress ? null : () async {
+                      setStateDialog(() => isSavingProgress = true);
+
+                      // Gọi API lưu tiến độ
+                      await _addStudyTime();
+
+                      if (context.mounted) {
+                        Navigator.pop(context); // Đóng Dialog
+                        Navigator.pop(context); // Thoát về Home
+                      }
+                    },
+                    child: isSavingProgress
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text("Về trang chủ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  ))
+                ],
+              );
+            }
         )
     );
   }
@@ -132,16 +201,15 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                 ),
               ),
 
-
               // ========================================================
-              // ĐOẠN CODE HIỂN THỊ KẾT QUẢ VÀ GIẢI THÍCH
+              // ĐOẠN CODE HIỂN THỊ KẾT QUẢ VÀ GIẢI THÍCH (ĐÃ CẬP NHẬT MÀU ĐỘNG)
               // ========================================================
               if (hasChecked)
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                      color: selectedAnswer == currentQ.correctAnswer ? Colors.green[50] : Colors.red[50],
+                      color: selectedAnswer == currentQ.correctAnswer ? (isDarkMode ? Colors.green[900] : Colors.green[50]) : (isDarkMode ? Colors.red[900] : Colors.red[50]),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: selectedAnswer == currentQ.correctAnswer ? Colors.green : Colors.red, width: 2)
                   ),
@@ -153,41 +221,43 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                         children: [
                           Icon(
                             selectedAnswer == currentQ.correctAnswer ? Icons.check_circle : Icons.cancel,
-                            color: selectedAnswer == currentQ.correctAnswer ? Colors.green : Colors.red,
+                            color: selectedAnswer == currentQ.correctAnswer ? (isDarkMode ? Colors.greenAccent : Colors.green) : (isDarkMode ? Colors.redAccent : Colors.red),
                             size: 30,
                           ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: Text(
                               selectedAnswer == currentQ.correctAnswer ? "Tuyệt vời!" : "Sai rồi. Đáp án đúng là: ${currentQ.correctAnswer}",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: selectedAnswer == currentQ.correctAnswer ? Colors.green[800] : Colors.red[800]),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: selectedAnswer == currentQ.correctAnswer ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800])),
                             ),
                           )
                         ],
                       ),
 
                       // Hàng 2: Hiện lời giải thích của AI
-                      const SizedBox(height: 15),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.lightbulb, color: Colors.orange, size: 20),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                currentQ.explanation, // Lời giải thích từ Database
-                                style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+                      if (currentQ.explanation.isNotEmpty) ...[
+                        const SizedBox(height: 15),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: cardColor, // Đổi màu nền hộp giải thích theo Theme
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.lightbulb, color: Colors.orange, size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  currentQ.explanation,
+                                  style: TextStyle(fontSize: 14, color: textColor, height: 1.5),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )
+                            ],
+                          ),
+                        )
+                      ]
                     ],
                   ),
                 ),
@@ -206,7 +276,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                         hasChecked = true;
                         if (selectedAnswer != currentQ.correctAnswer) {
                           hearts--;
-                          if (hearts == 0) _showDialog("Hết lượt thử!", "Bạn đã hết trái tim ❤️. Hãy nghỉ ngơi và thử sức sau nhé!", false);
+                          if (hearts == 0) _showGameOverDialog(); // Đã sửa thành hàm báo hết tim
                         }
                       });
                     }

@@ -15,6 +15,7 @@ import 'drag_drop_quiz_screen.dart';
 import 'multiple_choice_screen.dart';
 import 'fill_blank_screen.dart';
 import 'profile_screen.dart';
+import 'my_lessons_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -335,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // --- TAB 1: My Lessons ---
-          Center(child: Text("Loading", style: TextStyle(color: textColor))),
+          MyLessonsScreen(username: widget.username),
 
           // --- TAB 2: Discover ---
           const DiscoverScreen(),

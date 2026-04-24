@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart'; // <--- Import Provider
 import '../providers/theme_provider.dart'; // <--- Import ThemeProvider
+import 'dart:io';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
