@@ -19,43 +19,63 @@ public class AiService {
     @Value("${gemini.api.key}")
     private String apiKey;
 
+    /**
+     * Hàm cũ: Tạo câu hỏi từ text PDF
+     */
     public String generateQuizJson(String pdfText, String quizType) {
+        return callGemini(pdfText, quizType, null);
+    }
+
+    /**
+     * Hàm mới: Tự tạo nội dung và câu hỏi theo chuyên ngành (Topic)
+     */
+    public String generateLessonByTopic(String topic, String quizType) {
+        return callGemini(null, quizType, topic);
+    }
+
+    private String callGemini(String pdfText, String quizType, String topic) {
         String urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
-        String basePrompt = "Bạn là một chuyên gia thiết kế bài giảng ngoại ngữ. Dựa vào nội dung tài liệu sau:\n\"\"\"" + pdfText + "\"\"\"\n\n";
-        String taskPrompt = "";
-
-        // CHIA NHÁNH THEO TỪNG TRÒ CHƠI
-        if ("multiple_choice".equals(quizType)) {
-            taskPrompt = "Hãy tạo 5 câu hỏi TRẮC NGHIỆM (A, B, C, D) bằng tiếng Anh.\n" +
-                    "Yêu cầu cấu trúc JSON:\n" +
-                    "- 'sentenceStart': chứa toàn bộ nội dung câu hỏi.\n" +
-                    "- 'sentenceEnd': để chuỗi rỗng \"\".\n" +
-                    "- 'optionA', 'optionB', 'optionC', 'optionD': chứa 4 đáp án.\n" +
-                    "- 'correctAnswer': chứa đáp án đúng (phải trùng khớp chữ với 1 trong 4 option).\n" +
-                    "- 'explanation': Giải thích cực kỳ ngắn gọn (bằng tiếng Việt) tại sao lại chọn đáp án này.";
-        } else if ("fill_blank".equals(quizType)) {
-            taskPrompt = "Hãy tạo 5 câu hỏi bài tập ĐỤC LỖ (Tự gõ đáp án).\n" +
-                    "Yêu cầu:\n" +
-                    "- Chọn 1 từ vựng quan trọng (Single word) làm đáp án.\n" +
-                    "- 'sentenceStart': phần trước từ đó.\n" +
-                    "- 'sentenceEnd': phần sau từ đó.\n" +
-                    "- 'optionA', 'optionB', 'optionC', 'optionD': để trống \"\".\n" +
-                    "- 'correctAnswer': từ khóa đúng (không phân biệt hoa thường).\n" +
-                    "- 'explanation': Giải thích tại sao từ này lại đúng ngữ pháp/ngữ cảnh đó.";
+        String basePrompt = "";
+        if (pdfText != null) {
+            basePrompt = "Bạn là một chuyên gia thiết kế bài giảng ngoại ngữ. Dựa vào nội dung tài liệu sau:\n\"\"\"" + pdfText + "\"\"\"\n\n";
         } else {
-            // Mặc định là drag_drop (Kéo thả)
-            taskPrompt = "Hãy tạo ra 5 câu hỏi bài tập dạng KÉO THẢ TỪ VỰNG.\n" +
-                    "Yêu cầu cấu trúc JSON:\n" +
-                    "- Cắt câu làm 2 phần: phần trước từ khóa (sentenceStart) và phần sau (sentenceEnd).\n" +
-                    "- 'optionA', 'optionB', 'optionC', 'optionD': chứa 4 đáp án (1 đúng, 3 nhiễu).\n" +
-                    "- 'correctAnswer': chứa đáp án đúng.\n" +
-                    "- 'explanation': Giải thích cực kỳ ngắn gọn (bằng tiếng Việt) tại sao từ này lại phù hợp để điền vào chỗ trống.";
+            basePrompt = "Bạn là một chuyên gia thiết kế bài giảng ngoại ngữ. Hãy tự soạn một đoạn văn tiếng Anh chuyên ngành khoảng 150-200 chữ về chủ đề: \"" + topic + "\".\n" +
+                    "Sau đó dựa vào chính đoạn văn đó để tạo câu hỏi.\n\n";
         }
 
-        String finalPrompt = basePrompt + taskPrompt + "\n\nBẮT BUỘC TRẢ VỀ DUY NHẤT MỘT MẢNG JSON, tuyệt đối không có text thừa. Ví dụ:\n" +
-                "[\n  {\n    \"sentenceStart\": \"...\",\n    \"sentenceEnd\": \"...\",\n    \"optionA\": \"...\",\n    \"optionB\": \"...\",\n    \"optionC\": \"...\",\n    \"optionD\": \"...\",\n    \"correctAnswer\": \"...\",\n    \"explanation\": \"...\"\n  }\n]";
-        // ... (Giữ nguyên đoạn gửi request bằng RestTemplate và ObjectMapper ở dưới)
+        String taskPrompt = "";
+        // CHIA NHÁNH THEO TỪNG TRÒ CHƠI
+        if ("multiple_choice".equals(quizType)) {
+            taskPrompt = "Hãy tạo 5 câu hỏi TRẮC NGHIỆM (A, B, C, D) bằng tiếng Anh.\n";
+        } else if ("fill_blank".equals(quizType)) {
+            taskPrompt = "Hãy tạo 5 câu hỏi bài tập ĐỤC LỖ (Tự gõ đáp án).\n";
+        } else {
+            taskPrompt = "Hãy tạo ra 5 câu hỏi bài tập dạng KÉO THẢ TỪ VỰNG.\n";
+        }
+
+        String jsonFormat = "Yêu cầu cấu trúc JSON trả về phải là một Object duy nhất chứa 3 phần:\n" +
+                "1. 'content': Chứa đoạn văn bản tiếng Anh (đoạn văn gốc từ PDF hoặc đoạn văn bạn tự soạn).\n" +
+                "2. 'vocabularies': Là một mảng gồm 5 từ vựng quan trọng nhất trong đoạn văn, mỗi Object có:\n" +
+                "   - 'word': Từ vựng tiếng Anh.\n" +
+                "   - 'phonetic': Phiên âm quốc tế (IPA).\n" +
+                "   - 'meaning': Nghĩa tiếng Việt.\n" +
+                "   - 'example': Một câu ví dụ tiếng Anh có chứa từ đó.\n" +
+                "3. 'questions': Là một mảng gồm 5 Object câu hỏi, mỗi Object có các trường:\n" +
+                "   - 'sentenceStart': Phần trước từ khóa.\n" +
+                "   - 'sentenceEnd': Phần sau từ khóa.\n" +
+                "   - 'optionA', 'optionB', 'optionC', 'optionD': 4 lựa chọn.\n" +
+                "   - 'correctAnswer': Đáp án đúng.\n" +
+                "   - 'explanation': Giải thích ngắn gọn bằng tiếng Việt.\n\n" +
+                "BẮT BUỘC TRẢ VỀ DUY NHẤT JSON theo định dạng này:\n" +
+                "{\n" +
+                "  \"content\": \"...\",\n" +
+                "  \"vocabularies\": [ ... ],\n" +
+                "  \"questions\": [ ... ]\n" +
+                "}";
+
+        String finalPrompt = basePrompt + taskPrompt + jsonFormat;
+
         Map<String, Object> requestBody = Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", finalPrompt)))));
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -71,7 +91,7 @@ public class AiService {
             return resultText.replace("```json\n", "").replace("```json", "").replace("```", "").trim();
         } catch (Exception e) {
             e.printStackTrace();
-            return "[]";
+            return "{\"content\": \"\", \"vocabularies\": [], \"questions\": []}";
         }
     }
 }

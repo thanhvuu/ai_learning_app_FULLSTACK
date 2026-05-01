@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../api_config.dart';
 import '../models/question_model.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FillBlankScreen extends StatefulWidget {
   final List<QuestionModel> questions;
@@ -18,7 +19,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
   int currentIndex = 0;
   int hearts = 3;
   bool hasChecked = false;
-  bool isSavingProgress = false; // Biến trạng thái khi lưu điểm
+  bool isSavingProgress = false;
   final TextEditingController _answerController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -34,7 +35,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
       _answerController.clear();
       hasChecked = false;
     });
-    // Tự động mở bàn phím khi sang câu mới
     Future.delayed(const Duration(milliseconds: 500), () {
       _focusNode.requestFocus();
     });
@@ -66,10 +66,8 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     });
   }
 
-  // --- HÀM CỘNG GIỜ HỌC VÀO SPRING BOOT ---
   Future<void> _addStudyTime() async {
-    const String url = "http://10.0.2.2:8080/api/progress/add-time";
-
+    final String url = "${ApiConfig.progress}/add-time";
     String username = FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";
 
     try {
@@ -78,7 +76,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": username,
-          "minutes": 5 // Thưởng 5 phút học
+          "minutes": 5
         }),
       );
     } catch (e) {
@@ -86,7 +84,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     }
   }
 
-  // --- DIALOG HẾT TIM ---
   void _showGameOverDialog() {
     showDialog(
         context: context, barrierDismissible: false,
@@ -110,7 +107,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     );
   }
 
-  // --- DIALOG HOÀN THÀNH CHIẾN THẮNG ---
   void _showCompletionDialog() {
     showDialog(
         context: context, barrierDismissible: false,
@@ -134,13 +130,10 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
                     ),
                     onPressed: isSavingProgress ? null : () async {
                       setStateDialog(() => isSavingProgress = true);
-
-                      // Gọi API lưu tiến độ
                       await _addStudyTime();
-
                       if (context.mounted) {
-                        Navigator.pop(context); // Đóng Dialog
-                        Navigator.pop(context); // Thoát về Home
+                        Navigator.pop(context);
+                        Navigator.pop(context);
                       }
                     },
                     child: isSavingProgress
@@ -158,8 +151,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
   Widget build(BuildContext context) {
     QuestionModel currentQ = widget.questions[currentIndex];
     bool isCorrect = _answerController.text.trim().toLowerCase() == currentQ.correctAnswer.toLowerCase();
-
-    // BÍ KÍP MÀU ĐỘNG
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
@@ -178,7 +169,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
           children: [
             Text("Gõ từ đúng vào chỗ trống:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor)),
             const SizedBox(height: 30),
-
             Wrap(
               runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center,
               children: [
@@ -200,8 +190,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
                 Text(currentQ.sentenceEnd, style: TextStyle(fontSize: 18, height: 1.5, color: textColor)),
               ],
             ),
-
-            // --- GIẢI THÍCH (CHỈ HIỆN KHI ĐÃ CHECK - ĐÃ CẬP NHẬT MÀU ĐỘNG) ---
             if (hasChecked) ...[
               const SizedBox(height: 30),
               Container(
@@ -225,8 +213,6 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
           ],
         ),
       ),
-
-      // Nút bấm cố định ở dưới
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20),
         child: SizedBox(

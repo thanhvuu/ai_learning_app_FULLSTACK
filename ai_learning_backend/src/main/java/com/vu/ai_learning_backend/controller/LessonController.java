@@ -5,8 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.vu.ai_learning_backend.entity.Lesson;
 import com.vu.ai_learning_backend.entity.Question;
+import com.vu.ai_learning_backend.entity.Vocabulary;
 import com.vu.ai_learning_backend.repository.LessonRepository;
 import com.vu.ai_learning_backend.repository.QuestionRepository;
+import com.vu.ai_learning_backend.repository.VocabularyRepository;
 import com.vu.ai_learning_backend.service.AiService;
 import com.vu.ai_learning_backend.service.PdfService;
 
@@ -15,10 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@CrossOrigin("*") // Dòng này để cho phép Flutter truy cập
+@CrossOrigin("*")
 @RequestMapping("/api/lessons")
 public class LessonController {
 
@@ -28,77 +32,105 @@ public class LessonController {
     @Autowired
     private AiService aiService;
 
-    // --- GỌI THÊM 2 ANH THỦ KHO RA LÀM VIỆC ---
     @Autowired
     private LessonRepository lessonRepository;
 
     @Autowired
     private QuestionRepository questionRepository;
 
+    @Autowired
+    private VocabularyRepository vocabularyRepository;
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadPDF(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "quizType", defaultValue = "drag_drop") String quizType,
-            @RequestParam("username") String username // <--- BỔ SUNG NHẬN TÊN USER TỪ FLUTTER
+            @RequestParam("username") String username
     ) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Vui lòng chọn một file PDF!");
         }
-
         try {
-            System.out.println("1. Đang đọc file PDF...");
             String pdfText = pdfService.extractText(file);
-
-            System.out.println("2. Đang tạo và lưu Bài học (Lesson) vào Database...");
-            Lesson lesson = new Lesson();
-            // Lấy tên file làm tên bài học
-            lesson.setTitle(file.getOriginalFilename());
-
-            // --- LƯU THÊM CÁC THÔNG TIN MỚI ---
-            lesson.setUsername(username);
-            lesson.setQuizType(quizType);
-            lesson.setProgress(0); // Vừa tạo thì tiến độ là 0%
-            // ----------------------------------
-
-            Lesson savedLesson = lessonRepository.save(lesson);
-
-            System.out.println("3. Đang nhờ Gemini soạn câu hỏi " + quizType + "...");
             String jsonResult = aiService.generateQuizJson(pdfText, quizType);
-
-            System.out.println("4. Đang dùng ObjectMapper phiên dịch JSON sang Object...");
-            ObjectMapper mapper = new ObjectMapper();
-
-            // Dặn máy dịch là nếu AI có trả về dư biến nào không có trong class Question thì cứ lờ đi
-            mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-            List<Question> questions = mapper.readValue(jsonResult, new TypeReference<List<Question>>(){});
-
-            System.out.println("5. Đang cất từng câu hỏi vào kho...");
-            for (Question q : questions) {
-                q.setLesson(savedLesson);
-                questionRepository.save(q);
-            }
-
-            // Gắn danh sách câu hỏi ngược lại vào Bài học để in ra màn hình JSON
-            savedLesson.setQuestions(questions);
-
-            System.out.println("6. Hoàn tất! Đã trả về thông tin bài học cho app.");
-            return ResponseEntity.ok(savedLesson);
-
+            return processAiResponse(jsonResult, file.getOriginalFilename(), username, quizType, "PDF_UPLOAD");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Có lỗi xảy ra: " + e.getMessage());
         }
     }
 
-    // =================================================================
-    //  THÊM API MỚI: LẤY DANH SÁCH BÀI HỌC CHO TAB "MY LESSONS"
-    // =================================================================
-    @GetMapping("/my-lessons")
-    public ResponseEntity<?> getMyLessons(@RequestParam String username) {
+    @PostMapping("/generate-by-topic")
+    public ResponseEntity<?> generateByTopic(
+            @RequestParam("topic") String topic,
+            @RequestParam(value = "quizType", defaultValue = "drag_drop") String quizType,
+            @RequestParam("username") String username,
+            @RequestParam(value = "category", required = false) String category
+    ) {
         try {
-            System.out.println("Đang lấy danh sách bài học của user: " + username);
-            // Gọi hàm tìm kiếm đã viết trong LessonRepository
+            String jsonResult = aiService.generateLessonByTopic(topic, quizType);
+            return processAiResponse(jsonResult, topic, username, quizType, category != null ? category : topic);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Có lỗi xảy ra: " + e.getMessage());
+        }
+    }
+
+    // API lấy lộ trình học (Roadmap) cho một chuyên ngành
+    @GetMapping("/roadmap")
+    public ResponseEntity<?> getRoadmap(@RequestParam("major") String major) {
+        // Trong thực tế, bạn có thể gọi AI để sinh Roadmap hoặc lấy từ một danh sách cố định.
+        // Ở đây tôi giả lập một lộ trình gồm 5 bài học cho mỗi ngành.
+        List<String> steps = new ArrayList<>();
+        if (major.contains("Information Technology")) {
+            steps = List.of("Introduction to IT", "Computer Hardware", "Software Engineering", "Computer Networking", "Cybersecurity Basics");
+        } else if (major.contains("Business")) {
+            steps = List.of("Business Basics", "Marketing Principles", "Financial Accounting", "Human Resource Management", "International Trade");
+        } else {
+            steps = List.of("Fundamental Concepts", "Essential Vocabulary", "Advanced Topics", "Case Studies", "Final Review");
+        }
+        return ResponseEntity.ok(steps);
+    }
+
+    private ResponseEntity<?> processAiResponse(String jsonResult, String title, String username, String quizType, String category) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        com.fasterxml.jackson.databind.JsonNode rootNode = mapper.readTree(jsonResult);
+        String content = rootNode.path("content").asText();
+        List<Vocabulary> vocabularies = mapper.convertValue(rootNode.path("vocabularies"), new TypeReference<List<Vocabulary>>(){});
+        List<Question> questions = mapper.convertValue(rootNode.path("questions"), new TypeReference<List<Question>>(){});
+
+        Lesson lesson = new Lesson();
+        lesson.setTitle(title);
+        lesson.setUsername(username);
+        lesson.setQuizType(quizType);
+        lesson.setProgress(0);
+        lesson.setContent(content);
+        lesson.setCategory(category);
+
+        Lesson savedLesson = lessonRepository.save(lesson);
+
+        if (vocabularies != null) {
+            for (Vocabulary v : vocabularies) {
+                v.setLesson(savedLesson);
+                vocabularyRepository.save(v);
+            }
+        }
+
+        for (Question q : questions) {
+            q.setLesson(savedLesson);
+            questionRepository.save(q);
+        }
+
+        savedLesson.setVocabularies(vocabularies);
+        savedLesson.setQuestions(questions);
+        return ResponseEntity.ok(savedLesson);
+    }
+
+    @GetMapping("/my-lessons")
+    public ResponseEntity<?> getMyLessons(@RequestParam("username") String username) {
+        try {
             List<Lesson> lessons = lessonRepository.findByUsernameOrderByCreatedAtDesc(username);
             return ResponseEntity.ok(lessons);
         } catch (Exception e) {

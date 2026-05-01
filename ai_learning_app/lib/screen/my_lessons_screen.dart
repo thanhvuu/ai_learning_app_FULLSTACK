@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../api_config.dart';
 import '../providers/theme_provider.dart';
+import '../models/vocabulary_model.dart';
+import '../models/question_model.dart';
+import 'vocabulary_screen.dart';
 
 class MyLessonsScreen extends StatefulWidget {
   // Thêm biến username để biết lấy bài học của ai
@@ -30,7 +34,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
   // --- HÀM GỌI API LẤY DANH SÁCH BÀI HỌC TỪ SPRING BOOT ---
   Future<void> fetchMyLessons() async {
     // Sửa lại URL này theo đúng API backend của bạn nhé
-    final String url = "http://10.0.2.2:8080/api/lessons/my-lessons?username=${widget.username}";
+    final String url = "${ApiConfig.lessons}/my-lessons?username=${widget.username}";
 
     try {
       var response = await http.get(Uri.parse(url));
@@ -43,13 +47,20 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
           activeCourses = data.map((item) {
             String type = item['quizType'] ?? 'unknown';
 
+            // Parse vocabularies và questions từ JSON backend
+            List<dynamic> vocabJson = item['vocabularies'] ?? [];
+            List<dynamic> questionsJson = item['questions'] ?? [];
+
             return {
               "title": item['title'] ?? "Bài học mới",
               "subtitle": _getSubtitleForType(type),
-              "progress": (item['progress'] ?? 0) / 100.0, // Đổi 75 thành 0.75
+              "progress": (item['progress'] ?? 0) / 100.0,
               "isCompleted": item['progress'] == 100,
               "gradient": _getGradientForType(type),
               "icon": _getIconForType(type),
+              "quizType": type,
+              "vocabularies": vocabJson.map((v) => VocabularyModel.fromJson(v)).toList(),
+              "questions": questionsJson.map((q) => QuestionModel.fromJson(q)).toList(),
             };
           }).toList();
           isLoading = false;
@@ -69,7 +80,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
 
   //ham call api lay progress
    Future<void> fetchProgress() async{
-    final String url = "http://10.0.2.2:8080/api/progress/today?username=${widget.username}";
+    final String url = "${ApiConfig.progress}/today?username=${widget.username}";
     try{
       var response = await http.get(Uri.parse(url));
       if(response.statusCode == 200){
@@ -224,47 +235,60 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
 
   Widget _buildCourseCard(Map<String, dynamic> course, Color cardColor, Color textColor, Color subtitleColor, Color greenAccent, bool isDarkMode) {
     bool isCompleted = course['isCompleted'];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20), padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(25), boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.grey.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 8))]),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 65, height: 65,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: course['gradient'])),
-                child: Icon(course['icon'], color: Colors.white.withOpacity(0.8), size: 30),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(course['title'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
-                    const SizedBox(height: 5),
-                    Text(course['subtitle'], style: TextStyle(color: subtitleColor, fontSize: 14, fontWeight: FontWeight.w500)),
-                  ],
+    return InkWell(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => VocabularyScreen(
+            topic: course['title'],
+            vocabularies: List<VocabularyModel>.from(course['vocabularies']),
+            questions: List<QuestionModel>.from(course['questions']),
+            quizType: course['quizType'],
+          ),
+        ));
+      },
+      borderRadius: BorderRadius.circular(25),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20), padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(25), boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.grey.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 8))]),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 65, height: 65,
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: course['gradient'])),
+                  child: Icon(course['icon'], color: Colors.white.withOpacity(0.8), size: 30),
                 ),
-              ),
-              Container(
-                width: 45, height: 45,
-                decoration: BoxDecoration(color: greenAccent, shape: BoxShape.circle, boxShadow: [BoxShadow(color: greenAccent.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]),
-                child: Icon(isCompleted ? Icons.check : Icons.play_arrow_rounded, color: Colors.white, size: 28),
-              )
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("PROGRESS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: textColor)),
-              Text("${(course['progress'] * 100).toInt()}%", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: greenAccent)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(value: course['progress'], minHeight: 8, backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200], valueColor: AlwaysStoppedAnimation<Color>(greenAccent), borderRadius: BorderRadius.circular(10)),
-        ],
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(course['title'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor)),
+                      const SizedBox(height: 5),
+                      Text(course['subtitle'], style: TextStyle(color: subtitleColor, fontSize: 14, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 45, height: 45,
+                  decoration: BoxDecoration(color: greenAccent, shape: BoxShape.circle, boxShadow: [BoxShadow(color: greenAccent.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]),
+                  child: Icon(isCompleted ? Icons.check : Icons.play_arrow_rounded, color: Colors.white, size: 28),
+                )
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("PROGRESS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: textColor)),
+                Text("${(course['progress'] * 100).toInt()}%", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: greenAccent)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: course['progress'], minHeight: 8, backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200], valueColor: AlwaysStoppedAnimation<Color>(greenAccent), borderRadius: BorderRadius.circular(10)),
+          ],
+        ),
       ),
     );
   }

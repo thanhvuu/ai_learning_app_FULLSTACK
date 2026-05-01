@@ -7,6 +7,7 @@ import '../providers/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../api_config.dart';
 import '../providers/quiz_provider.dart';
 import 'quiz_screen.dart';
 import 'discover_screen.dart';
@@ -16,6 +17,7 @@ import 'multiple_choice_screen.dart';
 import 'fill_blank_screen.dart';
 import 'profile_screen.dart';
 import 'my_lessons_screen.dart';
+import 'major_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -28,7 +30,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // CẤU HÌNH ĐỊA CHỈ SERVER
-  final String apiUrl = "http://10.0.2.2:8080/api/lessons/upload";
+  final String apiUrl = "${ApiConfig.lessons}/upload";
 
   int _selectedIndex = 0;
 
@@ -45,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Hàm fetch api BE
   Future<void> fetchUserData() async{
     final String username = widget.username;
-    final String url = "http://10.0.2.2:8080/api/users/profile?username=$username";
+    final String url = "${ApiConfig.users}/profile?username=$username";
 
     try{
       var response = await http.get(Uri.parse(url));
@@ -143,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
       request.files.add(await http.MultipartFile.fromPath('file', file.path));
       request.fields['quizType'] = quizType;
+      request.fields['username'] = widget.username;
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
@@ -308,21 +311,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 icon: const Icon(Icons.upload_file),
                                 label: const Text('Upload PDF & Create\nLesson', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-
-                            SizedBox(
-                              width: double.infinity,
-                              height: 60,
-                              child: OutlinedButton(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.white, width: 2),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                ),
-                                child: const Text('Browse Samples', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               ),
                             ),
                           ],
