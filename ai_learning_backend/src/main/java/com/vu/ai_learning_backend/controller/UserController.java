@@ -13,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @RestController // Khai báo đây là đầu mối API
+@CrossOrigin("*")
 @RequestMapping("/api/users") // Địa chỉ truy cập
 public class UserController {
 

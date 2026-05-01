@@ -28,6 +28,6 @@ public class Question {
 
     @ManyToOne
     @JoinColumn(name = "lesson_id")
-    @JsonBackReference
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Lesson lesson;
 }

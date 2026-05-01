@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../api_config.dart';
 import '../models/question_model.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MultipleChoiceScreen extends StatefulWidget {
   final List<QuestionModel> questions;
@@ -20,7 +21,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
   String? selectedAnswer;
   bool hasChecked = false;
   late List<String> currentOptions;
-  bool isSavingProgress = false; // Biến trạng thái khi đang lưu điểm
+  bool isSavingProgress = false;
 
   @override
   void initState() {
@@ -47,19 +48,16 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
     }
   }
 
-  // --- HÀM CỘNG GIỜ HỌC VÀO SPRING BOOT ---
   Future<void> _addStudyTime() async {
-    const String url = "http://10.0.2.2:8080/api/progress/add-time";
-
+    final String url = "${ApiConfig.progress}/add-time";
     String username = FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";
-
     try {
       await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": username,
-          "minutes": 5 // Thưởng 5 phút học cho mỗi bài hoàn thành
+          "minutes": 5
         }),
       );
     } catch (e) {
@@ -67,7 +65,6 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
     }
   }
 
-  // --- DIALOG HẾT TIM ---
   void _showGameOverDialog() {
     showDialog(
         context: context, barrierDismissible: false,
@@ -91,7 +88,6 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
     );
   }
 
-  // --- DIALOG HOÀN THÀNH CHIẾN THẮNG ---
   void _showCompletionDialog() {
     showDialog(
         context: context, barrierDismissible: false,
@@ -115,13 +111,10 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                     ),
                     onPressed: isSavingProgress ? null : () async {
                       setStateDialog(() => isSavingProgress = true);
-
-                      // Gọi API lưu tiến độ
                       await _addStudyTime();
-
                       if (context.mounted) {
-                        Navigator.pop(context); // Đóng Dialog
-                        Navigator.pop(context); // Thoát về Home
+                        Navigator.pop(context);
+                        Navigator.pop(context);
                       }
                     },
                     child: isSavingProgress
@@ -139,8 +132,6 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
   Widget build(BuildContext context) {
     if (widget.questions.isEmpty) return const Scaffold(body: Center(child: Text("Không có câu hỏi nào!")));
     QuestionModel currentQ = widget.questions[currentIndex];
-
-    // BÍ KÍP MÀU ĐỘNG
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
@@ -162,16 +153,12 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
             children: [
               Text("Chọn đáp án đúng:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 20),
-
-              // KHUNG CÂU HỎI
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!)),
                 child: Text(currentQ.sentenceStart, style: TextStyle(fontSize: 18, height: 1.5, color: textColor)),
               ),
               const SizedBox(height: 30),
-
-              // CÁC NÚT ĐÁP ÁN
               Expanded(
                 child: ListView.separated(
                   itemCount: currentOptions.length,
@@ -179,16 +166,13 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                   itemBuilder: (context, index) {
                     String option = currentOptions[index];
                     bool isSelected = selectedAnswer == option;
-
                     Color btnColor = cardColor;
                     Color borderColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
                     Color optionTextColor = textColor;
-
                     if (hasChecked) {
                       if (option == currentQ.correctAnswer) { btnColor = isDarkMode ? Colors.green[900]! : Colors.green[100]!; borderColor = Colors.green; optionTextColor = isDarkMode ? Colors.white : Colors.green[900]!; }
                       else if (isSelected) { btnColor = isDarkMode ? Colors.red[900]! : Colors.red[100]!; borderColor = Colors.red; optionTextColor = isDarkMode ? Colors.white : Colors.red[900]!; }
                     } else if (isSelected) { btnColor = isDarkMode ? Colors.green[900]!.withOpacity(0.5) : Colors.green[50]!; borderColor = Colors.green; optionTextColor = Colors.green; }
-
                     return GestureDetector(
                       onTap: () { if (!hasChecked) setState(() => selectedAnswer = option); },
                       child: Container(
@@ -200,10 +184,6 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                   },
                 ),
               ),
-
-              // ========================================================
-              // ĐOẠN CODE HIỂN THỊ KẾT QUẢ VÀ GIẢI THÍCH (ĐÃ CẬP NHẬT MÀU ĐỘNG)
-              // ========================================================
               if (hasChecked)
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -216,7 +196,6 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Hàng 1: Icon và chữ Tuyệt vời/Sai rồi
                       Row(
                         children: [
                           Icon(
@@ -233,27 +212,17 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                           )
                         ],
                       ),
-
-                      // Hàng 2: Hiện lời giải thích của AI
                       if (currentQ.explanation.isNotEmpty) ...[
                         const SizedBox(height: 15),
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: cardColor, // Đổi màu nền hộp giải thích theo Theme
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(10)),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.lightbulb, color: Colors.orange, size: 20),
                               const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  currentQ.explanation,
-                                  style: TextStyle(fontSize: 14, color: textColor, height: 1.5),
-                                ),
-                              ),
+                              Expanded(child: Text(currentQ.explanation, style: TextStyle(fontSize: 14, color: textColor, height: 1.5))),
                             ],
                           ),
                         )
@@ -262,9 +231,6 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                   ),
                 ),
               const SizedBox(height: 20),
-              // ========================================================
-
-              // Nút Kiểm Tra
               SizedBox(
                 height: 55,
                 child: ElevatedButton(
@@ -276,7 +242,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                         hasChecked = true;
                         if (selectedAnswer != currentQ.correctAnswer) {
                           hearts--;
-                          if (hearts == 0) _showGameOverDialog(); // Đã sửa thành hàm báo hết tim
+                          if (hearts == 0) _showGameOverDialog();
                         }
                       });
                     }

@@ -19,7 +19,6 @@ class QuestionModel {
     required this.explanation,
   });
 
-  // Hàm chuyển đổi JSON từ Spring Boot thành Object của Flutter
   factory QuestionModel.fromJson(Map<String, dynamic> json) {
     return QuestionModel(
       sentenceStart: json['sentence_start'] ?? json['sentenceStart'] ?? "",

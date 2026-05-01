@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../api_config.dart';
 import 'package:dotted_border/dotted_border.dart';
 import '../models/question_model.dart';
 import 'package:provider/provider.dart';
@@ -76,7 +77,7 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
 
   // --- HÀM CỘNG GIỜ HỌC VÀO SPRING BOOT ---
   Future<void> _addStudyTime() async {
-    const String url = "http://10.0.2.2:8080/api/progress/add-time";
+    final String url = "${ApiConfig.progress}/add-time";
 
     // Lấy tên thật của người dùng từ Firebase (Hoặc dùng tên mặc định nếu lỗi)
     String username = FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import '../api_config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:provider/provider.dart'; // <--- Import Provider
-import '../providers/theme_provider.dart'; // <--- Import ThemeProvider
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
-import 'homescreen.dart';
+import 'major_selection_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool showLoginFirst;
@@ -17,57 +18,46 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Trạng thái lật trang: true = Đăng nhập, false = Đăng ký
   late bool isLogin;
   bool isLoading = false;
   bool _obscurePassword = true;
 
-  // Khởi tạo trạng thái ban đầu
   @override
   void initState() {
     super.initState();
-    isLogin = widget.showLoginFirst; // Gán trạng thái theo ý của WelcomeScreen
+    isLogin = widget.showLoginFirst;
   }
 
-  // Controllers
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // --- HÀM XỬ LÝ ĐĂNG KÝ VÀ ĐĂNG NHẬP (FIREBASE + SPRING BOOT) ---
   Future<void> _submitAuth() async {
     setState(() => isLoading = true);
 
     try {
       if (isLogin) {
-        // 1. LUỒNG ĐĂNG NHẬP: Nhờ Firebase kiểm tra
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-
-        // Thành công -> Vào Home
-        _goToHome();
+        _goToMajorSelection();
       } else {
-        // 2. LUỒNG ĐĂNG KÝ
         if (_passwordController.text != _confirmPasswordController.text) {
           _showError("Mật khẩu xác nhận không khớp!");
           setState(() => isLoading = false);
           return;
         }
 
-        // Bước A: Tạo tài khoản trên Firebase
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // Lưu Tên của user vào Firebase Profile
         await userCredential.user?.updateDisplayName(_nameController.text.trim());
 
-        // Bước B: Bắn API đồng bộ dữ liệu sang Spring Boot để lưu XP và Bảng xếp hạng
-        const String springBootApiUrl = "http://10.0.2.2:8080/api/users/register";
+        final String springBootApiUrl = "${ApiConfig.users}/register";
         var response = await http.post(
           Uri.parse(springBootApiUrl),
           headers: {"Content-Type": "application/json"},
@@ -80,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (response.statusCode == 200) {
           _showSuccess("Đăng ký thành công! Đang chuyển vào ứng dụng...");
-          _goToHome();
+          _goToMajorSelection();
         } else {
           _showError("Firebase OK nhưng lỗi đồng bộ Spring Boot: ${response.body}");
         }
@@ -94,15 +84,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = false);
   }
 
-  void _goToHome() {
+  void _goToMajorSelection() {
     if (!mounted) return;
-
-    // Lấy tên user từ firebase
     String currentName = FirebaseAuth.instance.currentUser?.displayName ?? "Học viên";
-
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => HomeScreen(username: currentName)),
+      MaterialPageRoute(builder: (_) => MajorSelectionScreen(username: currentName)),
     );
   }
 
@@ -116,11 +103,8 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(color: Colors.white)), backgroundColor: Colors.green));
   }
 
-  // --- HÀM XỬ LÝ QUÊN MẬT KHẨU ---
   void _showForgotPasswordDialog() {
     final TextEditingController resetEmailController = TextEditingController(text: _emailController.text);
-
-    // Lấy theme để Popup cũng Dark Mode theo
     final isDarkMode = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
@@ -173,9 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _showError("Vui lòng nhập email!");
                           return;
                         }
-
                         setStateDialog(() => isSending = true);
-
                         try {
                           await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
                           if (context.mounted) {
@@ -203,11 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ==========================================
-    // BÍ KÍP MÀU ĐỘNG
-    // ==========================================
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
     final Color subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
     final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
@@ -215,7 +193,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final Color titleColor = isDarkMode ? Colors.greenAccent : Colors.green[900]!;
 
     return Scaffold(
-      // Gradient nền đổi theo chế độ
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -224,8 +201,8 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDarkMode
-                ? [const Color(0xFF121212), const Color(0xFF1A2620), const Color(0xFF121212)] // Gradient đêm
-                : [const Color(0xFFE8F6EF), const Color(0xFFF4FAF5), Colors.white], // Gradient ngày
+                ? [const Color(0xFF121212), const Color(0xFF1A2620), const Color(0xFF121212)]
+                : [const Color(0xFFE8F6EF), const Color(0xFFF4FAF5), Colors.white],
             stops: const [0.0, 0.4, 1.0],
           ),
         ),
@@ -236,20 +213,18 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // --- LOGO & TIÊU ĐỀ ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.eco, color: titleColor, size: 30),
                       const SizedBox(width: 8),
-                      Text(
+                      const Text(
                         "LingoBloom",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: titleColor),
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F8A50)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 25),
-
                   Text(
                     isLogin ? "Chào mừng trở lại" : "Tạo tài khoản mới",
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textColor),
@@ -263,8 +238,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 14, color: subtitleColor, height: 1.5),
                   ),
                   const SizedBox(height: 30),
-
-                  // --- FORM INPUT ---
                   Container(
                     padding: const EdgeInsets.all(25),
                     decoration: BoxDecoration(
@@ -282,19 +255,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Họ tên (Chỉ Đăng ký)
                         if (!isLogin) ...[
                           _buildLabel("Họ tên", textColor),
                           _buildTextField(_nameController, "Đặng Thanh Vũ", Icons.person_outline, inputBgColor, textColor),
                           const SizedBox(height: 15),
                         ],
-
-                        // Email
                         _buildLabel("Email", textColor),
                         _buildTextField(_emailController, "name@example.com", Icons.email_outlined, inputBgColor, textColor),
                         const SizedBox(height: 15),
-
-                        // Mật khẩu
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -310,17 +278,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 5),
                         _buildPasswordField(_passwordController, "••••••••", inputBgColor, textColor),
                         const SizedBox(height: 15),
-
-                        // Xác nhận mật khẩu (Chỉ Đăng ký)
                         if (!isLogin) ...[
                           _buildLabel("Xác nhận", textColor),
                           _buildPasswordField(_confirmPasswordController, "••••••••", inputBgColor, textColor, isConfirm: true),
                           const SizedBox(height: 25),
                         ],
-
                         if (isLogin) const SizedBox(height: 10),
-
-                        // --- NÚT SUBMIT ---
                         SizedBox(
                           width: double.infinity,
                           height: 55,
@@ -344,8 +307,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
-                  // --- NÚT CHUYỂN ĐỔI FORM ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -370,8 +331,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  // Footer mờ ở dưới cùng
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -393,8 +352,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // --- CÁC HÀM TIỆN ÍCH VẼ GIAO DIỆN CON (Đã truyền thêm màu nền và màu chữ) ---
-
   Widget _buildLabel(String text, Color textColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 2),
@@ -407,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(15)),
       child: TextField(
         controller: controller,
-        style: TextStyle(color: textColor), // Đổi màu chữ khi gõ
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[500]),
@@ -425,7 +382,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: TextField(
         controller: controller,
         obscureText: _obscurePassword,
-        style: TextStyle(color: textColor), // Đổi màu chữ khi gõ
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[500]),

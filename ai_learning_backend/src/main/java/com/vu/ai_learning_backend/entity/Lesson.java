@@ -30,4 +30,12 @@ public class Lesson {
     private String username;
     private String quizType; // drag_drop, multiple_choice, fill_blank
     private int progress;    // 0 đến 100
+
+    @Column(columnDefinition = "TEXT")
+    private String content; // Nội dung bài đọc (AI tự soạn hoặc bóc tách từ PDF)
+
+    private String category; // Chuyên ngành (ví dụ: IT, Business) để nhóm theo lộ trình
+
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
+    private List<Vocabulary> vocabularies;
 }
