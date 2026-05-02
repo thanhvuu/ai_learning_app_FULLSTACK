@@ -40,7 +40,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.4
   file_picker: ^10.3.10
+  image_picker: ^1.0.7
   provider: ^6.1.5+1
+  translator: ^1.0.4+1
 
 dev_dependencies:
   flutter_test:

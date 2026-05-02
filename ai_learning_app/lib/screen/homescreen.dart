@@ -1,15 +1,18 @@
 import 'dart:io';
+import 'dart:async'; // Dùng cho chức năng delay dịch thuật
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:translator/translator.dart'; // Thư viện dịch thuật
 
 import '../api_config.dart';
+import '../providers/theme_provider.dart';
 import '../providers/quiz_provider.dart';
-import 'quiz_screen.dart';
 import 'discover_screen.dart';
 import '../models/question_model.dart';
 import 'drag_drop_quiz_screen.dart';
@@ -17,7 +20,6 @@ import 'multiple_choice_screen.dart';
 import 'fill_blank_screen.dart';
 import 'profile_screen.dart';
 import 'my_lessons_screen.dart';
-import 'major_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -29,67 +31,136 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // CẤU HÌNH ĐỊA CHỈ SERVER
   final String apiUrl = "${ApiConfig.lessons}/upload";
-
   int _selectedIndex = 0;
-
-  // Biến dữ liệu
   int _streak = 0;
   int _xp = 0;
 
+  // ==========================================
+  // BIẾN CHO CHỨC NĂNG DỊCH THUẬT
+  // ==========================================
+  final GoogleTranslator _translator = GoogleTranslator();
+  final TextEditingController _inputController = TextEditingController();
+  final TextEditingController _outputController = TextEditingController();
+  Timer? _debounce; // Biến để hẹn giờ dịch (gõ xong mới dịch)
+
+  String sourceLangName = "English";
+  String targetLangName = "Vietnamese";
+  String sourceLangCode = "en";
+  String targetLangCode = "vi";
+
+  final ImagePicker _picker = ImagePicker();
+  File? _selectedImage;
+
   @override
-  void initState(){
+  void initState() {
     super.initState();
     fetchUserData();
   }
 
-  // Hàm fetch api BE
-  Future<void> fetchUserData() async{
-    final String username = widget.username;
-    final String url = "${ApiConfig.users}/profile?username=$username";
-
-    try{
+  Future<void> fetchUserData() async {
+    final String url = "${ApiConfig.users}/profile?username=${widget.username}";
+    try {
       var response = await http.get(Uri.parse(url));
-      if(response.statusCode == 200){
+      if (response.statusCode == 200) {
         var data = jsonDecode(utf8.decode(response.bodyBytes));
-        setState(() {
-          _streak = data['streak'];
-          _xp = data['totalXp'];
-        });
+        if (mounted) {
+          setState(() {
+            _streak = data['streak'];
+            _xp = data['totalXp'];
+          });
+        }
       }
-    } catch(e){
+    } catch (e) {
       print('Lỗi lấy dữ liệu: $e');
     }
   }
 
-  // --- 1. HÀM CHỈ CHỌN FILE VÀ MỞ POPUP ---
-  Future<void> pickPDFAndChooseGame(BuildContext context) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
+  // --- HÀM DỊCH THUẬT TỰ ĐỘNG ---
+  void _onInputTextChanged(String text) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    if (result != null && result.files.single.path != null) {
-      File file = File(result.files.single.path!);
-      if (context.mounted) {
-        _showGameModeDialog(context, file);
+    // Đợi người dùng ngừng gõ 1 giây rồi mới dịch để đỡ lag
+    _debounce = Timer(const Duration(milliseconds: 1000), () async {
+      if (text.trim().isEmpty) {
+        setState(() => _outputController.text = "");
+        return;
       }
+      try {
+        var translation = await _translator.translate(text, from: sourceLangCode, to: targetLangCode);
+        setState(() {
+          _outputController.text = translation.text;
+        });
+      } catch (e) {
+        setState(() => _outputController.text = "Lỗi dịch thuật...");
+      }
+    });
+  }
+
+  // --- HÀM ĐẢO NGÔN NGỮ ---
+  void _swapLanguage() {
+    setState(() {
+      // Đảo tên
+      String tempName = sourceLangName;
+      sourceLangName = targetLangName;
+      targetLangName = tempName;
+      // Đảo mã code
+      String tempCode = sourceLangCode;
+      sourceLangCode = targetLangCode;
+      targetLangCode = tempCode;
+      // Đảo chữ
+      String tempText = _inputController.text;
+      _inputController.text = _outputController.text;
+      _outputController.text = tempText;
+    });
+    // Dịch lại sau khi đảo
+    if (_inputController.text.isNotEmpty) {
+      _onInputTextChanged(_inputController.text);
     }
   }
 
-  // --- 2. HÀM VẼ CÁI POPUP CHỌN TRÒ CHƠI ---
+  // --- MENU CHỌN ẢNH (GIAO DIỆN) ---
+  void _showImageSourceActionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: Color(0xFF0F8A50)),
+              title: const Text('Chụp ảnh mới'),
+              onTap: () { Navigator.pop(context); /* TODO: Gọi hàm OCR */ },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Color(0xFF0F8A50)),
+              title: const Text('Chọn từ thư viện'),
+              onTap: () { Navigator.pop(context); /* TODO: Gọi hàm OCR */ },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // CÁC HÀM UPLOAD PDF BÀI HỌC CŨ (GIỮ NGUYÊN)
+  // ==========================================
+  Future<void> pickPDFAndChooseGame(BuildContext context) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    if (result != null && result.files.single.path != null) {
+      File file = File(result.files.single.path!);
+      if (context.mounted) _showGameModeDialog(context, file);
+    }
+  }
+
   void _showGameModeDialog(BuildContext context, File file) {
     showDialog(
         context: context,
         builder: (BuildContext dialogContext) {
-          // Lấy cardColor để Popup cũng đổi màu theo Dark Mode
           final isDarkMode = Provider.of<ThemeProvider>(dialogContext, listen: false).isDarkMode;
-          final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
-          final textColor = isDarkMode ? Colors.white : Colors.black87;
-
           return AlertDialog(
-            backgroundColor: cardColor,
+            backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Text("Chọn chế độ học", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
             content: Column(
@@ -97,12 +168,11 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Text("AI sẽ thiết kế bài học theo cách bạn muốn!", style: TextStyle(color: Colors.grey, fontSize: 13), textAlign: TextAlign.center),
                 const SizedBox(height: 20),
-
-                _buildGameOption(dialogContext, file, "Kéo thả từ vựng", Icons.drag_indicator, "drag_drop", isDarkMode, textColor),
+                _buildGameOption(dialogContext, file, "Kéo thả từ vựng", Icons.drag_indicator, "drag_drop", isDarkMode),
                 const SizedBox(height: 10),
-                _buildGameOption(dialogContext, file, "Trắc nghiệm (A,B,C,D)", Icons.list_alt, "multiple_choice", isDarkMode, textColor),
+                _buildGameOption(dialogContext, file, "Trắc nghiệm", Icons.list_alt, "multiple_choice", isDarkMode),
                 const SizedBox(height: 10),
-                _buildGameOption(dialogContext, file, "Bài đục lỗ (Tự gõ)", Icons.keyboard, "fill_blank", isDarkMode, textColor),
+                _buildGameOption(dialogContext, file, "Bài đục lỗ", Icons.keyboard, "fill_blank", isDarkMode),
               ],
             ),
           );
@@ -110,8 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Giao diện của từng nút bấm trong Popup
-  Widget _buildGameOption(BuildContext dialogContext, File file, String title, IconData icon, String quizType, bool isDarkMode, Color textColor) {
+  Widget _buildGameOption(BuildContext dialogContext, File file, String title, IconData icon, String quizType, bool isDarkMode) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -123,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: Colors.green[200]!, width: 1)),
         ),
         icon: Icon(icon),
-        label: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+        label: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDarkMode ? Colors.white : Colors.black87)),
         onPressed: () {
           Navigator.pop(dialogContext);
           uploadFileAndGetQuiz(context, file, quizType);
@@ -132,7 +201,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 3. HÀM GỬI API CÓ KÈM THEO LOẠI TRÒ CHƠI ---
   Future<void> uploadFileAndGetQuiz(BuildContext context, File file, String quizType) async {
     showDialog(
       context: context, barrierDismissible: false,
@@ -149,7 +217,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
       if (context.mounted) Navigator.pop(context);
 
       if (response.statusCode == 200) {
@@ -158,23 +225,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (questionsJson.isNotEmpty && context.mounted) {
           List<QuestionModel> generatedQuestions = questionsJson.map((q) => QuestionModel.fromJson(q)).toList();
-
-          if (quizType == "drag_drop") {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => DragDropQuizScreen(questions: generatedQuestions))).then((_) => fetchUserData());
-          } else if (quizType == "multiple_choice") {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => MultipleChoiceScreen(questions: generatedQuestions))).then((_) => fetchUserData());
-          } else if (quizType == "fill_blank") {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => FillBlankScreen(questions: generatedQuestions))).then((_) => fetchUserData());
-          }
+          if (quizType == "drag_drop") Navigator.push(context, MaterialPageRoute(builder: (_) => DragDropQuizScreen(questions: generatedQuestions))).then((_) => fetchUserData());
+          else if (quizType == "multiple_choice") Navigator.push(context, MaterialPageRoute(builder: (_) => MultipleChoiceScreen(questions: generatedQuestions))).then((_) => fetchUserData());
+          else if (quizType == "fill_blank") Navigator.push(context, MaterialPageRoute(builder: (_) => FillBlankScreen(questions: generatedQuestions))).then((_) => fetchUserData());
         }
       } else {
         if (context.mounted) _showError(context, "Lỗi server: ${response.statusCode}");
       }
     } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context);
-        _showError(context, "Lỗi kết nối: $e");
-      }
+      if (context.mounted) { Navigator.pop(context); _showError(context, "Lỗi kết nối: $e"); }
     }
   }
 
@@ -184,157 +243,171 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Lắng nghe trạng thái Sáng/Tối
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
 
-    // 2. Các màu sắc tự biến đổi theo giao diện
-    final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
+    // MÀU SẮC CHUẨN THEO THIẾT KẾ LUMINA AI
+    final Color bgColor = isDarkMode ? const Color(0xFF121212) : const Color(0xFFF0F7F4);
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
-    final Color bottomNavColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white; // Màu nền thanh menu dưới
-
-    // 3. Khai báo lại 2 biến màu xanh bị thiếu
-    const Color darkGreen = Color(0xFF0F8A50);
-    const Color lightGreen = Color(0xFF18C070);
+    final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color inputBgColor = isDarkMode ? Colors.grey[800]! : const Color(0xFFF4F8F5);
+    const Color primaryGreen = Color(0xFF0F8A50);
 
     return Scaffold(
       backgroundColor: bgColor,
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          // --- TAB 0: HOME ---
+          // --- TAB 0: HOME (GIAO DIỆN LUMINA AI) ---
           SafeArea(
-            child: Column(
-              children: [
-                // APP BAR CUSTOM
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Colors.blueAccent,
-                            child: Icon(Icons.person, color: Colors.white),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'AI Learning App',
-                                // DÙNG TEXTCOLOR Ở ĐÂY
-                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                              ),
-                              Text(
-                                'Tổng điểm: $_xp XP',
-                                // ĐỔI MÀU NHẸ LẠI CHO HỢP DARK MODE
-                                style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.green[300] : Colors.green[700], fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.green.withOpacity(0.2) : Colors.green[50],
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  "$_streak",
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: isDarkMode ? Colors.greenAccent : Colors.green[800]),
-                                ),
-                                const SizedBox(width: 4),
-                                const Text("🔥", style: TextStyle(fontSize: 16)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Icon(Icons.notifications, color: isDarkMode ? Colors.grey[300] : Colors.grey[800]),
-                        ],
-                      )
-                    ],
-                  ),
-                ),
-
-                // THẺ CARD Ở GIỮA
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [darkGreen, lightGreen],
-                        ),
-                        boxShadow: [
-                          BoxShadow(color: lightGreen.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(30.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. APP BAR
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
                           children: [
-                            const Text(
-                              "Transform any PDF\ninto an\nInteractive\nLesson.",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2),
+                            CircleAvatar(
+                              backgroundColor: isDarkMode ? Colors.grey[700] : const Color(0xFF1B2A22),
+                              radius: 18,
+                              child: const Icon(Icons.person, color: Colors.white, size: 20),
                             ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              "Our AI analyzes your\ndocuments to create\npersonalized vocabulary,\nquizzes, and speaking\nexercises.",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16, color: Colors.white, height: 1.5),
-                            ),
-                            const SizedBox(height: 40),
-
-                            SizedBox(
-                              width: double.infinity,
-                              height: 60,
-                              child: ElevatedButton.icon(
-                                onPressed: () => pickPDFAndChooseGame(context),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: darkGreen,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                  elevation: 0,
-                                ),
-                                icon: const Icon(Icons.upload_file),
-                                label: const Text('Upload PDF & Create\nLesson', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              ),
-                            ),
+                            const SizedBox(width: 12),
+                            Text('AI Learning App', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: textColor)),
                           ],
                         ),
+                      ],
+                    ),
+                  ),
+
+                  // 2. KHỐI TRANSLATE
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cardColor, borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.grey.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))],
+                    ),
+                    child: Column(
+                      children: [
+                        // Đổi ngôn ngữ
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(child: Text(sourceLangName, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, color: primaryGreen, fontSize: 15))),
+                            IconButton(icon: const Icon(Icons.swap_horiz, color: primaryGreen), onPressed: _swapLanguage),
+                            Expanded(child: Text(targetLangName, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 15))),
+                          ],
+                        ),
+                        Divider(height: 20, color: isDarkMode ? Colors.grey[700] : Colors.grey[200]),
+
+                        // Khung nhập văn bản
+                        Container(
+                          decoration: BoxDecoration(color: inputBgColor, borderRadius: BorderRadius.circular(15)),
+                          padding: const EdgeInsets.all(15),
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _inputController,
+                                maxLines: 3,
+                                onChanged: _onInputTextChanged, // Gọi hàm dịch khi gõ
+                                style: TextStyle(color: textColor, fontSize: 16),
+                                decoration: InputDecoration(hintText: "Enter text to translate...", hintStyle: TextStyle(color: Colors.grey[400]), border: InputBorder.none),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(icon: Icon(Icons.camera_alt_outlined, color: Colors.grey[600], size: 20), onPressed: () => _showImageSourceActionSheet(context)),
+                                  IconButton(icon: Icon(Icons.mic_none, color: Colors.grey[600], size: 20), onPressed: () {}),
+                                ],
+                              )
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Khung hiển thị kết quả
+                        Container(
+                          decoration: BoxDecoration(color: inputBgColor, borderRadius: BorderRadius.circular(15)),
+                          padding: const EdgeInsets.all(15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: _outputController,
+                                maxLines: 3,
+                                readOnly: true,
+                                style: TextStyle(fontStyle: FontStyle.italic, color: textColor, fontSize: 16),
+                                decoration: InputDecoration(hintText: "Translation will appear here...", hintStyle: TextStyle(color: Colors.grey[400], fontStyle: FontStyle.italic), border: InputBorder.none),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(icon: Icon(Icons.camera_alt_outlined, color: Colors.grey[600], size: 20), onPressed: () {}),
+                                  IconButton(icon: Icon(Icons.copy, color: Colors.grey[600], size: 20), onPressed: () {}),
+                                  IconButton(icon: Icon(Icons.volume_up_outlined, color: Colors.grey[600], size: 20), onPressed: () {}),
+                                ],
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 35),
+
+                  // 3. KHỐI STUDY MATERIALS (UPLOAD PDF)
+                  Text("Study Materials", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                  const SizedBox(height: 15),
+
+                  DottedBorder(
+                    color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                    strokeWidth: 2, dashPattern: const [8, 6],
+                    borderType: BorderType.RRect, radius: const Radius.circular(20),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(30),
+                      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        children: [
+                          CircleAvatar(radius: 25, backgroundColor: inputBgColor, child: const Icon(Icons.upload_file, size: 25, color: primaryGreen)),
+                          const SizedBox(height: 15),
+                          Text("Upload PDF Document", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Upload your lecture notes or readings\nto generate smart summaries and\nflashcards.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.5),
+                          ),
+                          const SizedBox(height: 25),
+
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryGreen,
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                            ),
+                            onPressed: () => pickPDFAndChooseGame(context),
+                            child: const Text("Select File", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          )
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           ),
 
-          // --- TAB 1: My Lessons ---
+          // --- CÁC TAB CÒN LẠI GIỮ NGUYÊN ---
           MyLessonsScreen(username: widget.username),
-
-          // --- TAB 2: Discover ---
           const DiscoverScreen(),
-
-          // --- TAB 3: Profile ---
-          ProfileScreen(
-            username: widget.username,
-            xp: _xp,
-            streak: _streak,
-          ),
+          ProfileScreen(username: widget.username, xp: _xp, streak: _streak),
         ],
       ),
 
@@ -342,60 +415,36 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(top: 15, bottom: 25, left: 10, right: 10),
         decoration: BoxDecoration(
-          color: bottomNavColor, // DÙNG MÀU ĐỘNG Ở ĐÂY
+          color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          boxShadow: [
-            BoxShadow(
-                color: isDarkMode ? Colors.black54 : Colors.black12, // Đổi bóng cho phù hợp ban đêm
-                blurRadius: 10
-            )
-          ],
+          boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.black12, blurRadius: 10)],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(Icons.home_filled, "Home", 0, lightGreen, isDarkMode),
-            _buildNavItem(Icons.menu_book_rounded, "My Lessons", 1, lightGreen, isDarkMode),
-            _buildNavItem(Icons.explore, "Discover", 2, lightGreen, isDarkMode),
-            _buildNavItem(Icons.person, "Profile", 3, lightGreen, isDarkMode),
+            _buildNavItem(Icons.home_filled, "Home", 0, primaryGreen, isDarkMode),
+            _buildNavItem(Icons.menu_book_rounded, "Lessons", 1, primaryGreen, isDarkMode),
+            _buildNavItem(Icons.explore, "Discover", 2, primaryGreen, isDarkMode),
+            _buildNavItem(Icons.person, "Profile", 3, primaryGreen, isDarkMode),
           ],
         ),
       ),
     );
   }
 
-  // Hàm hỗ trợ vẽ nút bấm ở thanh Bottom Navigation
   Widget _buildNavItem(IconData icon, String label, int index, Color activeColor, bool isDarkMode) {
     bool isActive = _selectedIndex == index;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
+      onTap: () => setState(() => _selectedIndex = index),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor.withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: BoxDecoration(color: isActive ? activeColor.withOpacity(0.15) : Colors.transparent, borderRadius: BorderRadius.circular(20)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isActive ? activeColor : (isDarkMode ? Colors.grey[400] : Colors.grey[500]),
-              size: 28,
-            ),
+            Icon(icon, color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[400]), size: 26),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? activeColor : (isDarkMode ? Colors.grey[400] : Colors.grey[500]),
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.w600, color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[400]))),
           ],
         ),
       ),
