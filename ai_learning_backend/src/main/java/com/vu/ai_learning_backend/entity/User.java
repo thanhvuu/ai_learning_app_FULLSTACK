@@ -22,6 +22,10 @@ public class User {
     private int lives = 5;
     private int totalXp = 0;
 
+    // THÊM DÒNG NÀY: Lưu số lượng cây từ vựng đã tưới (Mặc định là 0)
+    @Column(name = "watered_plants")
+    private int wateredPlants = 0;
+
     @Column(name =  "last_study_date")
     private LocalDate lastStudyDate;
 }

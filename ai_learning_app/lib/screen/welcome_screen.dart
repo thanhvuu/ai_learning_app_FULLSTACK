@@ -47,14 +47,14 @@ class WelcomeScreen extends StatelessWidget {
 
             // LOGO (Có thêm errorBuilder để không bị lỗi đỏ màn hình nếu chưa có ảnh)
             Image.asset(
-              'assets/logo.png',
+              'assets/image/logo.png',
               height: 120,
               errorBuilder: (context, error, stackTrace) => Icon(Icons.school, size: 100, color: primaryColor), // Icon dự phòng
             ),
 
             const SizedBox(height: 20),
             Text(
-              "LingoBloom", // Hoặc "ai_learning_app"
+              "AI Learning App", // Hoặc "ai_learning_app"
               style: TextStyle(color: primaryColor, fontSize: 32, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),

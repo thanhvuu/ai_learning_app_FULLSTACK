@@ -27,7 +27,7 @@ public class AiService {
     }
 
     /**
-     * Hàm mới: Tự tạo nội dung và câu hỏi theo chuyên ngành (Topic)
+     * Hàm cũ: Tự tạo nội dung và câu hỏi theo chuyên ngành (Topic)
      */
     public String generateLessonByTopic(String topic, String quizType) {
         return callGemini(null, quizType, topic);
@@ -92,6 +92,52 @@ public class AiService {
         } catch (Exception e) {
             e.printStackTrace();
             return "{\"content\": \"\", \"vocabularies\": [], \"questions\": []}";
+        }
+    }
+
+    // =========================================================================
+    // HÀM MỚI BỔ SUNG: TRA CỨU TỪ ĐIỂN VỚI AI (Mô phỏng TFlat)
+    // =========================================================================
+    public String lookupDictionary(String word) {
+        String urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+
+        String prompt = "Hãy đóng vai một từ điển tiếng Anh - tiếng Việt chuyên nghiệp. " +
+                "Tôi sẽ đưa cho bạn một từ hoặc cụm từ: '" + word + "'. " +
+                "Nhiệm vụ của bạn là CHỈ TRẢ VỀ ĐÚNG MỘT ĐỐI TƯỢNG JSON ĐƠN NHẤT theo cấu trúc dưới đây. " +
+                "TUYỆT ĐỐI KHÔNG giải thích, KHÔNG nói thêm bất cứ câu chữ nào bên ngoài JSON, KHÔNG dùng thẻ markdown.\n\n" +
+                "{\n" +
+                "  \"word\": \"(từ tiếng Anh đó)\",\n" +
+                "  \"phonetic\": \"(phiên âm quốc tế IPA)\",\n" +
+                "  \"partOfSpeech\": \"(Loại từ: Danh từ, Động từ, Tính từ...)\",\n" +
+                "  \"meaning\": \"(Nghĩa tiếng Việt ngắn gọn, dễ hiểu)\",\n" +
+                "  \"synonyms\": [\"(từ đồng nghĩa 1)\", \"(từ đồng nghĩa 2)\", \"(từ đồng nghĩa 3)\"],\n" +
+                "  \"antonyms\": [\"(từ trái nghĩa 1)\", \"(từ trái nghĩa 2)\"],\n" +
+                "  \"examples\": [\n" +
+                "    {\"en\": \"(Câu ví dụ tiếng Anh 1)\", \"vn\": \"(Nghĩa tiếng Việt của câu 1)\"},\n" +
+                "    {\"en\": \"(Câu ví dụ tiếng Anh 2)\", \"vn\": \"(Nghĩa tiếng Việt của câu 2)\"}\n" +
+                "  ]\n" +
+                "}";
+
+        Map<String, Object> requestBody = Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))));
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+            URI uri = URI.create(urlString);
+            String rawResponse = restTemplate.postForObject(uri, request, String.class);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(rawResponse);
+            String resultText = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+
+            // Dọn dẹp chuỗi JSON đề phòng Gemini tự thêm ký hiệu markdown (```json ... ```)
+            return resultText.replace("```json\n", "").replace("```json", "").replace("```", "").trim();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Nếu lỗi, trả về JSON rỗng để App Flutter không bị crash
+            return "{\"word\": \"" + word + "\", \"phonetic\": \"\", \"partOfSpeech\": \"\", \"meaning\": \"Không tìm thấy từ này hoặc lỗi server.\", \"synonyms\": [], \"antonyms\": [], \"examples\": []}";
         }
     }
 }

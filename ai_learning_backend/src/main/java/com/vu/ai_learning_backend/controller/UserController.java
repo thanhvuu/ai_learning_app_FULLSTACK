@@ -27,7 +27,7 @@ public class UserController {
     }
 
     // =======================================================
-    // 2 API MỚI VỪA ĐƯỢC THÊM VÀO ĐÂY NÈ (THAY THẾ CHO API 2 CŨ)
+    // API: ĐĂNG KÝ VÀ ĐĂNG NHẬP
     // =======================================================
 
     // API: ĐĂNG KÝ TÀI KHOẢN MỚI (MÃ HÓA)
@@ -66,8 +66,32 @@ public class UserController {
     }
 
     // =======================================================
-    // CÁC API CŨ BÊN DƯỚI GIỮ NGUYÊN HOÀN TOÀN
+    // API: CẬP NHẬT TIẾN ĐỘ HỌC TẬP VÀ VƯỜN ƯƠM
     // =======================================================
+
+    // API MỚI: CẬP NHẬT SỐ CÂY ĐÃ TƯỚI TỪ FLUTTER GỬI LÊN
+    @PostMapping("/update-plants")
+    public ResponseEntity<?> updateWateredPlants(@RequestParam String username, @RequestParam int plants) {
+        User user = userRepository.findByUsername(username).orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body("Không tìm thấy người dùng!");
+        }
+
+        // 1. Cộng dồn số cây đã tưới
+        user.setWateredPlants(user.getWateredPlants() + plants);
+
+        // 2. Thưởng thêm XP cho mỗi cây (Ví dụ: 5 XP cho 1 cây)
+        user.setTotalXp(user.getTotalXp() + (plants * 5));
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Đã tưới " + plants + " cây thành công!",
+                "totalXp", user.getTotalXp(),
+                "wateredPlants", user.getWateredPlants()
+        ));
+    }
 
     @PutMapping("/update-progress")
     public ResponseEntity<?> updateProgress(@RequestParam String username) {
@@ -106,7 +130,7 @@ public class UserController {
         ));
     }
 
-    // API 3: Lấy thông tin cá nhân (XP, Streak) để hiển thị lên Home
+    // API 3: Lấy thông tin cá nhân (XP, Streak, WateredPlants) để hiển thị lên Home
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(@RequestParam String username) {
         User user = userRepository.findByUsername(username).orElse(null);
@@ -117,7 +141,8 @@ public class UserController {
 
         return ResponseEntity.ok(Map.of(
                 "totalXp", user.getTotalXp(),
-                "streak", user.getStreak()
+                "streak", user.getStreak(),
+                "wateredPlants", user.getWateredPlants() // Trả về thêm số cây để hiển thị nếu cần
         ));
     }
 

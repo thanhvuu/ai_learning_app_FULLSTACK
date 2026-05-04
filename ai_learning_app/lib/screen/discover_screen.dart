@@ -6,7 +6,11 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 
 class DiscoverScreen extends StatefulWidget {
-  const DiscoverScreen({super.key});
+  // 1. KHAI BÁO THÊM BIẾN USERNAME Ở ĐÂY
+  final String username;
+
+  // 2. BẮT BUỘC TRUYỀN USERNAME KHI MỞ MÀN HÌNH NÀY
+  const DiscoverScreen({super.key, required this.username});
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -15,7 +19,6 @@ class DiscoverScreen extends StatefulWidget {
 class _DiscoverScreenState extends State<DiscoverScreen> {
   List<dynamic> leaderboard = [];
   bool isLoading = true;
-  final String currentUsername = "Đặng Thanh Vũ";
 
   @override
   void initState() {
@@ -99,12 +102,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          user['username'],
+          user['username'] ?? "Unknown",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
         ),
-        Text(
-          "${user['totalXp']} XP",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[500], fontSize: 13),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "${user['totalXp']} XP",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[500], fontSize: 13),
+            ),
+            const SizedBox(width: 4),
+            const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
+            const SizedBox(width: 4),
+            Text(
+              "${user['wateredPlants'] ?? 0} 🌱",
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F8A50), fontSize: 13),
+            ),
+          ],
         ),
       ],
     );
@@ -112,9 +127,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int myIndex = leaderboard.indexWhere((u) => u['username'] == currentUsername);
+    // 3. SỬA LẠI ĐỂ LẤY TÊN TỪ WIDGET TRUYỀN VÀO (thay vì gán cứng Đặng Thanh Vũ)
+    int myIndex = leaderboard.indexWhere((u) => u['username'] == widget.username);
     int myRank = myIndex >= 0 ? myIndex + 1 : 0;
     int myXp = myIndex >= 0 ? leaderboard[myIndex]['totalXp'] : 0;
+    int myWateredPlants = myIndex >= 0 ? (leaderboard[myIndex]['wateredPlants'] ?? 0) : 0;
+
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
@@ -181,11 +199,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       const CircleAvatar(radius: 20, backgroundColor: Colors.blueGrey, child: Icon(Icons.person, color: Colors.white, size: 20)),
                       const SizedBox(width: 15),
                       Expanded(
-                        child: Text(user['username'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+                        child: Text(user['username'] ?? "Unknown", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                       ),
-                      Text("${user['totalXp']} XP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor)),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("${user['totalXp']} XP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                          const SizedBox(width: 6),
+                          const Text("•", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          const SizedBox(width: 6),
+                          Text("${user['wateredPlants'] ?? 0} 🌱", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F8A50))),
+                        ],
+                      ),
                       const SizedBox(width: 10),
-                      const Icon(Icons.keyboard_arrow_up, color: Colors.green),
+                      const Icon(Icons.keyboard_arrow_up, color: Colors.green, size: 20),
                     ],
                   ),
                 );
@@ -221,7 +248,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10, letterSpacing: 1.2),
                       ),
                       Text(
-                        currentUsername,
+                        widget.username, // 4. HIỂN THỊ TÊN THẬT Ở ĐÂY
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
@@ -230,10 +257,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text("Cần nỗ lực hơn", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
-                    Text(
-                      "$myXp XP",
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                    Text(myRank == 1 ? "Bạn đang Dẫn đầu!" : "Cần nỗ lực hơn", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "$myXp XP",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(width: 5),
+                        Text("•", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)),
+                        const SizedBox(width: 5),
+                        Text(
+                          "$myWateredPlants 🌱",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ],
                     ),
                   ],
                 ),
