@@ -19,7 +19,6 @@ import '../providers/language_provider.dart';
 import '../l10n/app_localizations.dart';
 // import '../providers/quiz_provider.dart'; // Mở lại nếu có dùng
 import 'discover_screen.dart';
-import 'chat_screen.dart';
 import '../models/question_model.dart';
 import 'drag_drop_quiz_screen.dart';
 import 'multiple_choice_screen.dart';
@@ -29,11 +28,13 @@ import 'my_lessons_screen.dart';
 import '../widgets/dictionary_bottom_sheet.dart';
 import '../services/dictionary_helper.dart';
 import 'vocabulary_garden_screen.dart'; // Thêm dòng này
+import 'roadmap_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
+  final String? major; // Thêm trường major
 
-  const HomeScreen({super.key, required this.username});
+  const HomeScreen({super.key, required this.username, this.major});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -562,7 +563,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // --- CÁC TAB CÒN LẠI ---
           MyLessonsScreen(username: widget.username),
-          ChatScreen(username: widget.username),
           DiscoverScreen(username: widget.username),
           ProfileScreen(username: widget.username, xp: _xp, streak: _streak),
         ],
@@ -583,10 +583,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildNavItem(Icons.home_rounded, Icons.home_outlined, "Home", 0, primaryGreen, isDarkMode),
                 _buildNavItem(Icons.menu_book_rounded, Icons.menu_book_outlined, "Lessons", 1, primaryGreen, isDarkMode),
-                // === NÚT TRUNG TÂM NỔI BẬT ===
-                _buildCenterNavItem(primaryGreen, isDarkMode),
-                _buildNavItem(Icons.explore_rounded, Icons.explore_outlined, "Discover", 3, primaryGreen, isDarkMode),
-                _buildNavItem(Icons.person_rounded, Icons.person_outline_rounded, "Profile", 4, primaryGreen, isDarkMode),
+                _buildNavItem(Icons.explore_rounded, Icons.explore_outlined, "Discover", 2, primaryGreen, isDarkMode),
+                _buildNavItem(Icons.person_rounded, Icons.person_outline_rounded, "Profile", 3, primaryGreen, isDarkMode),
               ],
             ),
           ),
@@ -672,46 +670,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // === NÚT TRUNG TÂM (AI CHAT) — NỔI LÊN PHÍA TRÊN ===
-  Widget _buildCenterNavItem(Color activeColor, bool isDarkMode) {
-    bool isActive = _selectedIndex == 2;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = 2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Transform.translate(
-            offset: const Offset(0, -18),
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: isActive ? activeColor : (isDarkMode ? const Color(0xFF2A6B4A) : const Color(0xFF0F8A50)),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(color: activeColor.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
-                ],
-                border: Border.all(color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white, width: 3),
-              ),
-              child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 28),
-            ),
-          ),
-          Transform.translate(
-            offset: const Offset(0, -12),
-            child: Text(
-              "AI Chat",
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
-              ),
             ),
           ),
         ],

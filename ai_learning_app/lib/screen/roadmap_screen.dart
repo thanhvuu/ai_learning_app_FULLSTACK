@@ -29,15 +29,41 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   Future<void> fetchRoadmap() async {
     try {
-      final response = await http.get(Uri.parse("${ApiConfig.lessons}/roadmap?major=${widget.major}"));
+      // Sử dụng cách xây dựng URI an toàn hơn để xử lý khoảng trắng và ký tự đặc biệt
+      final String path = "/api/lessons/roadmap";
+      final String fullUrl = "${ApiConfig.baseUrl}$path?major=${Uri.encodeComponent(widget.major)}";
+      
+      final response = await http.get(
+        Uri.parse(fullUrl),
+      ).timeout(const Duration(seconds: 15)); // Tăng lên 15 giây cho chắc chắn
+
       if (response.statusCode == 200) {
-        setState(() {
-          steps = List<String>.from(jsonDecode(utf8.decode(response.bodyBytes)));
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            steps = List<String>.from(jsonDecode(utf8.decode(response.bodyBytes)));
+            isLoading = false;
+          });
+        }
+      } else {
+        _handleFetchError("Lỗi server (${response.statusCode})");
       }
     } catch (e) {
-      print("Error fetching roadmap: $e");
+      _handleFetchError("Lỗi kết nối: Hãy kiểm tra IP Backend của bạn");
+      print("Roadmap Error: $e");
+    }
+  }
+
+  void _handleFetchError(String message) {
+    if (mounted) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message), 
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5), // Hiện lâu hơn để người dùng kịp đọc
+        ),
+      );
+      // Không tự động pop ngay lập tức để người dùng biết chuyện gì đang xảy ra
     }
   }
 

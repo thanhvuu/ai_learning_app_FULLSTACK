@@ -100,11 +100,6 @@ class AppLocalizations {
       'get_started': 'BẮT ĐẦU NGAY',
       'have_account': 'TÔI ĐÃ CÓ TÀI KHOẢN',
 
-      // --- Chat Screen ---
-      'chat_title': 'Trợ lý AI',
-      'chat_hint': 'Hỏi AI về tiếng Anh...',
-      'server_error': 'Lỗi kết nối server',
-
       // --- Discover Screen ---
       'leaderboard': 'Bảng xếp hạng',
       'season': 'Mùa',
@@ -209,11 +204,6 @@ class AppLocalizations {
       'learn_free': 'Learn for free. Forever.',
       'get_started': 'GET STARTED',
       'have_account': 'I ALREADY HAVE AN ACCOUNT',
-
-      // --- Chat Screen ---
-      'chat_title': 'AI Assistant',
-      'chat_hint': 'Ask AI about English...',
-      'server_error': 'Server connection error',
 
       // --- Discover Screen ---
       'leaderboard': 'Leaderboard',

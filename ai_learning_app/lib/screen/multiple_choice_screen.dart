@@ -170,7 +170,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                     Color borderColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
                     Color optionTextColor = textColor;
                     if (hasChecked) {
-                      if (option == currentQ.correctAnswer) { btnColor = isDarkMode ? Colors.green[900]! : Colors.green[100]!; borderColor = Colors.green; optionTextColor = isDarkMode ? Colors.white : Colors.green[900]!; }
+                      if (option.trim() == currentQ.correctAnswer.trim()) { btnColor = isDarkMode ? Colors.green[900]! : Colors.green[100]!; borderColor = Colors.green; optionTextColor = isDarkMode ? Colors.white : Colors.green[900]!; }
                       else if (isSelected) { btnColor = isDarkMode ? Colors.red[900]! : Colors.red[100]!; borderColor = Colors.red; optionTextColor = isDarkMode ? Colors.white : Colors.red[900]!; }
                     } else if (isSelected) { btnColor = isDarkMode ? Colors.green[900]!.withOpacity(0.5) : Colors.green[50]!; borderColor = Colors.green; optionTextColor = Colors.green; }
                     return GestureDetector(
@@ -189,9 +189,9 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                      color: selectedAnswer == currentQ.correctAnswer ? (isDarkMode ? Colors.green[900] : Colors.green[50]) : (isDarkMode ? Colors.red[900] : Colors.red[50]),
+                      color: selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.green[900] : Colors.green[50]) : (isDarkMode ? Colors.red[900] : Colors.red[50]),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: selectedAnswer == currentQ.correctAnswer ? Colors.green : Colors.red, width: 2)
+                      border: Border.all(color: selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? Colors.green : Colors.red, width: 2)
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,15 +199,15 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                       Row(
                         children: [
                           Icon(
-                            selectedAnswer == currentQ.correctAnswer ? Icons.check_circle : Icons.cancel,
-                            color: selectedAnswer == currentQ.correctAnswer ? (isDarkMode ? Colors.greenAccent : Colors.green) : (isDarkMode ? Colors.redAccent : Colors.red),
+                            selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? Icons.check_circle : Icons.cancel,
+                            color: selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.greenAccent : Colors.green) : (isDarkMode ? Colors.redAccent : Colors.red),
                             size: 30,
                           ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: Text(
-                              selectedAnswer == currentQ.correctAnswer ? "Tuyệt vời!" : "Sai rồi. Đáp án đúng là: ${currentQ.correctAnswer}",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: selectedAnswer == currentQ.correctAnswer ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800])),
+                              selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? "Tuyệt vời!" : "Sai rồi. Đáp án đúng là: ${currentQ.correctAnswer}",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800])),
                             ),
                           )
                         ],
@@ -240,7 +240,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                     } else {
                       setState(() {
                         hasChecked = true;
-                        if (selectedAnswer != currentQ.correctAnswer) {
+                        if (selectedAnswer?.trim() != currentQ.correctAnswer.trim()) {
                           hearts--;
                           if (hearts == 0) _showGameOverDialog();
                         }
@@ -248,7 +248,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: hasChecked && selectedAnswer == currentQ.correctAnswer ? Colors.green : (hasChecked && selectedAnswer != currentQ.correctAnswer && hearts > 0 ? Colors.red : const Color(0xFF0F8A50)),
+                    backgroundColor: hasChecked && selectedAnswer?.trim() == currentQ.correctAnswer.trim() ? Colors.green : (hasChecked && selectedAnswer?.trim() != currentQ.correctAnswer.trim() && hearts > 0 ? Colors.red : const Color(0xFF0F8A50)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), disabledBackgroundColor: Colors.grey[300],
                   ),
                   child: Text(hasChecked ? "TIẾP TỤC" : "KIỂM TRA", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: selectedAnswer == null ? Colors.grey[500] : Colors.white)),

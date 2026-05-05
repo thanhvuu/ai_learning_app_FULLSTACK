@@ -55,7 +55,7 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     setState(() {
       hasChecked = true;
       // Nếu chọn sai thì trừ tim
-      if (droppedWord != widget.questions[currentIndex].correctAnswer) {
+      if (droppedWord?.trim() != widget.questions[currentIndex].correctAnswer.trim()) {
         hearts--;
         if (hearts == 0) {
           _showGameOverDialog();
@@ -246,15 +246,15 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
                 Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                        color: droppedWord == currentQ.correctAnswer ? (isDarkMode ? Colors.green[900] : Colors.green[100]) : (isDarkMode ? Colors.red[900] : Colors.red[100]),
+                        color: droppedWord?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.green[900] : Colors.green[100]) : (isDarkMode ? Colors.red[900] : Colors.red[100]),
                         borderRadius: BorderRadius.circular(15)
                     ),
                     child: Column(
                         children: [
                           Text(
-                              droppedWord == currentQ.correctAnswer ? "Chính xác!" : "Sai rồi! Đáp án đúng: ${currentQ.correctAnswer}",
+                              droppedWord?.trim() == currentQ.correctAnswer.trim() ? "Chính xác!" : "Sai rồi! Đáp án đúng: ${currentQ.correctAnswer}",
                               style: TextStyle(
-                                  color: droppedWord == currentQ.correctAnswer ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800]),
+                                  color: droppedWord?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800]),
                                   fontWeight: FontWeight.bold, fontSize: 16
                               )
                           ),

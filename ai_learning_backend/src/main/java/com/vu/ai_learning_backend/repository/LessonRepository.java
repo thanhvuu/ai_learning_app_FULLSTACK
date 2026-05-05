@@ -10,4 +10,7 @@ import java.util.List;
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
     // Hàm "thần thánh" tự động tìm bài học theo tên user và sắp xếp mới nhất lên đầu
     List<Lesson> findByUsernameOrderByCreatedAtDesc(String username);
+
+    // Tìm bài học đầu tiên khớp với category (Dùng cho Caching)
+    Lesson findFirstByCategory(String category);
 }

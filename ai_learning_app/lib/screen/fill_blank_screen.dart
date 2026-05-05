@@ -53,7 +53,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
 
   void _checkAnswer() {
     String userAnswer = _answerController.text.trim().toLowerCase();
-    String correctAnswer = widget.questions[currentIndex].correctAnswer.toLowerCase();
+    String correctAnswer = widget.questions[currentIndex].correctAnswer.trim().toLowerCase();
 
     setState(() {
       hasChecked = true;
@@ -150,7 +150,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
   @override
   Widget build(BuildContext context) {
     QuestionModel currentQ = widget.questions[currentIndex];
-    bool isCorrect = _answerController.text.trim().toLowerCase() == currentQ.correctAnswer.toLowerCase();
+    bool isCorrect = _answerController.text.trim().toLowerCase() == currentQ.correctAnswer.trim().toLowerCase();
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;

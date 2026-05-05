@@ -52,7 +52,7 @@ class _MajorSelectionScreenState extends State<MajorSelectionScreen> {
                 return InkWell(
                   onTap: () {
                     Navigator.pushReplacement(context, MaterialPageRoute(
-                      builder: (_) => HomeScreen(username: widget.username),
+                      builder: (_) => HomeScreen(username: widget.username, major: major['name']),
                     ));
                   },
                   child: Container(
