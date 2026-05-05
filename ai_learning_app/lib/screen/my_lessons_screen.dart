@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../api_config.dart';
 import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/vocabulary_model.dart';
 import '../models/question_model.dart';
 import 'vocabulary_screen.dart';
@@ -101,10 +103,11 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
 
   // --- CÁC HÀM HỖ TRỢ LÀM ĐẸP GIAO DIỆN DỰA VÀO LOẠI BÀI HỌC ---
   String _getSubtitleForType(String type) {
-    if (type == 'drag_drop') return "Kéo thả từ vựng";
-    if (type == 'multiple_choice') return "Trắc nghiệm A,B,C,D";
-    if (type == 'fill_blank') return "Bài tập đục lỗ";
-    return "Tài liệu học tập";
+    final t = AppLocalizations(LanguageProvider.safeOf(context, listen: false).languageCode);
+    if (type == 'drag_drop') return t.translate('drag_drop_type');
+    if (type == 'multiple_choice') return t.translate('multiple_choice_type');
+    if (type == 'fill_blank') return t.translate('fill_blank_type');
+    return t.translate('study_material_type');
   }
 
   List<Color> _getGradientForType(String type) {
@@ -134,6 +137,8 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final langProvider = LanguageProvider.safeOf(context);
+    final t = AppLocalizations(langProvider.languageCode);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
     final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
@@ -145,7 +150,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent, elevation: 0,
 
-        title: const Text('My Lessons', style: TextStyle(fontWeight: FontWeight.bold, color: greenAccent, fontSize: 20)),
+        title: Text(t.translate('my_lessons'), style: const TextStyle(fontWeight: FontWeight.bold, color: greenAccent, fontSize: 20)),
         centerTitle: true,
         actions: [
           Padding(
@@ -166,14 +171,14 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Active Courses", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
-                TextButton(onPressed: () {}, child: const Text("View All", style: TextStyle(color: greenAccent, fontWeight: FontWeight.bold, fontSize: 14)))
+                Text(t.translate('active_courses'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                TextButton(onPressed: () {}, child: Text(t.translate('view_all'), style: const TextStyle(color: greenAccent, fontWeight: FontWeight.bold, fontSize: 14)))
               ],
             ),
             const SizedBox(height: 10),
 
             if (activeCourses.isEmpty)
-              Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text("Chưa có bài học nào. Hãy upload PDF nhé!", style: TextStyle(color: subtitleColor)))),
+              Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text(t.translate('no_lessons'), style: TextStyle(color: subtitleColor)))),
 
             ...activeCourses.map((course) => _buildCourseCard(course, cardColor, textColor, subtitleColor, greenAccent, isDarkMode)),
             const SizedBox(height: 20),
@@ -194,7 +199,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Daily Goal", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+              Text(S.of(context, 'daily_goal'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 5),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic,
@@ -212,7 +217,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                   children: [
                     Icon(Icons.auto_awesome, size: 16, color: isDarkMode ? Colors.deepPurpleAccent : Colors.deepPurple),
                     const SizedBox(width: 5),
-                    Text("$streakCount Day Streak", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDarkMode ? Colors.deepPurpleAccent : Colors.deepPurple)),
+                    Text("$streakCount ${S.of(context, 'day_streak')}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDarkMode ? Colors.deepPurpleAccent : Colors.deepPurple)),
                   ],
                 ),
               )
@@ -281,7 +286,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("PROGRESS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: textColor)),
+                Text(S.of(context, 'progress'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: textColor)),
                 Text("${(course['progress'] * 100).toInt()}%", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: greenAccent)),
               ],
             ),

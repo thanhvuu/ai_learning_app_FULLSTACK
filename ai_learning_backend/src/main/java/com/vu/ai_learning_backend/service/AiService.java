@@ -33,6 +33,37 @@ public class AiService {
         return callGemini(null, quizType, topic);
     }
 
+    /**
+     * Hàm mới: Chat với AI
+     */
+    public String chatWithAi(String message) {
+        String urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+
+        String prompt = "Bạn là một trợ lý ảo hỗ trợ học tiếng Anh thông minh. " +
+                "Hãy trả lời người dùng một cách thân thiện, ngắn gọn và hữu ích. " +
+                "Nếu người dùng hỏi về tiếng Anh, hãy giải thích chi tiết và đưa ra ví dụ. " +
+                "Nếu người dùng hỏi các vấn đề khác, hãy cố gắng hướng họ về việc học tiếng Anh. " +
+                "Tin nhắn từ người dùng: '" + message + "'";
+
+        Map<String, Object> requestBody = Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))));
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+            URI uri = URI.create(urlString);
+            String rawResponse = restTemplate.postForObject(uri, request, String.class);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(rawResponse);
+            return rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Xin lỗi, tôi đang gặp chút sự cố kết nối. Bạn hãy thử lại sau nhé!";
+        }
+    }
+
     private String callGemini(String pdfText, String quizType, String topic) {
         String urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 

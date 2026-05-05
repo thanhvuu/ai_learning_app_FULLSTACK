@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart'; // <--- Thêm import
 import '../providers/theme_provider.dart'; // <--- Thêm import
+import '../providers/language_provider.dart';
+import '../l10n/app_localizations.dart';
 
 // Import màn hình
 import 'login_screen.dart';
@@ -30,6 +32,8 @@ class WelcomeScreen extends StatelessWidget {
     // BÍ KÍP MÀU ĐỘNG CHO MÀN HÌNH WELCOME
     // ==========================================
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final langProvider = LanguageProvider.safeOf(context);
+    final t = AppLocalizations(langProvider.languageCode);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
 
     // Màu chủ đạo: Ban đêm dùng xanh dạ quang, ban ngày dùng xanh lá đậm
@@ -59,7 +63,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "Học miễn phí. Suốt đời.",
+              t.translate('learn_free'),
               style: TextStyle(color: subtitleColor, fontSize: 16), // <--- Chữ không còn bị tàng hình nữa
             ),
 
@@ -78,7 +82,7 @@ class WelcomeScreen extends StatelessWidget {
                   _completeWelcomeAndNavigate(context, const LoginScreen(showLoginFirst: false));
                 },
                 child: Text(
-                    "BẮT ĐẦU NGAY",
+                    t.translate('get_started'),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDarkMode ? Colors.black : Colors.white)
                 ),
               ),
@@ -98,7 +102,7 @@ class WelcomeScreen extends StatelessWidget {
                   _completeWelcomeAndNavigate(context, const LoginScreen(showLoginFirst: true));
                 },
                 child: Text(
-                    "TÔI ĐÃ CÓ TÀI KHOẢN",
+                    t.translate('have_account'),
                     style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)
                 ),
               ),

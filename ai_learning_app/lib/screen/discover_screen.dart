@@ -4,6 +4,8 @@ import 'dart:convert';
 import '../api_config.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class DiscoverScreen extends StatefulWidget {
   // 1. KHAI BÁO THÊM BIẾN USERNAME Ở ĐÂY
@@ -134,6 +136,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     int myWateredPlants = myIndex >= 0 ? (leaderboard[myIndex]['wateredPlants'] ?? 0) : 0;
 
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final langProvider = LanguageProvider.safeOf(context);
+    final t = AppLocalizations(langProvider.languageCode);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
     final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
@@ -142,7 +146,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: Text('Leaderboard', style: TextStyle(fontWeight: FontWeight.bold, color: titleColor)),
+        title: Text(t.translate('leaderboard'), style: TextStyle(fontWeight: FontWeight.bold, color: titleColor)),
         backgroundColor: Colors.transparent,
         centerTitle: true,
         elevation: 0,
@@ -154,7 +158,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               children: [
                 Icon(Icons.star, color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurpleAccent),
                 const SizedBox(width: 5),
-                Text("Mùa 12", style: TextStyle(color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurple, fontWeight: FontWeight.bold)),
+                Text("${t.translate('season')} 12", style: TextStyle(color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurple, fontWeight: FontWeight.bold)),
               ],
             ),
           )
@@ -170,8 +174,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Chi tiết thứ hạng", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-                Text("Cập nhật 5 phút trước", style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                Text(t.translate('rank_detail'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                Text(t.translate('updated_ago'), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
               ],
             ),
           ),
@@ -244,7 +248,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "THỨ HẠNG CỦA BẠN",
+                        t.translate('your_rank'),
                         style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10, letterSpacing: 1.2),
                       ),
                       Text(
@@ -257,7 +261,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(myRank == 1 ? "Bạn đang Dẫn đầu!" : "Cần nỗ lực hơn", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+                    Text(myRank == 1 ? t.translate('leading') : t.translate('keep_trying'), style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

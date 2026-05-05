@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // <--- Import Provider
 import '../providers/theme_provider.dart'; // <--- Import ThemeProvider của bạn
+import '../providers/language_provider.dart'; // <--- Import LanguageProvider
+import '../l10n/app_localizations.dart'; // <--- Import bộ dịch
 import 'welcome_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final String username;
@@ -27,7 +29,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    // 2. CHỈNH MÀU ĐỘNG THEO THEME
+    // 2. LẮNG NGHE TRẠNG THÁI NGÔN NGỮ TỪ PROVIDER
+    final langProvider = LanguageProvider.safeOf(context);
+    final t = AppLocalizations(langProvider.languageCode);
+
+    // 3. CHỈNH MÀU ĐỘNG THEO THEME
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
     final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
@@ -42,14 +48,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          "Profile",
+          t.translate('profile'),
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.settings, color: textColor),
-            onPressed: () => _showSnackBar("Đang mở Cài đặt chung..."),
+            onPressed: () => _showSnackBar(t.translate('opening_settings')),
           )
         ],
       ),
@@ -57,10 +63,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Column(
           children: [
-            _buildAvatarSection(),
+            _buildAvatarSection(t),
             const SizedBox(height: 15),
             Text(
-              widget.username.isNotEmpty ? widget.username : "Học viên",
+              widget.username.isNotEmpty ? widget.username : t.translate('student'),
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textColor),
             ),
             const SizedBox(height: 8),
@@ -70,46 +76,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Truyền cardColor và textColor xuống các thẻ Thống kê
             Row(
               children: [
-                _buildStatCard(Icons.bolt, Colors.tealAccent.shade700, formattedXp, "TOTAL XP", cardColor, textColor),
+                _buildStatCard(Icons.bolt, Colors.tealAccent.shade700, formattedXp, t.translate('total_xp'), cardColor, textColor),
                 const SizedBox(width: 10),
-                _buildStatCard(Icons.menu_book, Colors.deepPurple, "48", "LESSONS", cardColor, textColor),
+                _buildStatCard(Icons.menu_book, Colors.deepPurple, "48", t.translate('lessons'), cardColor, textColor),
                 const SizedBox(width: 10),
-                _buildStatCard(Icons.local_fire_department, Colors.deepOrange, widget.streak.toString(), "STREAK", cardColor, textColor),
+                _buildStatCard(Icons.local_fire_department, Colors.deepOrange, widget.streak.toString(), t.translate('streak'), cardColor, textColor),
               ],
             ),
             const SizedBox(height: 35),
 
-            _buildSectionTitle("ACCOUNT"),
+            _buildSectionTitle(t.translate('account')),
             _buildCardGroup(cardColor, [
-              _buildListTile(Icons.person, "Change Account Info", textColor, onTap: () => _showSnackBar("Đang mở trang Đổi thông tin...")),
+              _buildListTile(Icons.person, t.translate('change_account_info'), textColor, onTap: () => _showSnackBar(t.translate('opening_account_info'))),
               _buildDivider(),
-              _buildListTile(Icons.lock, "Privacy Settings", textColor, onTap: () => _showSnackBar("Đang mở Cài đặt bảo mật...")),
+              _buildListTile(Icons.lock, t.translate('privacy_settings'), textColor, onTap: () => _showSnackBar(t.translate('opening_privacy'))),
             ]),
             const SizedBox(height: 25),
 
-            _buildSectionTitle("PREFERENCES"),
+            _buildSectionTitle(t.translate('preferences')),
             _buildCardGroup(cardColor, [
               // NÚT CÔNG TẮC ĐÃ ĐƯỢC NỐI VỚI PROVIDER
-              _buildSwitchTile(Icons.dark_mode, "Dark Mode", isDarkMode, textColor, (val) {
+              _buildSwitchTile(Icons.dark_mode, t.translate('dark_mode'), isDarkMode, textColor, (val) {
                 themeProvider.toggleTheme(val); // <--- Gọi hàm đổi màu toàn app
-                _showSnackBar(val ? "Đã bật Dark Mode" : "Đã tắt Dark Mode");
+                _showSnackBar(val ? t.translate('dark_mode_on') : t.translate('dark_mode_off'));
               }),
               _buildDivider(),
-              _buildListTile(Icons.language, "Language", textColor, trailingText: "English", onTap: () => _showSnackBar("Tính năng đổi ngôn ngữ đang phát triển!")),
+              // NÚT CHỌN NGÔN NGỮ — BẤM VÀO SẼ HIỂN THỊ DIALOG CHỌN
+              _buildListTile(Icons.language, t.translate('language'), textColor, trailingText: langProvider.languageName, onTap: () => _showLanguageDialog(langProvider, t)),
               _buildDivider(),
-              _buildListTile(Icons.notifications, "Notifications", textColor, onTap: () => _showSnackBar("Đang mở Cài đặt thông báo...")),
+              _buildListTile(Icons.notifications, t.translate('notifications'), textColor, onTap: () => _showSnackBar(t.translate('opening_notifications'))),
             ]),
             const SizedBox(height: 25),
 
-            _buildSectionTitle("OTHER"),
+            _buildSectionTitle(t.translate('other')),
             _buildCardGroup(cardColor, [
-              _buildListTile(Icons.help_outline, "Help Center", textColor, onTap: () => _showSnackBar("Đang kết nối đến Trung tâm hỗ trợ...")),
+              _buildListTile(Icons.help_outline, t.translate('help_center'), textColor, onTap: () => _showSnackBar(t.translate('connecting_help'))),
               _buildDivider(),
-              _buildListTile(Icons.info_outline, "About Us", textColor, onTap: () => _showAboutDialog()),
+              _buildListTile(Icons.info_outline, t.translate('about_us'), textColor, onTap: () => _showAboutDialog(t)),
             ]),
             const SizedBox(height: 35),
 
-            _buildLogoutButton(context, cardColor),
+            _buildLogoutButton(context, cardColor, t),
             const SizedBox(height: 20),
           ],
         ),
@@ -130,37 +137,133 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showAboutDialog() {
+  // === DIALOG CHỌN NGÔN NGỮ MỚI ===
+  void _showLanguageDialog(LanguageProvider langProvider, AppLocalizations t) {
+    final isDarkMode = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+    final Color dialogBg = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: dialogBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          t.translate('choose_language'),
+          style: const TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption(
+              flag: '🇻🇳',
+              name: 'Tiếng Việt',
+              code: 'vi',
+              isSelected: langProvider.languageCode == 'vi',
+              textColor: textColor,
+              isDarkMode: isDarkMode,
+              onTap: () {
+                langProvider.setLanguage('vi');
+                Navigator.pop(context);
+                _showSnackBar('${t.translate('language_changed')} Tiếng Việt');
+              },
+            ),
+            const SizedBox(height: 10),
+            _buildLanguageOption(
+              flag: '🇺🇸',
+              name: 'English',
+              code: 'en',
+              isSelected: langProvider.languageCode == 'en',
+              textColor: textColor,
+              isDarkMode: isDarkMode,
+              onTap: () {
+                langProvider.setLanguage('en');
+                Navigator.pop(context);
+                _showSnackBar('${t.translate('language_changed')} English');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required String flag,
+    required String name,
+    required String code,
+    required bool isSelected,
+    required Color textColor,
+    required bool isDarkMode,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF0F8A50).withOpacity(0.1)
+              : (isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF4FAF5)),
+          borderRadius: BorderRadius.circular(15),
+          border: isSelected
+              ? Border.all(color: const Color(0xFF0F8A50), width: 2)
+              : Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
+        ),
+        child: Row(
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 28)),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isSelected ? const Color(0xFF0F8A50) : textColor,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: Color(0xFF0F8A50), size: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAboutDialog(AppLocalizations t) {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("Về App", style: TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
-          content: const Text("Phiên bản 1.0.0\n\nỨng dụng học tập thông minh tích hợp AI, giúp bạn biến mọi tài liệu thành bài giảng tương tác.",),
+          title: Text(t.translate('about_app'), style: const TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
+          content: Text(t.translate('about_app_content')),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Đóng", style: TextStyle(color: Colors.grey)))
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(t.translate('close'), style: const TextStyle(color: Colors.grey)))
           ],
         )
     );
   }
 
-  void _handleLogout() {
+  void _handleLogout(AppLocalizations t) {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.logout, color: Colors.red),
-              SizedBox(width: 10),
-              Text("Đăng xuất", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Icon(Icons.logout, color: Colors.red),
+              const SizedBox(width: 10),
+              Text(t.translate('logout_confirm_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
-          content: const Text("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?"),
+          content: Text(t.translate('logout_confirm_message')),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Hủy", style: TextStyle(color: Colors.grey))
+                child: Text(t.translate('cancel'), style: const TextStyle(color: Colors.grey))
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -172,9 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context,
                   MaterialPageRoute(builder: (_) => const WelcomeScreen()),
                 ); // Tắt Dialog
-                _showSnackBar("Đã đăng xuất thành công!");
+                _showSnackBar(t.translate('logout_success'));
               },
-              child: const Text("Đăng xuất", style: TextStyle(color: Colors.white)),
+              child: Text(t.translate('logout_confirm_title'), style: const TextStyle(color: Colors.white)),
             )
           ],
         )
@@ -183,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // --- CÁC WIDGET GIAO DIỆN ĐÃ ĐƯỢC CẬP NHẬT MÀU SẮC ĐỘNG ---
 
-  Widget _buildAvatarSection() {
+  Widget _buildAvatarSection(AppLocalizations t) {
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -195,7 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Positioned(
           right: 0, bottom: 0,
           child: GestureDetector(
-            onTap: () => _showSnackBar("Đang mở thư viện ảnh..."),
+            onTap: () => _showSnackBar(t.translate('opening_gallery')),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: const Color(0xFF6A4CFF), shape: BoxShape.circle, border: Border.all(color: const Color(0xFFF4FAF5), width: 3)),
@@ -303,9 +406,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Thêm biến cardColor
-  Widget _buildLogoutButton(BuildContext context, Color cardColor) {
+  Widget _buildLogoutButton(BuildContext context, Color cardColor, AppLocalizations t) {
     return GestureDetector(
-      onTap: _handleLogout,
+      onTap: () => _handleLogout(t),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
@@ -314,12 +417,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, color: Color(0xFFD32F2F)),
-            SizedBox(width: 10),
-            Text("Logout", style: TextStyle(color: Color(0xFFD32F2F), fontSize: 16, fontWeight: FontWeight.bold)),
+            const Icon(Icons.logout, color: Color(0xFFD32F2F)),
+            const SizedBox(width: 10),
+            Text(t.translate('logout'), style: const TextStyle(color: Color(0xFFD32F2F), fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
       ),

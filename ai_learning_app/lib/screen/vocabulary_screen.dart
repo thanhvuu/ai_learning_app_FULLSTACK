@@ -45,11 +45,15 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
+    final Color bgColor = isDarkMode ? const Color(0xFF121212) : const Color(0xFFF4F9F4);
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: Text("Vocabulary: ${widget.topic}"),
         centerTitle: true,
+        backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.green,
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [

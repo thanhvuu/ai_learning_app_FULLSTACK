@@ -138,4 +138,14 @@ public class LessonController {
             return ResponseEntity.internalServerError().body("Lỗi lấy dữ liệu: " + e.getMessage());
         }
     }
+
+    @PostMapping("/chat")
+    public ResponseEntity<?> chat(@RequestBody Map<String, String> request) {
+        String message = request.get("message");
+        if (message == null || message.isEmpty()) {
+            return ResponseEntity.badRequest().body("Tin nhắn không được để trống!");
+        }
+        String response = aiService.chatWithAi(message);
+        return ResponseEntity.ok(Map.of("response", response));
+    }
 }

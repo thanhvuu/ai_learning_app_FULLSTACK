@@ -18,14 +18,35 @@ public class User {
 
     private String username;
 
-    private int streak = 0;
-    private int lives = 5;
-    private int totalXp = 0;
+    @Column(columnDefinition = "integer default 0")
+    private Integer streak = 0;
 
-    // THÊM DÒNG NÀY: Lưu số lượng cây từ vựng đã tưới (Mặc định là 0)
-    @Column(name = "watered_plants")
-    private int wateredPlants = 0;
+    @Column(columnDefinition = "integer default 5")
+    private Integer lives = 5;
 
-    @Column(name =  "last_study_date")
+    @Column(name = "total_xp", columnDefinition = "integer default 0")
+    private Integer totalXp = 0;
+
+    // Lưu số lượng cây từ vựng đã tưới (Mặc định là 0)
+    @Column(name = "watered_plants", columnDefinition = "integer default 0")
+    private Integer wateredPlants = 0;
+
+    @Column(name = "last_study_date")
     private LocalDate lastStudyDate;
+
+    // Tự động gán giá trị mặc định trước khi lưu vào DB
+    @PrePersist
+    public void prePersist() {
+        if (streak == null) streak = 0;
+        if (lives == null) lives = 5;
+        if (totalXp == null) totalXp = 0;
+        if (wateredPlants == null) wateredPlants = 0;
+    }
+
+    // Getter an toàn — trả về 0 thay vì null
+    public int getStreak() { return streak != null ? streak : 0; }
+    public int getLives() { return lives != null ? lives : 5; }
+    public int getTotalXp() { return totalXp != null ? totalXp : 0; }
+    public int getWateredPlants() { return wateredPlants != null ? wateredPlants : 0; }
 }
+

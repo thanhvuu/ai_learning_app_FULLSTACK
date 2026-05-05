@@ -15,8 +15,11 @@ import 'package:translator/translator.dart';
 
 import '../api_config.dart';
 import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
+import '../l10n/app_localizations.dart';
 // import '../providers/quiz_provider.dart'; // Mở lại nếu có dùng
 import 'discover_screen.dart';
+import 'chat_screen.dart';
 import '../models/question_model.dart';
 import 'drag_drop_quiz_screen.dart';
 import 'multiple_choice_screen.dart';
@@ -64,8 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  String sourceLangName = "TIẾNG ANH";
-  String targetLangName = "TIẾNG VIỆT";
+  late String sourceLangName;
+  late String targetLangName;
   String sourceLangCode = "en";
   String targetLangCode = "vi";
 
@@ -108,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _outputController.text = translation.text;
         });
       } catch (e) {
-        setState(() => _outputController.text = "Lỗi dịch thuật...");
+        setState(() => _outputController.text = S.of(context, 'translation_error'));
       }
     });
   }
@@ -174,14 +177,14 @@ class _HomeScreenState extends State<HomeScreen> {
         } else {
           Map<String, dynamic> emptyData = {
             "word": searchWord,
-            "meaning": "Đang nhờ AI phân tích cụm từ này...",
+            "meaning": S.of(context, 'ai_analyzing'),
           };
           DictionaryBottomSheet.show(context, emptyData, searchWord);
           _searchController.clear();
         }
       }
     } catch (e) {
-      if (mounted) _showError(context, "Lỗi đọc từ điển: $e");
+      if (mounted) _showError(context, "${S.of(context, 'dict_error')}: $e");
     }
   }
 
@@ -215,12 +218,12 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt, color: Color(0xFF0F8A50)),
-              title: const Text('Chụp ảnh mới'),
+              title: Text(S.of(context, 'take_new_photo')),
               onTap: () => _processImageForText(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library, color: Color(0xFF0F8A50)),
-              title: const Text('Chọn từ thư viện'),
+              title: Text(S.of(context, 'choose_from_gallery')),
               onTap: () => _processImageForText(ImageSource.gallery),
             ),
           ],
@@ -248,17 +251,17 @@ class _HomeScreenState extends State<HomeScreen> {
           return AlertDialog(
             backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text("Chọn chế độ học", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
+            title: Text(S.of(context, 'choose_study_mode'), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("AI sẽ thiết kế bài học theo cách bạn muốn!", style: TextStyle(color: Colors.grey, fontSize: 13), textAlign: TextAlign.center),
+                Text(S.of(context, 'ai_design_lesson'), style: const TextStyle(color: Colors.grey, fontSize: 13), textAlign: TextAlign.center),
                 const SizedBox(height: 20),
-                _buildGameOption(dialogContext, file, "Kéo thả từ vựng", Icons.drag_indicator, "drag_drop", isDarkMode),
+                _buildGameOption(dialogContext, file, S.of(context, 'drag_drop_vocab'), Icons.drag_indicator, "drag_drop", isDarkMode),
                 const SizedBox(height: 10),
-                _buildGameOption(dialogContext, file, "Trắc nghiệm", Icons.list_alt, "multiple_choice", isDarkMode),
+                _buildGameOption(dialogContext, file, S.of(context, 'multiple_choice'), Icons.list_alt, "multiple_choice", isDarkMode),
                 const SizedBox(height: 10),
-                _buildGameOption(dialogContext, file, "Bài đục lỗ", Icons.keyboard, "fill_blank", isDarkMode),
+                _buildGameOption(dialogContext, file, S.of(context, 'fill_blank'), Icons.keyboard, "fill_blank", isDarkMode),
               ],
             ),
           );
@@ -291,8 +294,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => const Center(
-        child: Card(child: Padding(padding: EdgeInsets.all(20.0), child: Column(mainAxisSize: MainAxisSize.min, children: [CircularProgressIndicator(color: Colors.green), SizedBox(height: 15), Text("AI đang soạn bài học...", style: TextStyle(fontWeight: FontWeight.bold))]))),
+      builder: (BuildContext context) => Center(
+        child: Card(child: Padding(padding: const EdgeInsets.all(20.0), child: Column(mainAxisSize: MainAxisSize.min, children: [const CircularProgressIndicator(color: Colors.green), const SizedBox(height: 15), Text(S.of(context, 'ai_preparing'), style: const TextStyle(fontWeight: FontWeight.bold))]))),
       ),
     );
 
@@ -337,6 +340,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final langProvider = LanguageProvider.safeOf(context);
+    final t = AppLocalizations(langProvider.languageCode);
+
+    // Cập nhật tên ngôn ngữ theo locale
+    sourceLangName = sourceLangCode == 'en' ? t.translate('english_lang') : t.translate('vietnamese_lang');
+    targetLangName = targetLangCode == 'en' ? t.translate('english_lang') : t.translate('vietnamese_lang');
 
     final Color bgColor = isDarkMode ? const Color(0xFF121212) : const Color(0xFFF4F9F4);
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
@@ -383,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onSubmitted: _handleSearchSubmit,
                       style: TextStyle(color: textColor, fontSize: 16),
                       decoration: InputDecoration(
-                        hintText: "Tìm kiếm từ vựng (Anh-Việt, V...",
+                        hintText: t.translate('search_hint'),
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         prefixIcon: const Icon(Icons.search, color: primaryGreen),
                         border: InputBorder.none,
@@ -402,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildTranslationCard(
                             title: sourceLangName,
                             controller: _inputController,
-                            hint: "Nhập văn bản cần dịch...",
+                            hint: t.translate('enter_text'),
                             isInput: true,
                             cardColor: cardWhite,
                             textColor: textColor,
@@ -413,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildTranslationCard(
                             title: targetLangName,
                             controller: _outputController,
-                            hint: "Bản dịch sẽ xuất hiện ở đây...",
+                            hint: t.translate('translation_result'),
                             isInput: false,
                             cardColor: isDarkMode ? const Color(0xFF2A2A2A) : const Color(0xFFE8F3ED),
                             textColor: textColor,
@@ -446,10 +455,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 35),
 
-                  // 5. TÀI LIỆU HỌC TẬP (STUDY MATERIALS)
-                  Text("Tài liệu học tập", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                  // 5. TÀI LIỆU HỌC TẬP (STUDY MATERIALS - PHỤC HỒI)
+                  Text(t.translate('study_materials'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 4),
-                  Text("Phân tích tài liệu PDF với AI của bạn", style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  Text(t.translate('study_materials_desc'), style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                   const SizedBox(height: 15),
 
                   GestureDetector(
@@ -457,52 +466,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A7055),
+                        color: isDarkMode ? const Color(0xFF333333) : const Color(0xFFE8F3ED),
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: const Color(0xFF2A7055).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
+                        border: Border.all(color: const Color(0xFF0F8A50).withOpacity(0.2), width: 1),
                       ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            right: -30,
-                            top: -20,
-                            child: Icon(Icons.article, size: 180, color: Colors.white.withOpacity(0.1)),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(25.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(15)),
-                                  child: const Icon(Icons.upload_file, color: Colors.white, size: 28),
-                                ),
-                                const SizedBox(height: 20),
-                                const Text("Upload PDF Document", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                                const SizedBox(height: 8),
-                                Text(
-                                  "Tải lên giáo trình hoặc tài liệu để tạo\nbộ thẻ ghi nhớ và bài tập tự động.",
-                                  style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9), height: 1.4),
-                                ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  children: const [
-                                    Text("Bắt đầu ngay", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.arrow_forward, color: Colors.white, size: 18),
-                                  ],
-                                )
-                              ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(color: const Color(0xFF0F8A50).withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
+                              child: const Icon(Icons.picture_as_pdf, color: Color(0xFF0F8A50), size: 28),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(t.translate('upload_pdf'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                                  const SizedBox(height: 4),
+                                  Text(t.translate('auto_create_quiz'), style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 35),
 
-                  // 6. KHỐI TÍNH NĂNG MỚI: VƯỜN ƯƠM TỪ VỰNG
+                  // 7. KHỐI TÍNH NĂNG MỚI: VƯỜN ƯƠM TỪ VỰNG
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(25),
@@ -515,17 +511,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(color: const Color(0xFFBBE5CE), borderRadius: BorderRadius.circular(20)),
-                          child: const Text("TÍNH NĂNG MỚI", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF17633D), letterSpacing: 1)),
+                          child: Text(t.translate('new_feature'), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF17633D), letterSpacing: 1)),
                         ),
                         const SizedBox(height: 15),
                         Text(
-                          "Vườn ươm từ vựng\ncủa bạn",
+                          t.translate('vocabulary_garden_title'),
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: textColor, height: 1.2),
                         ),
                         const SizedBox(height: 15),
                         Text(
-                          "Theo dõi sự tiến bộ hàng ngày. Mỗi\ntừ vựng bạn học được sẽ giúp khu\nvườn tri thức của bạn nở rộ hơn.",
+                          t.translate('vocabulary_garden_desc'),
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
                         ),
@@ -543,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                             elevation: 0,
                           ),
-                          child: const Text("Khám phá ngay", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Text(t.translate('explore_now'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(height: 25),
                         ClipRRect(
@@ -566,27 +562,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // --- CÁC TAB CÒN LẠI ---
           MyLessonsScreen(username: widget.username),
+          ChatScreen(username: widget.username),
           DiscoverScreen(username: widget.username),
           ProfileScreen(username: widget.username, xp: _xp, streak: _streak),
         ],
       ),
 
-      // --- BOTTOM NAVIGATION BAR MỚI ---
+      // --- BOTTOM NAVIGATION BAR MỚI (THIẾT KẾ GIỐNG HÌNH MẪU) ---
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(top: 10, bottom: 25, left: 15, right: 15),
         decoration: BoxDecoration(
           color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.black12, blurRadius: 15, offset: const Offset(0, -2))],
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+          boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -4))],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home, Icons.home_outlined, "Home", 0, primaryGreen, isDarkMode),
-            _buildNavItem(Icons.school, Icons.school_outlined, "Lessons", 1, primaryGreen, isDarkMode),
-            _buildNavItem(Icons.explore, Icons.explore_outlined, "Discover", 2, primaryGreen, isDarkMode),
-            _buildNavItem(Icons.person, Icons.person_outline, "Profile", 3, primaryGreen, isDarkMode),
-          ],
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(Icons.home_rounded, Icons.home_outlined, "Home", 0, primaryGreen, isDarkMode),
+                _buildNavItem(Icons.menu_book_rounded, Icons.menu_book_outlined, "Lessons", 1, primaryGreen, isDarkMode),
+                // === NÚT TRUNG TÂM NỔI BẬT ===
+                _buildCenterNavItem(primaryGreen, isDarkMode),
+                _buildNavItem(Icons.explore_rounded, Icons.explore_outlined, "Discover", 3, primaryGreen, isDarkMode),
+                _buildNavItem(Icons.person_rounded, Icons.person_outline_rounded, "Profile", 4, primaryGreen, isDarkMode),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -663,7 +666,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onChanged: isInput ? _onInputTextChanged : null,
                   style: TextStyle(color: textColor, fontSize: 18, fontStyle: isInput ? FontStyle.normal : FontStyle.italic),
                   decoration: InputDecoration(
-                    hintText: _isListening ? "Đang nghe..." : hint,
+                    hintText: _isListening ? S.of(context, 'listening') : hint,
                     hintStyle: TextStyle(color: _isListening ? Colors.red : Colors.grey[500], fontSize: 16, fontStyle: isInput ? FontStyle.normal : FontStyle.italic),
                     border: InputBorder.none,
                   ),
@@ -676,22 +679,70 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- HÀM VẼ BOTTOM NAV ---
+  // === NÚT TRUNG TÂM (AI CHAT) — NỔI LÊN PHÍA TRÊN ===
+  Widget _buildCenterNavItem(Color activeColor, bool isDarkMode) {
+    bool isActive = _selectedIndex == 2;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Transform.translate(
+            offset: const Offset(0, -18),
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: isActive ? activeColor : (isDarkMode ? const Color(0xFF2A6B4A) : const Color(0xFF0F8A50)),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: activeColor.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
+                ],
+                border: Border.all(color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white, width: 3),
+              ),
+              child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 28),
+            ),
+          ),
+          Transform.translate(
+            offset: const Offset(0, -12),
+            child: Text(
+              "AI Chat",
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- HÀM VẼ BOTTOM NAV ITEM (4 nút thường) ---
   Widget _buildNavItem(IconData activeIcon, IconData inactiveIcon, String label, int index, Color activeColor, bool isDarkMode) {
     bool isActive = _selectedIndex == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedIndex = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFD3EFE0) : Colors.transparent,
-            borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        width: 64,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[600]), size: 26),
-            if (isActive) const SizedBox(height: 4),
-            if (isActive) Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: activeColor)),
+            Icon(
+              isActive ? activeIcon : inactiveIcon,
+              color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[500]),
+              size: 26,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+              ),
+            ),
           ],
         ),
       ),
