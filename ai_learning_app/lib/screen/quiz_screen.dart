@@ -29,8 +29,8 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> checkAnswer(BuildContext context, QuizProvider quizState) async {
     if (!hasSubmitted) {
       if (selectedOption != null) {
-        String correctAns = quizState.questions[currentQuestionIndex]['correctAnswer'].toString();
-        bool correct = selectedOption!.startsWith(correctAns) || selectedOption == correctAns;
+        String correctAns = quizState.questions[currentQuestionIndex]['correctAnswer'].toString().trim();
+        bool correct = selectedOption!.trim().startsWith(correctAns) || selectedOption!.trim() == correctAns;
         setState(() {
           hasSubmitted = true;
           isCorrect = correct;
@@ -176,8 +176,8 @@ class _QuizScreenState extends State<QuizScreen> {
                 }
 
                 if (hasSubmitted) {
-                  String correctAns = currentQuestion['correctAnswer'].toString();
-                  if (option.toString().startsWith(correctAns) || option.toString() == correctAns) {
+                  String correctAns = currentQuestion['correctAnswer'].toString().trim();
+                  if (option.toString().trim().startsWith(correctAns) || option.toString().trim() == correctAns) {
                     borderColor = Colors.greenAccent;
                   } else if (option == selectedOption) {
                     borderColor = Colors.redAccent;

@@ -2,8 +2,16 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // TỪ NAY VỀ SAU, CÓ ĐỔI IP THÌ CHỈ CẦN SỬA ĐÚNG DÒNG SỐ 3 NÀY THÔI NHÉ
-  static const String ipAddress = "10.0.2.2";
+  // Tự động nhận diện thiết bị để chọn IP đúng
+  static String get ipAddress {
+    if (kIsWeb) return "localhost";
+    try {
+      if (Platform.isAndroid) return "10.0.2.2"; // Cho Android Emulator
+    } catch (e) {}
+    
+    // IP của máy Macbook của bạn trong mạng nội bộ
+    return "192.168.1.30"; 
+  }
 
   // Tự động ghép IP vào link
   static String get baseUrl => "http://$ipAddress:8080";

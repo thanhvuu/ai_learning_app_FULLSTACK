@@ -68,8 +68,20 @@ public class LessonController {
             @RequestParam(value = "category", required = false) String category
     ) {
         try {
+            // 1. Xác định Category để tìm kiếm trong DB
+            String searchCategory = (category != null && !category.isEmpty()) ? category : topic;
+
+            // 2. Kiểm tra xem trong DB đã có bài học này chưa (Caching)
+            Lesson existingLesson = lessonRepository.findFirstByCategory(searchCategory);
+            if (existingLesson != null) {
+                System.out.println("--- Trả về bài học từ Cache (DB): " + searchCategory + " ---");
+                return ResponseEntity.ok(existingLesson);
+            }
+
+            // 3. Nếu chưa có, mới gọi AI để tạo
+            System.out.println("--- Cache Miss: Gọi AI để tạo bài học: " + topic + " ---");
             String jsonResult = aiService.generateLessonByTopic(topic, quizType);
-            return processAiResponse(jsonResult, topic, username, quizType, category != null ? category : topic);
+            return processAiResponse(jsonResult, topic, username, quizType, searchCategory);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Có lỗi xảy ra: " + e.getMessage());
@@ -79,16 +91,29 @@ public class LessonController {
     // API lấy lộ trình học (Roadmap) cho một chuyên ngành
     @GetMapping("/roadmap")
     public ResponseEntity<?> getRoadmap(@RequestParam("major") String major) {
-        // Trong thực tế, bạn có thể gọi AI để sinh Roadmap hoặc lấy từ một danh sách cố định.
-        // Ở đây tôi giả lập một lộ trình gồm 5 bài học cho mỗi ngành.
+        System.out.println("--- Đang lấy Roadmap cho ngành: " + major + " ---");
         List<String> steps = new ArrayList<>();
+        
         if (major.contains("Information Technology")) {
             steps = List.of("Introduction to IT", "Computer Hardware", "Software Engineering", "Computer Networking", "Cybersecurity Basics");
         } else if (major.contains("Business")) {
             steps = List.of("Business Basics", "Marketing Principles", "Financial Accounting", "Human Resource Management", "International Trade");
+        } else if (major.contains("Medical")) {
+            steps = List.of("Medical Terminology", "Human Anatomy", "Common Diseases", "Pharmacology Basics", "Patient Care & Communication");
+        } else if (major.contains("Travel")) {
+            steps = List.of("At the Airport", "Hotel Reservations", "Sightseeing & Directions", "Dining Out", "Emergency Situations");
+        } else if (major.contains("Engineering")) {
+            steps = List.of("Engineering Basics", "Materials Science", "Technical Drawing", "Mathematics for Engineers", "Safety Regulations");
+        } else if (major.contains("Art")) {
+            steps = List.of("Art History", "Color Theory", "Drawing Techniques", "Digital Design Basics", "Famous Artists & Works");
+        } else if (major.contains("Daily")) {
+            steps = List.of("Greetings & Introductions", "Family & Friends", "Hobbies & Interests", "Shopping & Prices", "Weather & Time");
+        } else if (major.contains("IELTS") || major.contains("TOEIC")) {
+            steps = List.of("Listening Strategies", "Reading Comprehension", "Writing Task 1 & 2", "Speaking Fluency", "Practice Tests");
         } else {
             steps = List.of("Fundamental Concepts", "Essential Vocabulary", "Advanced Topics", "Case Studies", "Final Review");
         }
+        
         return ResponseEntity.ok(steps);
     }
 
@@ -139,13 +164,38 @@ public class LessonController {
         }
     }
 
-    @PostMapping("/chat")
-    public ResponseEntity<?> chat(@RequestBody Map<String, String> request) {
-        String message = request.get("message");
-        if (message == null || message.isEmpty()) {
-            return ResponseEntity.badRequest().body("Tin nhắn không được để trống!");
+    // API ADMIN: Tự động sinh dữ liệu mẫu hàng loạt để tránh người dùng phải đợi AI
+    @PostMapping("/admin/pre-generate-batch")
+    public ResponseEntity<?> preGenerateBatch() {
+        List<String> popularTopics = List.of(
+            "Frontend Basics", 
+            "ReactJS Advanced", 
+            "Database SQL", 
+            "UI/UX Principles", 
+            "Docker for Beginners"
+        );
+        
+        int count = 0;
+        for (String topic : popularTopics) {
+            try {
+                // Kiểm tra xem đã có trong DB chưa
+                if (lessonRepository.findFirstByCategory(topic) != null) {
+                    System.out.println("--- Admin: Bỏ qua (Đã có sẵn): " + topic + " ---");
+                    continue;
+                }
+                
+                System.out.println("--- Admin: Đang tạo trước dữ liệu cho: " + topic + " ---");
+                String jsonResult = aiService.generateLessonByTopic(topic, "drag_drop");
+                processAiResponse(jsonResult, topic, "system_admin", "drag_drop", topic);
+                
+                count++;
+                // Nghỉ 5 giây để tránh bị giới hạn API Rate Limit của Gemini
+                Thread.sleep(5000);
+            } catch (Exception e) {
+                System.err.println("--- Admin: Lỗi khi tạo topic " + topic + ": " + e.getMessage());
+            }
         }
-        String response = aiService.chatWithAi(message);
-        return ResponseEntity.ok(Map.of("response", response));
+        
+        return ResponseEntity.ok(Map.of("message", "Đã tạo thành công " + count + " bài học mới cho hệ thống."));
     }
 }
