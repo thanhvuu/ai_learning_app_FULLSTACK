@@ -35,8 +35,9 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
 
   // --- HÀM GỌI API LẤY DANH SÁCH BÀI HỌC TỪ SPRING BOOT ---
   Future<void> fetchMyLessons() async {
-    // Sửa lại URL này theo đúng API backend của bạn nhé
-    final String url = "${ApiConfig.lessons}/my-lessons?username=${widget.username}";
+    // URL encode username để tránh lỗi nếu có khoảng trắng hoặc dấu
+    final String encodedUsername = Uri.encodeComponent(widget.username);
+    final String url = "${ApiConfig.lessons}/my-lessons?username=$encodedUsername";
 
     try {
       var response = await http.get(Uri.parse(url));
@@ -54,7 +55,9 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
             List<dynamic> questionsJson = item['questions'] ?? [];
 
             return {
+              "id": item['id'],
               "title": item['title'] ?? "Bài học mới",
+              "content": item['content'] ?? "",
               "subtitle": _getSubtitleForType(type),
               "progress": (item['progress'] ?? 0) / 100.0,
               "isCompleted": item['progress'] == 100,
@@ -82,7 +85,8 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
 
   //ham call api lay progress
    Future<void> fetchProgress() async{
-    final String url = "${ApiConfig.progress}/today?username=${widget.username}";
+    final String encodedUsername = Uri.encodeComponent(widget.username);
+    final String url = "${ApiConfig.progress}/today?username=$encodedUsername";
     try{
       var response = await http.get(Uri.parse(url));
       if(response.statusCode == 200){
@@ -127,8 +131,32 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
   void _loadDummyData() {
     setState(() {
       activeCourses = [
-        {"title": "Business English", "subtitle": "Mẫu (Đang lỗi API)", "progress": 0.75, "isCompleted": false, "gradient": const [Color(0xFF2E86C1), Color(0xFF85C1E9)], "icon": Icons.business_center},
-        {"title": "IT Vocabulary", "subtitle": "Mẫu (Đang lỗi API)", "progress": 0.40, "isCompleted": false, "gradient": const [Color(0xFF17202A), Color(0xFF5D6D7E)], "icon": Icons.memory},
+        {
+          "id": 1,
+          "title": "Business English",
+          "content": "Learn business vocabulary",
+          "subtitle": "Mẫu (Đang lỗi API)",
+          "progress": 0.75,
+          "isCompleted": false,
+          "gradient": const [Color(0xFF2E86C1), Color(0xFF85C1E9)],
+          "icon": Icons.business_center,
+          "vocabularies": <VocabularyModel>[],
+          "questions": <QuestionModel>[],
+          "quizType": "multiple_choice"
+        },
+        {
+          "id": 2,
+          "title": "IT Vocabulary",
+          "content": "Learn IT terms",
+          "subtitle": "Mẫu (Đang lỗi API)",
+          "progress": 0.40,
+          "isCompleted": false,
+          "gradient": const [Color(0xFF17202A), Color(0xFF5D6D7E)],
+          "icon": Icons.memory,
+          "vocabularies": <VocabularyModel>[],
+          "questions": <QuestionModel>[],
+          "quizType": "fill_blank"
+        },
       ];
       isLoading = false;
     });
@@ -161,28 +189,36 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: greenAccent))
-          : SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDailyGoalCard(cardColor, textColor, greenAccent, isDarkMode),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(t.translate('active_courses'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
-                TextButton(onPressed: () {}, child: Text(t.translate('view_all'), style: const TextStyle(color: greenAccent, fontWeight: FontWeight.bold, fontSize: 14)))
-              ],
-            ),
-            const SizedBox(height: 10),
+          : RefreshIndicator(
+        onRefresh: () async {
+          await fetchMyLessons();
+          await fetchProgress();
+        },
+        color: greenAccent,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDailyGoalCard(cardColor, textColor, greenAccent, isDarkMode),
+              const SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(t.translate('active_courses'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                  TextButton(onPressed: () {}, child: Text(t.translate('view_all'), style: const TextStyle(color: greenAccent, fontWeight: FontWeight.bold, fontSize: 14)))
+                ],
+              ),
+              const SizedBox(height: 10),
 
-            if (activeCourses.isEmpty)
-              Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text(t.translate('no_lessons'), style: TextStyle(color: subtitleColor)))),
+              if (activeCourses.isEmpty)
+                Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text(t.translate('no_lessons'), style: TextStyle(color: subtitleColor)))),
 
-            ...activeCourses.map((course) => _buildCourseCard(course, cardColor, textColor, subtitleColor, greenAccent, isDarkMode)),
-            const SizedBox(height: 20),
-          ],
+              ...activeCourses.map((course) => _buildCourseCard(course, cardColor, textColor, subtitleColor, greenAccent, isDarkMode)),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -244,7 +280,9 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
       onTap: () {
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => VocabularyScreen(
+            lessonId: course['id'],
             topic: course['title'],
+            content: course['content'] ?? "",
             vocabularies: List<VocabularyModel>.from(course['vocabularies']),
             questions: List<QuestionModel>.from(course['questions']),
             quizType: course['quizType'],

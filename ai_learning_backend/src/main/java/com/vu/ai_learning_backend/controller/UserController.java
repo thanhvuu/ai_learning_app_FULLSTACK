@@ -93,6 +93,24 @@ public class UserController {
         ));
     }
 
+    // API MỚI: CẬP NHẬT CHUYÊN NGÀNH HỌC (MAJOR)
+    @PostMapping("/update-major")
+    public ResponseEntity<?> updateMajor(@RequestParam String username, @RequestParam String major) {
+        User user = userRepository.findByUsername(username).orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body("Không tìm thấy người dùng!");
+        }
+
+        user.setMajor(major);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Cập nhật chuyên ngành " + major + " thành công!",
+                "major", major
+        ));
+    }
+
     @PutMapping("/update-progress")
     public ResponseEntity<?> updateProgress(@RequestParam String username) {
         // 1. Tìm đúng bạn Vũ (hoặc user đang học) trong Database

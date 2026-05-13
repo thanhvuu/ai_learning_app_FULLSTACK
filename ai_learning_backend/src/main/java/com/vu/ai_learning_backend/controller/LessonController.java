@@ -71,20 +71,94 @@ public class LessonController {
             // 1. Xác định Category để tìm kiếm trong DB
             String searchCategory = (category != null && !category.isEmpty()) ? category : topic;
 
-            // 2. Kiểm tra xem trong DB đã có bài học này chưa (Caching)
-            Lesson existingLesson = lessonRepository.findFirstByCategory(searchCategory);
-            if (existingLesson != null) {
-                System.out.println("--- Trả về bài học từ Cache (DB): " + searchCategory + " ---");
-                return ResponseEntity.ok(existingLesson);
+            // 2. Kiểm tra xem user này đã có bài học này chưa?
+            // Lưu ý: Cần repository hỗ trợ findByUsernameAndCategory
+            Lesson userLesson = lessonRepository.findFirstByUsernameAndCategory(username, searchCategory);
+            if (userLesson != null) {
+                System.out.println("--- Trả về bài học đã có của user: " + username + " ---");
+                return ResponseEntity.ok(userLesson);
             }
 
-            // 3. Nếu chưa có, mới gọi AI để tạo
+            // 3. Nếu user chưa có, kiểm tra xem trong hệ thống đã có template bài học này chưa?
+            Lesson templateLesson = lessonRepository.findFirstByCategory(searchCategory);
+            if (templateLesson != null) {
+                System.out.println("--- Cloning lesson from template for user: " + username + " ---");
+                Lesson clonedLesson = cloneLessonForUser(templateLesson, username, quizType);
+                return ResponseEntity.ok(clonedLesson);
+            }
+
+            // 4. Nếu chưa có template, mới gọi AI để tạo
             System.out.println("--- Cache Miss: Gọi AI để tạo bài học: " + topic + " ---");
             String jsonResult = aiService.generateLessonByTopic(topic, quizType);
             return processAiResponse(jsonResult, topic, username, quizType, searchCategory);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Có lỗi xảy ra: " + e.getMessage());
+        }
+    }
+
+    private Lesson cloneLessonForUser(Lesson template, String username, String quizType) {
+        Lesson newLesson = new Lesson();
+        newLesson.setTitle(template.getTitle());
+        newLesson.setUsername(username);
+        newLesson.setQuizType(quizType); // User có thể chọn loại quiz khác nhau cho cùng 1 topic
+        newLesson.setProgress(0);
+        newLesson.setContent(template.getContent());
+        newLesson.setCategory(template.getCategory());
+        newLesson.setPdfUrl(template.getPdfUrl());
+        
+        Lesson savedLesson = lessonRepository.save(newLesson);
+        
+        // Clone vocabularies
+        if (template.getVocabularies() != null) {
+            List<Vocabulary> newVocabs = new ArrayList<>();
+            for (Vocabulary v : template.getVocabularies()) {
+                Vocabulary nv = new Vocabulary();
+                nv.setWord(v.getWord());
+                nv.setMeaning(v.getMeaning());
+                nv.setPhonetic(v.getPhonetic());
+                nv.setExample(v.getExample());
+                nv.setLesson(savedLesson);
+                newVocabs.add(vocabularyRepository.save(nv));
+            }
+            savedLesson.setVocabularies(newVocabs);
+        }
+        
+        // Clone questions
+        if (template.getQuestions() != null) {
+            List<Question> newQuestions = new ArrayList<>();
+            for (Question q : template.getQuestions()) {
+                Question nq = new Question();
+                nq.setSentenceStart(q.getSentenceStart());
+                nq.setSentenceEnd(q.getSentenceEnd());
+                nq.setCorrectAnswer(q.getCorrectAnswer());
+                nq.setOptionA(q.getOptionA());
+                nq.setOptionB(q.getOptionB());
+                nq.setOptionC(q.getOptionC());
+                nq.setOptionD(q.getOptionD());
+                nq.setExplanation(q.getExplanation());
+                nq.setLesson(savedLesson);
+                newQuestions.add(questionRepository.save(nq));
+            }
+            savedLesson.setQuestions(newQuestions);
+        }
+        
+        return savedLesson;
+    }
+
+    @PostMapping("/update-progress")
+    public ResponseEntity<?> updateProgress(@RequestBody Map<String, Object> payload) {
+        try {
+            Long lessonId = Long.valueOf(payload.get("lessonId").toString());
+            int progress = Integer.parseInt(payload.get("progress").toString());
+            
+            Lesson lesson = lessonRepository.findById(lessonId).orElseThrow();
+            lesson.setProgress(progress);
+            lessonRepository.save(lesson);
+            
+            return ResponseEntity.ok(Map.of("message", "Cập nhật tiến độ thành công"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi cập nhật: " + e.getMessage());
         }
     }
 

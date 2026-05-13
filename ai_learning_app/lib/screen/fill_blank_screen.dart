@@ -9,7 +9,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class FillBlankScreen extends StatefulWidget {
   final List<QuestionModel> questions;
-  const FillBlankScreen({super.key, required this.questions});
+  final int lessonId;
+  const FillBlankScreen({super.key, required this.questions, required this.lessonId});
 
   @override
   State<FillBlankScreen> createState() => _FillBlankScreenState();
@@ -40,6 +41,37 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     });
   }
 
+  bool _isCorrect(String? selected, QuestionModel q) {
+    if (selected == null) return false;
+    String cleanSelected = selected.trim().toLowerCase();
+    String cleanCorrect = q.correctAnswer.trim().toLowerCase();
+
+    // Kiểm tra nếu đáp án đúng là text đầy đủ
+    if (cleanSelected == cleanCorrect) return true;
+
+    // Kiểm tra nếu đáp án đúng là chữ cái (A, B, C, D)
+    if (cleanCorrect == "a" && cleanSelected == q.optionA.trim().toLowerCase()) return true;
+    if (cleanCorrect == "b" && cleanSelected == q.optionB.trim().toLowerCase()) return true;
+    if (cleanCorrect == "c" && cleanSelected == q.optionC.trim().toLowerCase()) return true;
+    if (cleanCorrect == "d" && cleanSelected == q.optionD.trim().toLowerCase()) return true;
+
+    return false;
+  }
+
+  void _checkAnswer() {
+    String userAnswer = _answerController.text.trim();
+
+    setState(() {
+      hasChecked = true;
+      if (!_isCorrect(userAnswer, widget.questions[currentIndex])) {
+        hearts--;
+        if (hearts == 0) {
+          _showGameOverDialog();
+        }
+      }
+    });
+  }
+
   void _nextQuestion() {
     if (currentIndex < widget.questions.length - 1) {
       setState(() {
@@ -51,19 +83,20 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     }
   }
 
-  void _checkAnswer() {
-    String userAnswer = _answerController.text.trim().toLowerCase();
-    String correctAnswer = widget.questions[currentIndex].correctAnswer.trim().toLowerCase();
-
-    setState(() {
-      hasChecked = true;
-      if (userAnswer != correctAnswer) {
-        hearts--;
-        if (hearts == 0) {
-          _showGameOverDialog();
-        }
-      }
-    });
+  Future<void> _updateLessonProgress() async {
+    final String url = "${ApiConfig.lessons}/update-progress";
+    try {
+      await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "lessonId": widget.lessonId,
+          "progress": 100
+        }),
+      );
+    } catch (e) {
+      print("Lỗi cập nhật tiến độ bài học: $e");
+    }
   }
 
   Future<void> _addStudyTime() async {
@@ -131,6 +164,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
                     onPressed: isSavingProgress ? null : () async {
                       setStateDialog(() => isSavingProgress = true);
                       await _addStudyTime();
+                      await _updateLessonProgress();
                       if (context.mounted) {
                         Navigator.pop(context);
                         Navigator.pop(context);

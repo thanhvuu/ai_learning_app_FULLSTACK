@@ -43,6 +43,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final String apiUrl = "${ApiConfig.lessons}/upload";
   int _selectedIndex = 0;
+  final GlobalKey<State<MyLessonsScreen>> _lessonsKey = GlobalKey();
   int _streak = 0;
   int _xp = 0;
 
@@ -312,13 +313,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (response.statusCode == 200) {
         var jsonResult = jsonDecode(utf8.decode(response.bodyBytes));
+        int lessonId = jsonResult['id'] ?? 0;
         List<dynamic> questionsJson = jsonResult['questions'] ?? [];
 
         if (questionsJson.isNotEmpty && context.mounted) {
           List<QuestionModel> generatedQuestions = questionsJson.map((q) => QuestionModel.fromJson(q)).toList();
-          if (quizType == "drag_drop") Navigator.push(context, MaterialPageRoute(builder: (_) => DragDropQuizScreen(questions: generatedQuestions))).then((_) => fetchUserData());
-          else if (quizType == "multiple_choice") Navigator.push(context, MaterialPageRoute(builder: (_) => MultipleChoiceScreen(questions: generatedQuestions))).then((_) => fetchUserData());
-          else if (quizType == "fill_blank") Navigator.push(context, MaterialPageRoute(builder: (_) => FillBlankScreen(questions: generatedQuestions))).then((_) => fetchUserData());
+          if (quizType == "drag_drop") {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => DragDropQuizScreen(questions: generatedQuestions, lessonId: lessonId))).then((_) => fetchUserData());
+          } else if (quizType == "multiple_choice") {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => MultipleChoiceScreen(questions: generatedQuestions, lessonId: lessonId))).then((_) => fetchUserData());
+          } else if (quizType == "fill_blank") {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => FillBlankScreen(questions: generatedQuestions, lessonId: lessonId))).then((_) => fetchUserData());
+          }
         }
       } else {
         if (context.mounted) _showError(context, "Lỗi server: ${response.statusCode}");
@@ -457,6 +463,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 35),
 
                   // 5. TÀI LIỆU HỌC TẬP (STUDY MATERIALS - PHỤC HỒI)
+                  if (widget.major != null) ...[
+                    Text("Lộ trình học tập", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                    const SizedBox(height: 15),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RoadmapScreen(major: widget.major!, username: widget.username),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0F8A50), Color(0xFF18C070)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0F8A50).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            )
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: const Icon(Icons.map_rounded, color: Colors.white, size: 28),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.major!,
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      "Tiếp tục hành trình học tập của bạn",
+                                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 35),
+                  ],
+
                   Text(t.translate('study_materials'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 4),
                   Text(t.translate('study_materials_desc'), style: TextStyle(fontSize: 14, color: Colors.grey[600])),
@@ -562,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // --- CÁC TAB CÒN LẠI ---
-          MyLessonsScreen(username: widget.username),
+          MyLessonsScreen(key: _lessonsKey, username: widget.username),
           DiscoverScreen(username: widget.username),
           ProfileScreen(username: widget.username, xp: _xp, streak: _streak),
         ],
@@ -681,7 +754,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNavItem(IconData activeIcon, IconData inactiveIcon, String label, int index, Color activeColor, bool isDarkMode) {
     bool isActive = _selectedIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () {
+        setState(() => _selectedIndex = index);
+        if (index == 1) {
+          // Trigger refresh cho MyLessonsScreen
+          final dynamic lessonsState = _lessonsKey.currentState;
+          if (lessonsState != null) {
+            lessonsState.fetchMyLessons();
+            lessonsState.fetchProgress();
+          }
+        }
+      },
       child: SizedBox(
         width: 64,
         child: Column(

@@ -31,6 +31,8 @@ public class User {
     @Column(name = "watered_plants", columnDefinition = "integer default 0")
     private Integer wateredPlants = 0;
 
+    private String major;
+
     @Column(name = "last_study_date")
     private LocalDate lastStudyDate;
 

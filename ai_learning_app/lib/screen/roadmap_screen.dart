@@ -6,6 +6,7 @@ import '../api_config.dart';
 import '../models/question_model.dart';
 import '../models/vocabulary_model.dart';
 import 'vocabulary_screen.dart';
+import 'homescreen.dart';
 
 class RoadmapScreen extends StatefulWidget {
   final String major;
@@ -104,6 +105,8 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
       if (response.statusCode == 200) {
         var jsonResult = jsonDecode(utf8.decode(response.bodyBytes));
+        int lessonId = jsonResult['id'] ?? 0;
+        String lessonContent = jsonResult['content'] ?? "";
         List<dynamic> vocabJson = jsonResult['vocabularies'] ?? [];
         List<dynamic> questionsJson = jsonResult['questions'] ?? [];
 
@@ -112,7 +115,9 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => VocabularyScreen(
+            lessonId: lessonId,
             topic: topic,
+            content: lessonContent,
             vocabularies: vocabs,
             questions: questions,
             quizType: "multiple_choice",
@@ -133,6 +138,17 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
       appBar: AppBar(
         title: Text("Lộ trình: ${widget.major}"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard_rounded),
+            onPressed: () {
+              Navigator.pushReplacement(context, MaterialPageRoute(
+                builder: (_) => HomeScreen(username: widget.username, major: widget.major),
+              ));
+            },
+            tooltip: "Vào Trang chủ",
+          )
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

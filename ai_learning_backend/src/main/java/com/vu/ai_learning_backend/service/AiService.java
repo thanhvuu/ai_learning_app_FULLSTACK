@@ -58,11 +58,11 @@ public class AiService {
                 "    {\"word\": \"Symptom\", \"phonetic\": \"/ˈsɪmp.təm/\", \"meaning\": \"Triệu chứng\", \"example\": \"Fever is a common symptom of many infections.\"}\n" +
                 "  ],\n" +
                 "  \"questions\": [\n" +
-                "    {\"sentenceStart\": \"The doctor made a \", \"sentenceEnd\": \" after examining the patient.\", \"optionA\": \"Diagnosis\", \"optionB\": \"Symptom\", \"optionC\": \"Treatment\", \"optionD\": \"Anatomy\", \"correctAnswer\": \"A\", \"explanation\": \"Diagnosis là việc chẩn đoán bệnh sau khi thăm khám.\"}, \n" +
-                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" is the study of how drugs interact with the body.\", \"optionA\": \"Anatomy\", \"optionB\": \"Pharmacology\", \"optionC\": \"Symptom\", \"optionD\": \"Diagnosis\", \"correctAnswer\": \"B\", \"explanation\": \"Pharmacology là môn nghiên cứu về tương tác của thuốc.\"}, \n" +
-                "    {\"sentenceStart\": \"A headache is a \", \"sentenceEnd\": \" of stress.\", \"optionA\": \"Diagnosis\", \"optionB\": \"Treatment\", \"optionC\": \"Symptom\", \"optionD\": \"Anatomy\", \"correctAnswer\": \"C\", \"explanation\": \"Symptom là triệu chứng của một tình trạng nào đó.\"}, \n" +
-                "    {\"sentenceStart\": \"Modern \", \"sentenceEnd\": \" can cure many previously fatal diseases.\", \"optionA\": \"Anatomy\", \"optionB\": \"Symptom\", \"optionC\": \"Diagnosis\", \"optionD\": \"Treatment\", \"correctAnswer\": \"D\", \"explanation\": \"Treatment (điều trị) hiện đại có thể chữa nhiều bệnh.\"}, \n" +
-                "    {\"sentenceStart\": \"To perform surgery, one must understand human \", \"sentenceEnd\": \".\", \"optionA\": \"Anatomy\", \"optionB\": \"Diagnosis\", \"optionC\": \"Symptom\", \"optionD\": \"Treatment\", \"correctAnswer\": \"A\", \"explanation\": \"Phẫu thuật đòi hỏi kiến thức về giải phẫu học (Anatomy).\"}\n" +
+                "    {\"sentenceStart\": \"The doctor made a \", \"sentenceEnd\": \" after examining the patient.\", \"optionA\": \"Diagnosis\", \"optionB\": \"Symptom\", \"optionC\": \"Treatment\", \"optionD\": \"Anatomy\", \"correctAnswer\": \"Diagnosis\", \"explanation\": \"Diagnosis là việc chẩn đoán bệnh sau khi thăm khám.\"}, \n" +
+                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" is the study of how drugs interact with the body.\", \"optionA\": \"Anatomy\", \"optionB\": \"Pharmacology\", \"optionC\": \"Symptom\", \"optionD\": \"Diagnosis\", \"correctAnswer\": \"Pharmacology\", \"explanation\": \"Pharmacology là môn nghiên cứu về tương tác của thuốc.\"}, \n" +
+                "    {\"sentenceStart\": \"A headache is a \", \"sentenceEnd\": \" of stress.\", \"optionA\": \"Diagnosis\", \"optionB\": \"Treatment\", \"optionC\": \"Symptom\", \"optionD\": \"Anatomy\", \"correctAnswer\": \"Symptom\", \"explanation\": \"Symptom là triệu chứng của một tình trạng nào đó.\"}, \n" +
+                "    {\"sentenceStart\": \"Modern \", \"sentenceEnd\": \" can cure many previously fatal diseases.\", \"optionA\": \"Anatomy\", \"optionB\": \"Symptom\", \"optionC\": \"Diagnosis\", \"optionD\": \"Treatment\", \"correctAnswer\": \"Treatment\", \"explanation\": \"Treatment (điều trị) hiện đại có thể chữa nhiều bệnh.\"}, \n" +
+                "    {\"sentenceStart\": \"To perform surgery, one must understand human \", \"sentenceEnd\": \".\", \"optionA\": \"Anatomy\", \"optionB\": \"Diagnosis\", \"optionC\": \"Symptom\", \"optionD\": \"Treatment\", \"correctAnswer\": \"Anatomy\", \"explanation\": \"Phẫu thuật đòi hỏi kiến thức về giải phẫu học (Anatomy).\"}\n" +
                 "  ]\n" +
                 "}";
     }
@@ -78,11 +78,11 @@ public class AiService {
                 "    {\"word\": \"Passport\", \"phonetic\": \"/ˈpæs.pɔːrt/\", \"meaning\": \"Hộ chiếu\", \"example\": \"Don't forget to bring your passport to the airport.\"}\n" +
                 "  ],\n" +
                 "  \"questions\": [\n" +
-                "    {\"sentenceStart\": \"You need to show your \", \"sentenceEnd\": \" at the immigration desk.\", \"optionA\": \"Luggage\", \"optionB\": \"Passport\", \"optionC\": \"Security\", \"optionD\": \"Departure\", \"correctAnswer\": \"B\", \"explanation\": \"Bạn cần trình hộ chiếu (Passport) tại bàn nhập cảnh.\"}, \n" +
-                "    {\"sentenceStart\": \"The \", \"sentenceEnd\": \" gate is located at the end of the hall.\", \"optionA\": \"Boarding\", \"optionB\": \"Security\", \"optionC\": \"Luggage\", \"optionD\": \"Passport\", \"correctAnswer\": \"A\", \"explanation\": \"Cổng lên máy bay (Boarding gate) nằm ở cuối sảnh.\"}, \n" +
-                "    {\"sentenceStart\": \"Please check the \", \"sentenceEnd\": \" time of your flight.\", \"optionA\": \"Passport\", \"optionB\": \"Security\", \"optionC\": \"Departure\", \"optionD\": \"Luggage\", \"correctAnswer\": \"C\", \"explanation\": \"Hãy kiểm tra giờ khởi hành (Departure) của chuyến bay.\"}, \n" +
-                "    {\"sentenceStart\": \"All \", \"sentenceEnd\": \" must be scanned before entry.\", \"optionA\": \"Departure\", \"optionB\": \"Passport\", \"optionC\": \"Luggage\", \"optionD\": \"Boarding\", \"correctAnswer\": \"C\", \"explanation\": \"Tất cả hành lý (Luggage) phải được quét qua máy.\"}, \n" +
-                "    {\"sentenceStart\": \"The \", \"sentenceEnd\": \" officer asked for my identification.\", \"optionA\": \"Departure\", \"optionB\": \"Security\", \"optionC\": \"Boarding\", \"optionD\": \"Passport\", \"correctAnswer\": \"B\", \"explanation\": \"Nhân viên an ninh (Security officer) yêu cầu kiểm tra giấy tờ.\"}\n" +
+                "    {\"sentenceStart\": \"You need to show your \", \"sentenceEnd\": \" at the immigration desk.\", \"optionA\": \"Luggage\", \"optionB\": \"Passport\", \"optionC\": \"Security\", \"optionD\": \"Departure\", \"correctAnswer\": \"Passport\", \"explanation\": \"Bạn cần trình hộ chiếu (Passport) tại bàn nhập cảnh.\"}, \n" +
+                "    {\"sentenceStart\": \"The \", \"sentenceEnd\": \" gate is located at the end of the hall.\", \"optionA\": \"Boarding\", \"optionB\": \"Security\", \"optionC\": \"Luggage\", \"optionD\": \"Passport\", \"correctAnswer\": \"Boarding\", \"explanation\": \"Cổng lên máy bay (Boarding gate) nằm ở cuối sảnh.\"}, \n" +
+                "    {\"sentenceStart\": \"Please check the \", \"sentenceEnd\": \" time of your flight.\", \"optionA\": \"Passport\", \"optionB\": \"Security\", \"optionC\": \"Departure\", \"optionD\": \"Luggage\", \"correctAnswer\": \"Departure\", \"explanation\": \"Hãy kiểm tra giờ khởi hành (Departure) của chuyến bay.\"}, \n" +
+                "    {\"sentenceStart\": \"All \", \"sentenceEnd\": \" must be scanned before entry.\", \"optionA\": \"Departure\", \"optionB\": \"Passport\", \"optionC\": \"Luggage\", \"optionD\": \"Boarding\", \"correctAnswer\": \"Luggage\", \"explanation\": \"Tất cả hành lý (Luggage) phải được quét qua máy.\"}, \n" +
+                "    {\"sentenceStart\": \"The \", \"sentenceEnd\": \" officer asked for my identification.\", \"optionA\": \"Departure\", \"optionB\": \"Security\", \"optionC\": \"Boarding\", \"optionD\": \"Passport\", \"correctAnswer\": \"Security\", \"explanation\": \"Nhân viên an ninh (Security officer) yêu cầu kiểm tra giấy tờ.\"}\n" +
                 "  ]\n" +
                 "}";
     }
@@ -98,11 +98,11 @@ public class AiService {
                 "    {\"word\": \"Relationship\", \"phonetic\": \"/rɪˈleɪ.ʃən.ʃɪp/\", \"meaning\": \"Mối quan hệ\", \"example\": \"Honesty is key to a good relationship.\"}\n" +
                 "  ],\n" +
                 "  \"questions\": [\n" +
-                "    {\"sentenceStart\": \"A simple 'Hi' is a common \", \"sentenceEnd\": \" in English.\", \"optionA\": \"Conversation\", \"optionB\": \"Greeting\", \"optionC\": \"Introduction\", \"optionD\": \"Relationship\", \"correctAnswer\": \"B\", \"explanation\": \"'Hi' là một lời chào (Greeting) phổ biến.\"}, \n" +
-                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" yourself is the first step to making friends.\", \"optionA\": \"Introducing\", \"optionB\": \"Greeting\", \"optionC\": \"Friendship\", \"optionD\": \"Conversation\", \"correctAnswer\": \"A\", \"explanation\": \"Giới thiệu bản thân là bước đầu để kết bạn.\"}, \n" +
-                "    {\"sentenceStart\": \"We had an interesting \", \"sentenceEnd\": \" about music.\", \"optionA\": \"Greeting\", \"optionB\": \"Friendship\", \"optionC\": \"Conversation\", \"optionD\": \"Introduction\", \"correctAnswer\": \"C\", \"explanation\": \"Chúng tôi đã có một cuộc hội thoại (Conversation) về âm nhạc.\"}, \n" +
-                "    {\"sentenceStart\": \"Trust is important for a long-lasting \", \"sentenceEnd\": \".\", \"optionA\": \"Greeting\", \"optionB\": \"Introduction\", \"optionC\": \"Friendship\", \"optionD\": \"Conversation\", \"correctAnswer\": \"C\", \"explanation\": \"Sự tin tưởng quan trọng cho một tình bạn (Friendship) bền lâu.\"}, \n" +
-                "    {\"sentenceStart\": \"How is your \", \"sentenceEnd\": \" with your new neighbor?\", \"optionA\": \"Greeting\", \"optionB\": \"Introduction\", \"optionC\": \"Relationship\", \"optionD\": \"Conversation\", \"correctAnswer\": \"C\", \"explanation\": \"Mối quan hệ (Relationship) của bạn với hàng xóm thế nào?\"}\n" +
+                "    {\"sentenceStart\": \"A simple 'Hi' is a common \", \"sentenceEnd\": \" in English.\", \"optionA\": \"Conversation\", \"optionB\": \"Greeting\", \"optionC\": \"Introduction\", \"optionD\": \"Relationship\", \"correctAnswer\": \"Greeting\", \"explanation\": \"'Hi' là một lời chào (Greeting) phổ biến.\"}, \n" +
+                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" yourself is the first step to making friends.\", \"optionA\": \"Introducing\", \"optionB\": \"Greeting\", \"optionC\": \"Friendship\", \"optionD\": \"Conversation\", \"correctAnswer\": \"Introducing\", \"explanation\": \"Giới thiệu bản thân là bước đầu để kết bạn.\"}, \n" +
+                "    {\"sentenceStart\": \"We had an interesting \", \"sentenceEnd\": \" about music.\", \"optionA\": \"Greeting\", \"optionB\": \"Friendship\", \"optionC\": \"Conversation\", \"optionD\": \"Introduction\", \"correctAnswer\": \"Conversation\", \"explanation\": \"Chúng tôi đã có một cuộc hội thoại (Conversation) về âm nhạc.\"}, \n" +
+                "    {\"sentenceStart\": \"Trust is important for a long-lasting \", \"sentenceEnd\": \".\", \"optionA\": \"Greeting\", \"optionB\": \"Introduction\", \"optionC\": \"Friendship\", \"optionD\": \"Conversation\", \"correctAnswer\": \"Friendship\", \"explanation\": \"Sự tin tưởng quan trọng cho một tình bạn (Friendship) bền lâu.\"}, \n" +
+                "    {\"sentenceStart\": \"How is your \", \"sentenceEnd\": \" with your new neighbor?\", \"optionA\": \"Greeting\", \"optionB\": \"Introduction\", \"optionC\": \"Relationship\", \"optionD\": \"Conversation\", \"correctAnswer\": \"Relationship\", \"explanation\": \"Mối quan hệ (Relationship) của bạn với hàng xóm thế nào?\"}\n" +
                 "  ]\n" +
                 "}";
     }
@@ -118,11 +118,11 @@ public class AiService {
                 "    {\"word\": \"Data\", \"phonetic\": \"/ˈdeɪ.tə/\", \"meaning\": \"Dữ liệu\", \"example\": \"The company collects a lot of data about its customers.\"}\n" +
                 "  ],\n" +
                 "  \"questions\": [\n" +
-                "    {\"sentenceStart\": \"Computer \", \"sentenceEnd\": \" includes the physical parts of a computer.\", \"optionA\": \"Software\", \"optionB\": \"Hardware\", \"optionC\": \"Data\", \"optionD\": \"Networking\", \"correctAnswer\": \"B\", \"explanation\": \"Hardware là các thành phần vật lý của máy tính.\"}, \n" +
-                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" refers to programs and instructions for the computer.\", \"optionA\": \"Hardware\", \"optionB\": \"Data\", \"optionC\": \"Software\", \"optionD\": \"Networking\", \"correctAnswer\": \"C\", \"explanation\": \"Software là các chương trình và chỉ dẫn cho máy tính.\"}, \n" +
-                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" is used to connect computers together.\", \"optionA\": \"Hardware\", \"optionB\": \"Networking\", \"optionC\": \"Software\", \"optionD\": \"Data\", \"correctAnswer\": \"B\", \"explanation\": \"Networking được dùng để kết nối các máy tính với nhau.\"}, \n" +
-                "    {\"sentenceStart\": \"Protecting information from online threats is called \", \"sentenceEnd\": \".\", \"optionA\": \"Hardware\", \"optionB\": \"Data\", \"optionC\": \"Software\", \"optionD\": \"Cybersecurity\", \"correctAnswer\": \"D\", \"explanation\": \"Cybersecurity là bảo vệ thông tin khỏi các mối đe dọa trực tuyến.\"}, \n" +
-                "    {\"sentenceStart\": \"The computer processes \", \"sentenceEnd\": \" to give information.\", \"optionA\": \"Software\", \"optionB\": \"Hardware\", \"optionC\": \"Data\", \"optionD\": \"Networking\", \"correctAnswer\": \"C\", \"explanation\": \"Máy tính xử lý dữ liệu (Data) để đưa ra thông tin.\"}\n" +
+                "    {\"sentenceStart\": \"Computer \", \"sentenceEnd\": \" includes the physical parts of a computer.\", \"optionA\": \"Software\", \"optionB\": \"Hardware\", \"optionC\": \"Data\", \"optionD\": \"Networking\", \"correctAnswer\": \"Hardware\", \"explanation\": \"Hardware là các thành phần vật lý của máy tính.\"}, \n" +
+                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" refers to programs and instructions for the computer.\", \"optionA\": \"Hardware\", \"optionB\": \"Data\", \"optionC\": \"Software\", \"optionD\": \"Networking\", \"correctAnswer\": \"Software\", \"explanation\": \"Software là các chương trình và chỉ dẫn cho máy tính.\"}, \n" +
+                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" is used to connect computers together.\", \"optionA\": \"Hardware\", \"optionB\": \"Networking\", \"optionC\": \"Software\", \"optionD\": \"Data\", \"correctAnswer\": \"Networking\", \"explanation\": \"Networking được dùng để kết nối các máy tính với nhau.\"}, \n" +
+                "    {\"sentenceStart\": \"Protecting information from online threats is called \", \"sentenceEnd\": \".\", \"optionA\": \"Hardware\", \"optionB\": \"Data\", \"optionC\": \"Software\", \"optionD\": \"Cybersecurity\", \"correctAnswer\": \"Cybersecurity\", \"explanation\": \"Cybersecurity là bảo vệ thông tin khỏi các mối đe dọa trực tuyến.\"}, \n" +
+                "    {\"sentenceStart\": \"The computer processes \", \"sentenceEnd\": \" to give information.\", \"optionA\": \"Software\", \"optionB\": \"Hardware\", \"optionC\": \"Data\", \"optionD\": \"Networking\", \"correctAnswer\": \"Data\", \"explanation\": \"Máy tính xử lý dữ liệu (Data) để đưa ra thông tin.\"}\n" +
                 "  ]\n" +
                 "}";
     }
@@ -138,11 +138,11 @@ public class AiService {
                 "    {\"word\": \"Customer\", \"phonetic\": \"/ˈkʌs.tə.mər/\", \"meaning\": \"Khách hàng\", \"example\": \"The customer is always right.\"}\n" +
                 "  ],\n" +
                 "  \"questions\": [\n" +
-                "    {\"sentenceStart\": \"A \", \"sentenceEnd\": \" business earns more money than it spends.\", \"optionA\": \"Marketing\", \"optionB\": \"Finance\", \"optionC\": \"Profitable\", \"optionD\": \"Management\", \"correctAnswer\": \"C\", \"explanation\": \"Một doanh nghiệp có lợi nhuận (Profitable) kiếm được nhiều tiền hơn số tiền chi tiêu.\"}, \n" +
-                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" involves promoting and selling products.\", \"optionA\": \"Finance\", \"optionB\": \"Management\", \"optionC\": \"Customer\", \"optionD\": \"Marketing\", \"correctAnswer\": \"D\", \"explanation\": \"Marketing bao gồm việc quảng bá và bán sản phẩm.\"}, \n" +
-                "    {\"sentenceStart\": \"The study of money and investments is called \", \"sentenceEnd\": \".\", \"optionA\": \"Marketing\", \"optionB\": \"Finance\", \"optionC\": \"Management\", \"optionD\": \"Customer\", \"correctAnswer\": \"B\", \"explanation\": \"Việc nghiên cứu về tiền bạc và đầu tư được gọi là Tài chính (Finance).\"}, \n" +
-                "    {\"sentenceStart\": \"Good \", \"sentenceEnd\": \" helps the company run smoothly.\", \"optionA\": \"Management\", \"optionB\": \"Finance\", \"optionC\": \"Customer\", \"optionD\": \"Marketing\", \"correctAnswer\": \"A\", \"explanation\": \"Quản lý (Management) tốt giúp công ty vận hành trơn tru.\"}, \n" +
-                "    {\"sentenceStart\": \"Every business needs a \", \"sentenceEnd\": \" to buy its goods.\", \"optionA\": \"Management\", \"optionB\": \"Finance\", \"optionC\": \"Marketing\", \"optionD\": \"Customer\", \"correctAnswer\": \"D\", \"explanation\": \"Mọi doanh nghiệp đều cần khách hàng (Customer) để mua hàng hóa của mình.\"}\n" +
+                "    {\"sentenceStart\": \"A \", \"sentenceEnd\": \" business earns more money than it spends.\", \"optionA\": \"Marketing\", \"optionB\": \"Finance\", \"optionC\": \"Profitable\", \"optionD\": \"Management\", \"correctAnswer\": \"Profitable\", \"explanation\": \"Một doanh nghiệp có lợi nhuận (Profitable) kiếm được nhiều tiền hơn số tiền chi tiêu.\"}, \n" +
+                "    {\"sentenceStart\": \"\", \"sentenceEnd\": \" involves promoting and selling products.\", \"optionA\": \"Finance\", \"optionB\": \"Management\", \"optionC\": \"Customer\", \"optionD\": \"Marketing\", \"correctAnswer\": \"Marketing\", \"explanation\": \"Marketing bao gồm việc quảng bá và bán sản phẩm.\"}, \n" +
+                "    {\"sentenceStart\": \"The study of money and investments is called \", \"sentenceEnd\": \".\", \"optionA\": \"Marketing\", \"optionB\": \"Finance\", \"optionC\": \"Management\", \"optionD\": \"Customer\", \"correctAnswer\": \"Finance\", \"explanation\": \"Việc nghiên cứu về tiền bạc và đầu tư được gọi là Tài chính (Finance).\"}, \n" +
+                "    {\"sentenceStart\": \"Good \", \"sentenceEnd\": \" helps the company run smoothly.\", \"optionA\": \"Management\", \"optionB\": \"Finance\", \"optionC\": \"Customer\", \"optionD\": \"Marketing\", \"correctAnswer\": \"Management\", \"explanation\": \"Quản lý (Management) tốt giúp công ty vận hành trơn tru.\"}, \n" +
+                "    {\"sentenceStart\": \"Every business needs a \", \"sentenceEnd\": \" to buy its goods.\", \"optionA\": \"Management\", \"optionB\": \"Finance\", \"optionC\": \"Marketing\", \"optionD\": \"Customer\", \"correctAnswer\": \"Customer\", \"explanation\": \"Mọi doanh nghiệp đều cần khách hàng (Customer) để mua hàng hóa của mình.\"}\n" +
                 "  ]\n" +
                 "}";
     }
@@ -178,10 +178,10 @@ public class AiService {
                 "   - 'meaning': Nghĩa tiếng Việt.\n" +
                 "   - 'example': Một câu ví dụ tiếng Anh có chứa từ đó.\n" +
                 "3. 'questions': Là một mảng gồm 5 Object câu hỏi, mỗi Object có các trường:\n" +
-                "   - 'sentenceStart': Phần trước từ khóa.\n" +
-                "   - 'sentenceEnd': Phần sau từ khóa.\n" +
+                "   - 'sentenceStart': Phần trước từ khóa (Nếu câu hỏi là một câu hỏi trực tiếp, hãy để toàn bộ câu hỏi ở đây).\n" +
+                "   - 'sentenceEnd': Phần sau từ khóa (Có thể để trống).\n" +
                 "   - 'optionA', 'optionB', 'optionC', 'optionD': 4 lựa chọn.\n" +
-                "   - 'correctAnswer': Đáp án đúng.\n" +
+                "   - 'correctAnswer': Đáp án đúng (Ghi đầy đủ nội dung của đáp án đó, KHÔNG ghi A, B, C, D).\n" +
                 "   - 'explanation': Giải thích ngắn gọn bằng tiếng Việt.\n\n" +
                 "BẮT BUỘC TRẢ VỀ DUY NHẤT JSON theo định dạng này:\n" +
                 "{\n" +

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 
 import 'major_selection_screen.dart';
+import 'roadmap_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool showLoginFirst;
@@ -42,7 +43,27 @@ class _LoginScreenState extends State<LoginScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-        _goToMajorSelection();
+
+        // Gọi API Login của Spring Boot để lấy thông tin Major (nếu có)
+        final String springBootLoginUrl = "${ApiConfig.users}/login";
+        var response = await http.post(
+          Uri.parse(springBootLoginUrl),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "username": FirebaseAuth.instance.currentUser?.displayName ?? _emailController.text.split('@')[0],
+            "password": _passwordController.text.trim(),
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          var userData = jsonDecode(utf8.decode(response.bodyBytes));
+          String? major = userData['major'];
+          _handleLoginSuccess(major);
+        } else {
+          // Nếu backend chưa có user này (có thể do lỗi sync trước đó), vẫn cho vào để chọn Major
+          String currentName = FirebaseAuth.instance.currentUser?.displayName ?? _emailController.text.split('@')[0];
+          _goToMajorSelection(currentName);
+        }
       } else {
         if (_passwordController.text != _confirmPasswordController.text) {
           _showError("Mật khẩu xác nhận không khớp!");
@@ -55,14 +76,15 @@ class _LoginScreenState extends State<LoginScreen> {
           password: _passwordController.text.trim(),
         );
 
-        await userCredential.user?.updateDisplayName(_nameController.text.trim());
+        String nameToSave = _nameController.text.trim();
+        await userCredential.user?.updateDisplayName(nameToSave);
 
         final String springBootApiUrl = "${ApiConfig.users}/register";
         var response = await http.post(
           Uri.parse(springBootApiUrl),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
-            "username": _nameController.text.trim(),
+            "username": nameToSave,
             "email": _emailController.text.trim(),
             "password": _passwordController.text.trim(),
           }),
@@ -70,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (response.statusCode == 200) {
           _showSuccess("Đăng ký thành công! Đang chuyển vào ứng dụng...");
-          _goToMajorSelection();
+          _goToMajorSelection(nameToSave);
         } else {
           _showError("Firebase OK nhưng lỗi đồng bộ Spring Boot: ${response.body}");
         }
@@ -84,12 +106,28 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = false);
   }
 
-  void _goToMajorSelection() {
+  void _handleLoginSuccess(String? major) {
     if (!mounted) return;
-    String currentName = FirebaseAuth.instance.currentUser?.displayName ?? "Học viên";
+    // Lấy tên từ Firebase hoặc fallback về phần trước @ của email
+    String currentName = FirebaseAuth.instance.currentUser?.displayName ?? _emailController.text.split('@')[0];
+
+    if (major != null && major.isNotEmpty) {
+      // Nếu đã có Major, vào thẳng màn hình Roadmap
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => RoadmapScreen(username: currentName, major: major)),
+      );
+    } else {
+      // Nếu chưa có, đi tới màn hình chọn Major
+      _goToMajorSelection(currentName);
+    }
+  }
+
+  void _goToMajorSelection(String username) {
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => MajorSelectionScreen(username: currentName)),
+      MaterialPageRoute(builder: (_) => MajorSelectionScreen(username: username)),
     );
   }
 
@@ -123,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text("Nhập email của bạn để nhận liên kết đặt lại mật khẩu an toàn từ LingoBloom.", style: TextStyle(color: textColor)),
+                      Text("Nhập email của bạn để nhận liên kết đặt lại mật khẩu an toàn .", style: TextStyle(color: textColor)),
                       const SizedBox(height: 20),
                       Container(
                         decoration: BoxDecoration(color: inputBgColor, borderRadius: BorderRadius.circular(15)),
@@ -219,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Icon(Icons.eco, color: titleColor, size: 30),
                       const SizedBox(width: 8),
                       const Text(
-                        "LingoBloom",
+                        "AI Learning App",
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F8A50)),
                       ),
                     ],

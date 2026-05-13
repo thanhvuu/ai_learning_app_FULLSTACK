@@ -10,8 +10,9 @@ import 'package:firebase_auth/firebase_auth.dart'; // Thêm import Firebase đ�
 
 class DragDropQuizScreen extends StatefulWidget {
   final List<QuestionModel> questions;
+  final int lessonId;
 
-  const DragDropQuizScreen({super.key, required this.questions});
+  const DragDropQuizScreen({super.key, required this.questions, required this.lessonId});
 
   @override
   State<DragDropQuizScreen> createState() => _DragDropQuizScreenState();
@@ -48,6 +49,23 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     hasChecked = false;
   }
 
+  bool _isCorrect(String? selected, QuestionModel q) {
+    if (selected == null) return false;
+    String cleanSelected = selected.trim().toLowerCase();
+    String cleanCorrect = q.correctAnswer.trim().toLowerCase();
+
+    // Kiểm tra nếu đáp án đúng là text đầy đủ
+    if (cleanSelected == cleanCorrect) return true;
+
+    // Kiểm tra nếu đáp án đúng là chữ cái (A, B, C, D)
+    if (cleanCorrect == "a" && cleanSelected == q.optionA.trim().toLowerCase()) return true;
+    if (cleanCorrect == "b" && cleanSelected == q.optionB.trim().toLowerCase()) return true;
+    if (cleanCorrect == "c" && cleanSelected == q.optionC.trim().toLowerCase()) return true;
+    if (cleanCorrect == "d" && cleanSelected == q.optionD.trim().toLowerCase()) return true;
+
+    return false;
+  }
+
   // --- HÀM KIỂM TRA ĐÁP ÁN ---
   void _checkAnswer() {
     if (droppedWord == null) return;
@@ -55,7 +73,7 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
     setState(() {
       hasChecked = true;
       // Nếu chọn sai thì trừ tim
-      if (droppedWord?.trim() != widget.questions[currentIndex].correctAnswer.trim()) {
+      if (!_isCorrect(droppedWord, widget.questions[currentIndex])) {
         hearts--;
         if (hearts == 0) {
           _showGameOverDialog();
@@ -72,6 +90,22 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
       });
     } else {
       _showCompletionDialog();
+    }
+  }
+
+  Future<void> _updateLessonProgress() async {
+    final String url = "${ApiConfig.lessons}/update-progress";
+    try {
+      await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "lessonId": widget.lessonId,
+          "progress": 100
+        }),
+      );
+    } catch (e) {
+      print("Lỗi cập nhật tiến độ bài học: $e");
     }
   }
 
@@ -158,6 +192,7 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
 
                         // 1. Gọi API cộng 5 phút học vào Database
                         await _addStudyTime();
+                        await _updateLessonProgress();
 
                         // 2. Thoát về trang chủ sau khi cộng giờ thành công
                         if (context.mounted) {
@@ -225,6 +260,7 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
                   Text(currentQ.sentenceEnd, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: textColor)),
                 ],
               ),
+
               const SizedBox(height: 50),
 
               Wrap(
@@ -246,15 +282,15 @@ class _DragDropQuizScreenState extends State<DragDropQuizScreen> {
                 Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                        color: droppedWord?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.green[900] : Colors.green[100]) : (isDarkMode ? Colors.red[900] : Colors.red[100]),
+                        color: _isCorrect(droppedWord, currentQ) ? (isDarkMode ? Colors.green[900] : Colors.green[100]) : (isDarkMode ? Colors.red[900] : Colors.red[100]),
                         borderRadius: BorderRadius.circular(15)
                     ),
                     child: Column(
                         children: [
                           Text(
-                              droppedWord?.trim() == currentQ.correctAnswer.trim() ? "Chính xác!" : "Sai rồi! Đáp án đúng: ${currentQ.correctAnswer}",
+                              _isCorrect(droppedWord, currentQ) ? "Chính xác!" : "Sai rồi! Đáp án đúng: ${currentQ.correctAnswer}",
                               style: TextStyle(
-                                  color: droppedWord?.trim() == currentQ.correctAnswer.trim() ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800]),
+                                  color: _isCorrect(droppedWord, currentQ) ? (isDarkMode ? Colors.greenAccent : Colors.green[800]) : (isDarkMode ? Colors.redAccent : Colors.red[800]),
                                   fontWeight: FontWeight.bold, fontSize: 16
                               )
                           ),

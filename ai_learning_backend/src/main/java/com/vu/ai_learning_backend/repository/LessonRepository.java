@@ -13,4 +13,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     // Tìm bài học đầu tiên khớp với category (Dùng cho Caching)
     Lesson findFirstByCategory(String category);
+
+    // Tìm bài học của user cụ thể theo category
+    Lesson findFirstByUsernameAndCategory(String username, String category);
 }
