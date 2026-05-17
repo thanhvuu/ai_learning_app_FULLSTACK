@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
 // Các màn hình của bạn
-import 'screen/login_screen.dart';
-import 'screen/welcome_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/welcome_screen.dart';
 
 // Các Providers
 import 'providers/quiz_provider.dart';
