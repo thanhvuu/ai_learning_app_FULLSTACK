@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:ai_learning_app/core/config/api_config.dart';
 import 'package:provider/provider.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
 import 'package:ai_learning_app/core/localization/app_localizations.dart';
+import 'package:ai_learning_app/data/models/leaderboard_user_model.dart';
+import 'package:ai_learning_app/data/services/implements/leaderboard_service_impl.dart';
+import 'package:ai_learning_app/presentation/view_models/discover_view_model.dart';
 
 class DiscoverScreen extends StatefulWidget {
   // 1. KHAI BÁO THÊM BIẾN USERNAME Ở ĐÂY
@@ -19,36 +19,26 @@ class DiscoverScreen extends StatefulWidget {
 }
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
-  List<dynamic> leaderboard = [];
-  bool isLoading = true;
+  late final DiscoverViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    fetchLeaderboard();
+    _viewModel = DiscoverViewModel(LeaderboardServiceImpl());
+    _viewModel.loadLeaderboard();
   }
 
-  Future<void> fetchLeaderboard() async {
-    final String apiUrl = "${ApiConfig.users}/leaderboard";
-    try {
-      var response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        setState(() {
-          leaderboard = jsonDecode(utf8.decode(response.bodyBytes));
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      print("Lỗi lấy bảng xếp hạng: $e");
-      setState(() => isLoading = false);
-    }
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
   }
 
-  Widget _buildTop3Podium(Color textColor) {
+  Widget _buildTop3Podium(List<LeaderboardUserModel> leaderboard, Color textColor) {
     if (leaderboard.isEmpty) return const SizedBox();
-    var rank1 = leaderboard.isNotEmpty ? leaderboard[0] : null;
-    var rank2 = leaderboard.length > 1 ? leaderboard[1] : null;
-    var rank3 = leaderboard.length > 2 ? leaderboard[2] : null;
+    final rank1 = leaderboard.isNotEmpty ? leaderboard[0] : null;
+    final rank2 = leaderboard.length > 1 ? leaderboard[1] : null;
+    final rank3 = leaderboard.length > 2 ? leaderboard[2] : null;
 
     return Padding(
       padding: const EdgeInsets.only(top: 20, bottom: 30),
@@ -66,7 +56,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
-  Widget _buildAvatarItem(dynamic user, int rank, double size, Color rankColor, Color textColor) {
+  Widget _buildAvatarItem(LeaderboardUserModel user, int rank, double size, Color rankColor, Color textColor) {
     return Column(
       children: [
         Stack(
@@ -104,21 +94,21 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          user['username'] ?? "Unknown",
+          user.username,
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "${user['totalXp']} XP",
+              "${user.totalXp} XP",
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[500], fontSize: 13),
             ),
             const SizedBox(width: 4),
             const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
             const SizedBox(width: 4),
             Text(
-              "${user['wateredPlants'] ?? 0} 🌱",
+              "${user.wateredPlants} 🌱",
               style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F8A50), fontSize: 13),
             ),
           ],
@@ -129,12 +119,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 3. SỬA LẠI ĐỂ LẤY TÊN TỪ WIDGET TRUYỀN VÀO (thay vì gán cứng Đặng Thanh Vũ)
-    int myIndex = leaderboard.indexWhere((u) => u['username'] == widget.username);
-    int myRank = myIndex >= 0 ? myIndex + 1 : 0;
-    int myXp = myIndex >= 0 ? leaderboard[myIndex]['totalXp'] : 0;
-    int myWateredPlants = myIndex >= 0 ? (leaderboard[myIndex]['wateredPlants'] ?? 0) : 0;
-
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final langProvider = LanguageProvider.safeOf(context);
     final t = AppLocalizations(langProvider.languageCode);
@@ -164,11 +148,26 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           )
         ],
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator(color: titleColor))
-          : Column(
+      body: AnimatedBuilder(
+        animation: _viewModel,
+        builder: (context, _) {
+          final leaderboard = _viewModel.leaderboard;
+          final myIndex = leaderboard.indexWhere((u) => u.username == widget.username);
+          final myRank = myIndex >= 0 ? myIndex + 1 : 0;
+          final myXp = myIndex >= 0 ? leaderboard[myIndex].totalXp : 0;
+          final myWateredPlants = myIndex >= 0 ? leaderboard[myIndex].wateredPlants : 0;
+
+          if (_viewModel.isLoading) {
+            return Center(child: CircularProgressIndicator(color: titleColor));
+          }
+
+          if (_viewModel.errorMessage != null) {
+            return Center(child: Text(_viewModel.errorMessage!, style: TextStyle(color: textColor)));
+          }
+
+          return Column(
         children: [
-          _buildTop3Podium(textColor),
+          _buildTop3Podium(leaderboard, textColor),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Row(
@@ -203,16 +202,16 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       const CircleAvatar(radius: 20, backgroundColor: Colors.blueGrey, child: Icon(Icons.person, color: Colors.white, size: 20)),
                       const SizedBox(width: 15),
                       Expanded(
-                        child: Text(user['username'] ?? "Unknown", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+                        child: Text(user.username, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${user['totalXp']} XP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                          Text("${user.totalXp} XP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
                           const SizedBox(width: 6),
                           const Text("•", style: TextStyle(color: Colors.grey, fontSize: 12)),
                           const SizedBox(width: 6),
-                          Text("${user['wateredPlants'] ?? 0} 🌱", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F8A50))),
+                          Text("${user.wateredPlants} 🌱", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F8A50))),
                         ],
                       ),
                       const SizedBox(width: 10),
@@ -284,6 +283,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ),
           ),
         ],
+      );
+        },
       ),
     );
   }
