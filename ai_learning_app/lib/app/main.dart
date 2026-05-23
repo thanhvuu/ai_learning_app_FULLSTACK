@@ -9,7 +9,7 @@ import 'package:ai_learning_app/presentation/views/login_screen.dart';
 import 'package:ai_learning_app/presentation/views/welcome_screen.dart';
 
 // Các Providers
-import 'package:ai_learning_app/presentation/view_models/quiz_view_model.dart';
+import 'package:ai_learning_app/presentation/view_models/implements/quiz_viewmodel.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
 
@@ -21,7 +21,7 @@ void main() async {
     // Bọc app bằng MultiProvider để chứa nhiều provider
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => QuizProvider()),
+        ChangeNotifierProvider(create: (_) => QuizViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],

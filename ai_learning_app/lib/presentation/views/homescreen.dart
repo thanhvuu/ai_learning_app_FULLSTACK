@@ -17,7 +17,7 @@ import 'package:ai_learning_app/core/config/api_config.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
 import 'package:ai_learning_app/core/localization/app_localizations.dart';
-// import 'package:ai_learning_app/presentation/view_models/quiz_view_model.dart'; // Mở lại nếu có dùng
+// import 'package:ai_learning_app/presentation/view_models/implements/quiz_viewmodel.dart'; // Mở lại nếu có dùng
 import 'discover_screen.dart';
 import 'package:ai_learning_app/data/models/question_model.dart';
 import 'drag_drop_quiz_screen.dart';
@@ -26,7 +26,7 @@ import 'fill_blank_screen.dart';
 import 'profile_screen.dart';
 import 'my_lessons_screen.dart';
 import 'package:ai_learning_app/presentation/widgets/dictionary_bottom_sheet.dart';
-import 'package:ai_learning_app/data/services/dictionary_helper.dart';
+import 'package:ai_learning_app/global/locator_service.dart';
 import 'vocabulary_garden_screen.dart'; // Thêm dòng này
 import 'roadmap_screen.dart';
 
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (searchWord.isEmpty) return;
 
     try {
-      Map<String, dynamic>? wordData = await DictionaryHelper.lookupWordOffline(searchWord);
+      Map<String, dynamic>? wordData = await ServiceLocator.dictionaryService.lookupWordOffline(searchWord);
 
       if (mounted) {
         if (wordData != null) {

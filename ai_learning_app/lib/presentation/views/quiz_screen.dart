@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ai_learning_app/core/config/api_config.dart';
-import 'package:ai_learning_app/presentation/view_models/quiz_view_model.dart';
+import 'package:ai_learning_app/presentation/view_models/implements/quiz_viewmodel.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -26,7 +26,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Future<void> checkAnswer(BuildContext context, QuizProvider quizState) async {
+  Future<void> checkAnswer(BuildContext context, QuizViewModel quizState) async {
     if (!hasSubmitted) {
       if (selectedOption != null) {
         String correctAns = quizState.questions[currentQuestionIndex]['correctAnswer'].toString().trim();
@@ -108,7 +108,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final quizState = context.watch<QuizProvider>();
+    final quizState = context.watch<QuizViewModel>();
     if (quizState.questions.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),

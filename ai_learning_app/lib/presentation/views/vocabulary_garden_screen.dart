@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
 import 'package:ai_learning_app/core/localization/app_localizations.dart';
-import 'package:ai_learning_app/data/services/dictionary_helper.dart';
+import 'package:ai_learning_app/global/locator_service.dart';
 import 'flashcard_screen.dart';
 
 class VocabularyGardenScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _VocabularyGardenScreenState extends State<VocabularyGardenScreen> {
   }
 
   Future<void> _loadGarden() async {
-    var words = await DictionaryHelper.getGardenWords();
+    var words = await ServiceLocator.dictionaryService.getGardenWords();
     setState(() {
       _gardenWords = words;
       _isLoading = false;
@@ -201,7 +201,7 @@ class _VocabularyGardenScreenState extends State<VocabularyGardenScreen> {
   }
 
   Future<void> _removeWord(String word) async {
-    await DictionaryHelper.toggleSaveWord(word, "");
+    await ServiceLocator.dictionaryService.toggleSaveWord(word, "");
     _loadGarden();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${S.of(context, 'removed_from_garden')} '$word' ${S.of(context, 'from_garden')}", style: const TextStyle(color: Colors.white))));
