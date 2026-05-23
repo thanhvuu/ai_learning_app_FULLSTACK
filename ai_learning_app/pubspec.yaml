@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.0
+  dio: ^5.9.0
   dotted_border: ^2.1.0
 
   firebase_core: ^4.5.0

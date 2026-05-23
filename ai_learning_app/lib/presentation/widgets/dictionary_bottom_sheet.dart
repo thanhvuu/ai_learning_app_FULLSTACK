@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:ai_learning_app/core/network/http_compat.dart' as http;
 import 'dart:convert';
 import 'package:ai_learning_app/core/config/api_config.dart'; // Đảm bảo đường dẫn này đúng với project của bạn
 import 'package:flutter_tts/flutter_tts.dart';
