@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:ai_learning_app/firebase_options.dart';
 
 // Các màn hình của bạn
 import 'package:ai_learning_app/presentation/views/login_screen.dart';
 import 'package:ai_learning_app/presentation/views/welcome_screen.dart';
+import 'package:ai_learning_app/presentation/views/no_internet_screen.dart';
 
 // Các Providers
 import 'package:ai_learning_app/presentation/view_models/implements/quiz_viewmodel.dart';
@@ -71,9 +73,31 @@ class MyApp extends StatelessWidget {
           // --- Lắng nghe ThemeProvider để quyết định dùng Sáng hay Tối ---
           themeMode: themeProvider.themeMode,
 
-          // Giữ nguyên luồng kiểm tra màn hình Welcome/Login của bạn
-          home: const StartupGate(),
+          // Luôn theo dõi trạng thái kết nối mạng
+          home: const ConnectivityGate(),
         );
+      },
+    );
+  }
+}
+
+
+class ConnectivityGate extends StatelessWidget {
+  const ConnectivityGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<ConnectivityResult>>(
+      stream: Connectivity().onConnectivityChanged,
+      builder: (context, snapshot) {
+        final results = snapshot.data ?? const [ConnectivityResult.mobile];
+        final hasInternet = !results.contains(ConnectivityResult.none);
+
+        if (!hasInternet) {
+          return const NoInternetScreen();
+        }
+
+        return const StartupGate();
       },
     );
   }
