@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../api_config.dart'; // Đảm bảo đường dẫn này đúng với project của bạn
+import 'package:ai_learning_app/core/config/api_config.dart'; // Đảm bảo đường dẫn này đúng với project của bạn
 import 'package:flutter_tts/flutter_tts.dart';
-import '../services/dictionary_helper.dart';
+import 'package:ai_learning_app/data/services/dictionary_helper.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
+import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 
 class DictionaryBottomSheet {
   static void show(BuildContext context, Map<String, dynamic> initialData, String searchWord) {

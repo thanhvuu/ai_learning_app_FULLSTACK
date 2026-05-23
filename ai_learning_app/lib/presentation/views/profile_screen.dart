@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // <--- Import Provider
-import '../providers/theme_provider.dart'; // <--- Import ThemeProvider của bạn
-import '../providers/language_provider.dart'; // <--- Import LanguageProvider
-import '../l10n/app_localizations.dart'; // <--- Import bộ dịch
+import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart'; // <--- Import ThemeProvider của bạn
+import 'package:ai_learning_app/presentation/view_models/language_view_model.dart'; // <--- Import LanguageProvider
+import 'package:ai_learning_app/core/localization/app_localizations.dart'; // <--- Import bộ dịch
 import 'welcome_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final String username;

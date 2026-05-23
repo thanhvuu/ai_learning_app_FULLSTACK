@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart'; // <--- Thêm import
-import '../providers/theme_provider.dart'; // <--- Thêm import
-import '../providers/language_provider.dart';
-import '../l10n/app_localizations.dart';
+import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart'; // <--- Thêm import
+import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
+import 'package:ai_learning_app/core/localization/app_localizations.dart';
 
 // Import màn hình
 import 'login_screen.dart';

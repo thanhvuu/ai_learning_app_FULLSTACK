@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../api_config.dart';
-import '../providers/quiz_provider.dart';
+import 'package:ai_learning_app/core/config/api_config.dart';
+import 'package:ai_learning_app/presentation/view_models/quiz_view_model.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});

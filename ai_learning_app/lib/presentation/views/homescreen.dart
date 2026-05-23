@@ -13,20 +13,20 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:translator/translator.dart';
 
-import '../api_config.dart';
-import '../providers/theme_provider.dart';
-import '../providers/language_provider.dart';
-import '../l10n/app_localizations.dart';
-// import '../providers/quiz_provider.dart'; // Mở lại nếu có dùng
+import 'package:ai_learning_app/core/config/api_config.dart';
+import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
+import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
+import 'package:ai_learning_app/core/localization/app_localizations.dart';
+// import 'package:ai_learning_app/presentation/view_models/quiz_view_model.dart'; // Mở lại nếu có dùng
 import 'discover_screen.dart';
-import '../models/question_model.dart';
+import 'package:ai_learning_app/data/models/question_model.dart';
 import 'drag_drop_quiz_screen.dart';
 import 'multiple_choice_screen.dart';
 import 'fill_blank_screen.dart';
 import 'profile_screen.dart';
 import 'my_lessons_screen.dart';
-import '../widgets/dictionary_bottom_sheet.dart';
-import '../services/dictionary_helper.dart';
+import 'package:ai_learning_app/presentation/widgets/dictionary_bottom_sheet.dart';
+import 'package:ai_learning_app/data/services/dictionary_helper.dart';
 import 'vocabulary_garden_screen.dart'; // Thêm dòng này
 import 'roadmap_screen.dart';
 
