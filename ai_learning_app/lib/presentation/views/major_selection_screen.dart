@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'roadmap_screen.dart';
 import 'homescreen.dart';
-import 'package:http/http.dart' as http;
+import 'package:ai_learning_app/core/network/http_compat.dart' as http;
 import 'package:ai_learning_app/core/config/api_config.dart';
 
 class MajorSelectionScreen extends StatefulWidget {

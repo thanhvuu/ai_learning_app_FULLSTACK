@@ -4,7 +4,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:ai_learning_app/data/models/question_model.dart';
 import 'package:provider/provider.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
-import 'package:http/http.dart' as http;
+import 'package:ai_learning_app/core/network/http_compat.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart'; // Thêm import Firebase để lấy tên User
 
