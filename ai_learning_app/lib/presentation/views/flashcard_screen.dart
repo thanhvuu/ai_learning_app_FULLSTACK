@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ai_learning_app/data/services/dictionary_helper.dart';
+import 'package:ai_learning_app/global/locator_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:ai_learning_app/core/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,7 +24,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     var currentWord = widget.reviewWords[_currentIndex];
 
     // Cập nhật SQLite (Offline)
-    await DictionaryHelper.updateWordProgress(
+    await ServiceLocator.dictionaryService.updateWordProgress(
         currentWord['word'],
         currentWord['level'] ?? 0,
         isRemembered

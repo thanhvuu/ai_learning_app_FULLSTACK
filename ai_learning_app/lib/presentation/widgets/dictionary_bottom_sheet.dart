@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ai_learning_app/core/config/api_config.dart'; // Đảm bảo đường dẫn này đúng với project của bạn
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:ai_learning_app/data/services/dictionary_helper.dart';
+import 'package:ai_learning_app/global/locator_service.dart';
 import 'package:provider/provider.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 
@@ -54,7 +54,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
   // HÀM KIỂM TRA TRẠNG THÁI LƯU
   Future<void> _checkSavedStatus() async {
     String word = wordData['word'] ?? widget.searchWord;
-    bool saved = await DictionaryHelper.isWordSaved(word);
+    bool saved = await ServiceLocator.dictionaryService.isWordSaved(word);
     if (mounted) {
       setState(() => _isSaved = saved);
     }
@@ -64,7 +64,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
   Future<void> _toggleSave() async {
     String word = wordData['word'] ?? widget.searchWord;
     String meaning = wordData['meaning'] ?? "Không có nghĩa";
-    bool newState = await DictionaryHelper.toggleSaveWord(word, meaning);
+    bool newState = await ServiceLocator.dictionaryService.toggleSaveWord(word, meaning);
 
     if (mounted) {
       setState(() => _isSaved = newState);
