@@ -6,7 +6,13 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_username", columnList = "username"),
+                @Index(name = "idx_users_total_xp", columnList = "total_xp")
+        }
+)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,6 +22,7 @@ public class User {
     private String email;
     private String password;
 
+    @Column(unique = true)
     private String username;
 
     @Column(columnDefinition = "integer default 0")
@@ -51,4 +58,4 @@ public class User {
     public int getTotalXp() { return totalXp != null ? totalXp : 0; }
     public int getWateredPlants() { return wateredPlants != null ? wateredPlants : 0; }
 }
-
+

@@ -22,13 +22,13 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   // Lưu lựa chọn vào bộ nhớ điện thoại
-  _saveToPrefs(bool isDark) async {
+  Future<void> _saveToPrefs(bool isDark) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('theme_mode', isDark);
   }
 
   // Đọc lựa chọn từ bộ nhớ khi mở app
-  _loadFromPrefs() async {
+  Future<void> _loadFromPrefs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isDark = prefs.getBool('theme_mode') ?? false;
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;

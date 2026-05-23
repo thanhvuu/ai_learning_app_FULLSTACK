@@ -7,7 +7,14 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "lessons")
+@Table(
+        name = "lessons",
+        indexes = {
+                @Index(name = "idx_lessons_username_created_at", columnList = "username, created_at"),
+                @Index(name = "idx_lessons_category", columnList = "category"),
+                @Index(name = "idx_lessons_username_category", columnList = "username, category")
+        }
+)
 public class Lesson {
 
     @Id
@@ -19,6 +26,7 @@ public class Lesson {
     @Column(length = 1000)
     private String pdfUrl;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)

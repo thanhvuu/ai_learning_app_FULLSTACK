@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ai_learning_app/global/locator_service.dart';
 import 'package:ai_learning_app/core/network/http_compat.dart' as http;
 import 'package:ai_learning_app/core/config/api_config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class FlashcardScreen extends StatefulWidget {
   final List<Map<String, dynamic>> reviewWords;
@@ -25,9 +24,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
     // Cập nhật SQLite (Offline)
     await ServiceLocator.dictionaryService.updateWordProgress(
-        currentWord['word'],
-        currentWord['level'] ?? 0,
-        isRemembered
+      currentWord['word'],
+      currentWord['level'] ?? 0,
+      isRemembered,
     );
 
     // Nếu nhớ từ, cộng vào biến đếm
@@ -56,12 +55,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       String username = "vucumu191"; // SỬA LẠI ĐỂ LẤY USERNAME ĐỘNG CỦA BẠN
 
       // Giả sử API của bạn là: /api/users/update-plants
-      final String url = "${ApiConfig.baseUrl}/api/users/update-plants?username=$username&plants=$_wateredCount";
+      final String url =
+          "${ApiConfig.baseUrl}/api/users/update-plants?username=$username&plants=$_wateredCount";
 
       await http.post(Uri.parse(url)); // Gửi báo cáo lên server
-      print("Đã cộng $_wateredCount cây lên server!");
+      debugPrint("Đã cộng $_wateredCount cây lên server!");
     } catch (e) {
-      print("Lỗi khi gửi thành tích lên server: $e");
+      debugPrint("Lỗi khi gửi thành tích lên server: $e");
     }
   }
 
@@ -71,19 +71,40 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("🎉 Tuyệt vời!", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
-        content: const Text("Bạn đã tưới nước xong cho toàn bộ khu vườn hôm nay. Các mầm cây đang lớn lên rất nhanh!", textAlign: TextAlign.center),
+        title: const Text(
+          "🎉 Tuyệt vời!",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF0F8A50),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          "Bạn đã tưới nước xong cho toàn bộ khu vườn hôm nay. Các mầm cây đang lớn lên rất nhanh!",
+          textAlign: TextAlign.center,
+        ),
         actions: [
           Center(
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F8A50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F8A50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
               onPressed: () {
                 Navigator.pop(context); // Tắt Dialog
-                Navigator.pop(context, true); // Thoát về Vườn Ươm & báo load lại
+                Navigator.pop(
+                  context,
+                  true,
+                ); // Thoát về Vườn Ươm & báo load lại
               },
-              child: const Text("Quay lại Vườn", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Quay lại Vườn",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -91,7 +112,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.reviewWords.isEmpty) return const Scaffold(body: Center(child: Text("Không có từ nào để ôn!")));
+    if (widget.reviewWords.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text("Không có từ nào để ôn!")),
+      );
+    }
 
     var currentWord = widget.reviewWords[_currentIndex];
     const Color primaryGreen = Color(0xFF0F8A50);
@@ -101,8 +126,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(context, true)),
-        title: Text("Đang tưới nước: ${_currentIndex + 1}/${widget.reviewWords.length}", style: const TextStyle(color: Colors.grey, fontSize: 16)),
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.grey),
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        title: Text(
+          "Đang tưới nước: ${_currentIndex + 1}/${widget.reviewWords.length}",
+          style: const TextStyle(color: Colors.grey, fontSize: 16),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -132,8 +163,19 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
-                    border: _isFlipped ? Border.all(color: primaryGreen.withOpacity(0.5), width: 2) : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryGreen.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                    border: _isFlipped
+                        ? Border.all(
+                            color: primaryGreen.withValues(alpha: 0.5),
+                            width: 2,
+                          )
+                        : null,
                   ),
                   child: Center(
                     child: Column(
@@ -141,7 +183,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       children: [
                         Text(
                           currentWord['word'],
-                          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: _isFlipped ? primaryGreen : const Color(0xFF1B2A22)),
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: _isFlipped
+                                ? primaryGreen
+                                : const Color(0xFF1B2A22),
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -152,12 +200,21 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                             child: Text(
                               currentWord['meaning'] ?? "",
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 20, color: Colors.grey[700]),
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey[700],
+                              ),
                             ),
-                          )
+                          ),
                         ] else ...[
-                          Text("Chạm để xem nghĩa", style: TextStyle(color: Colors.grey[400], fontStyle: FontStyle.italic)),
-                        ]
+                          Text(
+                            "Chạm để xem nghĩa",
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -179,11 +236,22 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red[50],
                       foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       elevation: 0,
                     ),
-                    child: const Text("Chưa nhớ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "Chưa nhớ",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
 
                   // NÚT ĐÃ NHỚ
@@ -192,11 +260,22 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryGreen,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       elevation: 0,
                     ),
-                    child: const Text("Đã thuộc!", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "Đã thuộc!",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),

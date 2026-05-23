@@ -1,6 +1,7 @@
 /// Lớp quản lý tất cả chuỗi hiển thị của ứng dụng theo ngôn ngữ.
 /// Sử dụng: AppLocalizations.of(context).translate('key')
 /// hoặc shortcut: S.of(context, 'key')
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,10 @@ class AppLocalizations {
   /// Truy cập nhanh từ context (an toàn khi Provider chưa sẵn sàng)
   static AppLocalizations of(BuildContext context) {
     try {
-      final lang = Provider.of<LanguageProvider>(context, listen: false).languageCode;
+      final lang = Provider.of<LanguageProvider>(
+        context,
+        listen: false,
+      ).languageCode;
       return AppLocalizations(lang);
     } catch (_) {
       // Fallback về Tiếng Việt nếu Provider chưa được đăng ký (ví dụ sau hot-reload)
@@ -24,7 +28,9 @@ class AppLocalizations {
 
   /// Hàm dịch từ key
   String translate(String key) {
-    return _localizedValues[languageCode]?[key] ?? _localizedValues['vi']?[key] ?? key;
+    return _localizedValues[languageCode]?[key] ??
+        _localizedValues['vi']?[key] ??
+        key;
   }
 
   // ============================================
@@ -59,10 +65,12 @@ class AppLocalizations {
       'opening_gallery': 'Đang mở thư viện ảnh...',
       'connecting_help': 'Đang kết nối đến Trung tâm hỗ trợ...',
       'about_app': 'Về App',
-      'about_app_content': 'Phiên bản 1.0.0\n\nỨng dụng học tập thông minh tích hợp AI, giúp bạn biến mọi tài liệu thành bài giảng tương tác.',
+      'about_app_content':
+          'Phiên bản 1.0.0\n\nỨng dụng học tập thông minh tích hợp AI, giúp bạn biến mọi tài liệu thành bài giảng tương tác.',
       'close': 'Đóng',
       'logout_confirm_title': 'Đăng xuất',
-      'logout_confirm_message': 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?',
+      'logout_confirm_message':
+          'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?',
       'cancel': 'Hủy',
       'logout_success': 'Đã đăng xuất thành công!',
       'choose_language': 'Chọn ngôn ngữ',
@@ -79,7 +87,8 @@ class AppLocalizations {
       'auto_create_quiz': 'Tự động tạo Quiz & Flashcard',
       'new_feature': 'TÍNH NĂNG MỚI',
       'vocabulary_garden_title': 'Vườn ươm từ vựng\ncủa bạn',
-      'vocabulary_garden_desc': 'Theo dõi sự tiến bộ hàng ngày. Mỗi\ntừ vựng bạn học được sẽ giúp khu\nvườn tri thức của bạn nở rộ hơn.',
+      'vocabulary_garden_desc':
+          'Theo dõi sự tiến bộ hàng ngày. Mỗi\ntừ vựng bạn học được sẽ giúp khu\nvườn tri thức của bạn nở rộ hơn.',
       'explore_now': 'Khám phá ngay',
       'take_new_photo': 'Chụp ảnh mới',
       'choose_from_gallery': 'Chọn từ thư viện',
@@ -164,10 +173,12 @@ class AppLocalizations {
       'opening_gallery': 'Opening Gallery...',
       'connecting_help': 'Connecting to Help Center...',
       'about_app': 'About App',
-      'about_app_content': 'Version 1.0.0\n\nAn AI-powered smart learning app that transforms any document into interactive lessons.',
+      'about_app_content':
+          'Version 1.0.0\n\nAn AI-powered smart learning app that transforms any document into interactive lessons.',
       'close': 'Close',
       'logout_confirm_title': 'Logout',
-      'logout_confirm_message': 'Are you sure you want to logout from this account?',
+      'logout_confirm_message':
+          'Are you sure you want to logout from this account?',
       'cancel': 'Cancel',
       'logout_success': 'Logged out successfully!',
       'choose_language': 'Choose Language',
@@ -184,7 +195,8 @@ class AppLocalizations {
       'auto_create_quiz': 'Auto-generate Quiz & Flashcard',
       'new_feature': 'NEW FEATURE',
       'vocabulary_garden_title': 'Your Vocabulary\nGarden',
-      'vocabulary_garden_desc': 'Track your daily progress. Every\nnew word you learn will help your\nknowledge garden bloom.',
+      'vocabulary_garden_desc':
+          'Track your daily progress. Every\nnew word you learn will help your\nknowledge garden bloom.',
       'explore_now': 'Explore Now',
       'take_new_photo': 'Take a Photo',
       'choose_from_gallery': 'Choose from Gallery',

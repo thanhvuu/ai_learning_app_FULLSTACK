@@ -29,7 +29,8 @@ class VocabularyScreen extends StatefulWidget {
   State<VocabularyScreen> createState() => _VocabularyScreenState();
 }
 
-class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerProviderStateMixin {
+class _VocabularyScreenState extends State<VocabularyScreen>
+    with SingleTickerProviderStateMixin {
   int currentIndex = 0;
   final PageController _pageController = PageController();
   late TabController _tabController;
@@ -50,20 +51,34 @@ class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerPr
   void _startQuiz() {
     Widget screen;
     if (widget.quizType == "drag_drop") {
-      screen = DragDropQuizScreen(lessonId: widget.lessonId, questions: widget.questions);
+      screen = DragDropQuizScreen(
+        lessonId: widget.lessonId,
+        questions: widget.questions,
+      );
     } else if (widget.quizType == "multiple_choice") {
-      screen = MultipleChoiceScreen(lessonId: widget.lessonId, questions: widget.questions);
+      screen = MultipleChoiceScreen(
+        lessonId: widget.lessonId,
+        questions: widget.questions,
+      );
     } else {
-      screen = FillBlankScreen(lessonId: widget.lessonId, questions: widget.questions);
+      screen = FillBlankScreen(
+        lessonId: widget.lessonId,
+        questions: widget.questions,
+      );
     }
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => screen));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    final Color bgColor = isDarkMode ? const Color(0xFF121212) : const Color(0xFFF4F9F4);
+    final Color bgColor = isDarkMode
+        ? const Color(0xFF121212)
+        : const Color(0xFFF4F9F4);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -96,16 +111,31 @@ class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerPr
                     color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
                     ],
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.auto_awesome, color: Colors.orange, size: 30),
+                      const Icon(
+                        Icons.auto_awesome,
+                        color: Colors.orange,
+                        size: 30,
+                      ),
                       const SizedBox(height: 15),
                       Text(
-                        widget.content.isNotEmpty ? widget.content : "Đang tải nội dung...",
-                        style: TextStyle(fontSize: 18, height: 1.8, color: textColor, letterSpacing: 0.5),
+                        widget.content.isNotEmpty
+                            ? widget.content
+                            : "Đang tải nội dung...",
+                        style: TextStyle(
+                          fontSize: 18,
+                          height: 1.8,
+                          color: textColor,
+                          letterSpacing: 0.5,
+                        ),
                         textAlign: TextAlign.justify,
                       ),
                     ],
@@ -120,8 +150,13 @@ class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerPr
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
                 ),
@@ -145,15 +180,20 @@ class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerPr
                 child: PageView.builder(
                   controller: _pageController,
                   itemCount: widget.vocabularies.length,
-                  onPageChanged: (index) => setState(() => currentIndex = index),
+                  onPageChanged: (index) =>
+                      setState(() => currentIndex = index),
                   itemBuilder: (context, index) {
                     final vocab = widget.vocabularies[index];
                     return Padding(
                       padding: const EdgeInsets.all(30.0),
                       child: Card(
                         elevation: 8,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                        color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        color: isDarkMode
+                            ? const Color(0xFF2C2C2C)
+                            : Colors.white,
                         child: Padding(
                           padding: const EdgeInsets.all(25.0),
                           child: Column(
@@ -161,39 +201,64 @@ class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerPr
                             children: [
                               Text(
                                 vocab.word,
-                                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.green),
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
                               ),
                               const SizedBox(height: 10),
                               Text(
                                 vocab.phonetic,
-                                style: TextStyle(fontSize: 18, color: Colors.blueGrey[400], fontStyle: FontStyle.italic),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.blueGrey[400],
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                               const Divider(height: 50),
                               Text(
                                 "Ý nghĩa:",
-                                style: TextStyle(fontSize: 14, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               const SizedBox(height: 10),
                               Text(
                                 vocab.meaning,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 22, color: textColor, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  color: textColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               const SizedBox(height: 30),
                               Container(
                                 padding: const EdgeInsets.all(15),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
+                                  color: Colors.green.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.lightbulb_outline, color: Colors.orange),
+                                    const Icon(
+                                      Icons.lightbulb_outline,
+                                      color: Colors.orange,
+                                    ),
                                     const SizedBox(height: 10),
                                     Text(
                                       vocab.example,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 15, height: 1.5, color: isDarkMode ? Colors.greenAccent : Colors.green[800]),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        height: 1.5,
+                                        color: isDarkMode
+                                            ? Colors.greenAccent
+                                            : Colors.green[800],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -211,19 +276,37 @@ class _VocabularyScreenState extends State<VocabularyScreen> with SingleTickerPr
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("${currentIndex + 1}/${widget.vocabularies.length}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      "${currentIndex + 1}/${widget.vocabularies.length}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     ElevatedButton(
-                      onPressed: currentIndex == widget.vocabularies.length - 1 ? _startQuiz : () {
-                        _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
-                      },
+                      onPressed: currentIndex == widget.vocabularies.length - 1
+                          ? _startQuiz
+                          : () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeIn,
+                              );
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 15,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                       child: Text(
-                        currentIndex == widget.vocabularies.length - 1 ? "THỰC HÀNH NGAY" : "TỪ TIẾP THEO",
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        currentIndex == widget.vocabularies.length - 1
+                            ? "THỰC HÀNH NGAY"
+                            : "TỪ TIẾP THEO",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

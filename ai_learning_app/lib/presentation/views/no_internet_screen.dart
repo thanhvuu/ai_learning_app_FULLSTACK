@@ -13,11 +13,7 @@ class NoInternetScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: const [
-              Icon(
-                Icons.wifi_off_rounded,
-                size: 88,
-                color: Color(0xFF0F8A50),
-              ),
+              Icon(Icons.wifi_off_rounded, size: 88, color: Color(0xFF0F8A50)),
               SizedBox(height: 16),
               Text(
                 'Không có kết nối Internet',
@@ -32,10 +28,7 @@ class NoInternetScreen extends StatelessWidget {
               Text(
                 'Vui lòng bật Wi-Fi hoặc dữ liệu di động để tiếp tục học.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF5A6A63),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xFF5A6A63)),
               ),
             ],
           ),

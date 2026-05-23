@@ -8,13 +8,20 @@ import 'package:provider/provider.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 
 class DictionaryBottomSheet {
-  static void show(BuildContext context, Map<String, dynamic> initialData, String searchWord) {
+  static void show(
+    BuildContext context,
+    Map<String, dynamic> initialData,
+    String searchWord,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return _DictionarySheetContent(initialData: initialData, searchWord: searchWord);
+        return _DictionarySheetContent(
+          initialData: initialData,
+          searchWord: searchWord,
+        );
       },
     );
   }
@@ -25,10 +32,14 @@ class _DictionarySheetContent extends StatefulWidget {
   final Map<String, dynamic> initialData;
   final String searchWord;
 
-  const _DictionarySheetContent({required this.initialData, required this.searchWord});
+  const _DictionarySheetContent({
+    required this.initialData,
+    required this.searchWord,
+  });
 
   @override
-  State<_DictionarySheetContent> createState() => _DictionarySheetContentState();
+  State<_DictionarySheetContent> createState() =>
+      _DictionarySheetContentState();
 }
 
 class _DictionarySheetContentState extends State<_DictionarySheetContent> {
@@ -64,7 +75,10 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
   Future<void> _toggleSave() async {
     String word = wordData['word'] ?? widget.searchWord;
     String meaning = wordData['meaning'] ?? "Không có nghĩa";
-    bool newState = await ServiceLocator.dictionaryService.toggleSaveWord(word, meaning);
+    bool newState = await ServiceLocator.dictionaryService.toggleSaveWord(
+      word,
+      meaning,
+    );
 
     if (mounted) {
       setState(() => _isSaved = newState);
@@ -74,31 +88,40 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
 
       // HIỆN THÔNG BÁO NỔI LÊN TRÊN CÙNG MÀN HÌNH
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              newState ? "🌱 Đã gieo mầm từ '$word' vào vườn!" : "Đã nhổ từ '$word' khỏi vườn.",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              textAlign: TextAlign.center,
-            ),
-            duration: const Duration(seconds: 2),
-            backgroundColor: const Color(0xFF0F8A50),
-            behavior: SnackBarBehavior.floating, // Bắt buộc để làm nó nổi lên
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // Bo góc cho đẹp
-            margin: EdgeInsets.only(
-              bottom: MediaQuery.of(context).size.height * 0.8, // Đẩy nó nổi tít lên trên Bottom Sheet
-              left: 20,
-              right: 20,
-            ),
-          )
+        SnackBar(
+          content: Text(
+            newState
+                ? "🌱 Đã gieo mầm từ '$word' vào vườn!"
+                : "Đã nhổ từ '$word' khỏi vườn.",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: const Color(0xFF0F8A50),
+          behavior: SnackBarBehavior.floating, // Bắt buộc để làm nó nổi lên
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ), // Bo góc cho đẹp
+          margin: EdgeInsets.only(
+            bottom:
+                MediaQuery.of(context).size.height *
+                0.8, // Đẩy nó nổi tít lên trên Bottom Sheet
+            left: 20,
+            right: 20,
+          ),
+        ),
       );
     }
   }
+
   // HÀM CẤU HÌNH GIỌNG ĐỌC TIẾNG ANH (MỸ)
   Future<void> _initTts() async {
     await flutterTts.setLanguage("en-US"); // Đọc tiếng Anh Mỹ
-    await flutterTts.setSpeechRate(0.5);   // Tốc độ đọc (0.5 là vừa nghe, 1.0 hơi nhanh)
-    await flutterTts.setVolume(1.0);       // Âm lượng tối đa
-    await flutterTts.setPitch(1.0);        // Độ trầm bổng
+    await flutterTts.setSpeechRate(
+      0.5,
+    ); // Tốc độ đọc (0.5 là vừa nghe, 1.0 hơi nhanh)
+    await flutterTts.setVolume(1.0); // Âm lượng tối đa
+    await flutterTts.setPitch(1.0); // Độ trầm bổng
   }
 
   // HÀM PHÁT ÂM KHI BẤM NÚT
@@ -111,7 +134,8 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
 
   Future<void> _fetchAdvancedDataFromAI() async {
     try {
-      final String searchUrl = "${ApiConfig.baseUrl}/api/dictionary/lookup?word=${Uri.encodeComponent(widget.searchWord)}";
+      final String searchUrl =
+          "${ApiConfig.baseUrl}/api/dictionary/lookup?word=${Uri.encodeComponent(widget.searchWord)}";
       var response = await http.get(Uri.parse(searchUrl));
 
       if (response.statusCode == 200) {
@@ -133,10 +157,12 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
             }
 
             // Nếu SQLite thiếu phiên âm hoặc loại từ, lấy luôn của AI bù vào
-            if (wordData['phonetic'] == null || wordData['phonetic'].toString().isEmpty) {
+            if (wordData['phonetic'] == null ||
+                wordData['phonetic'].toString().isEmpty) {
               wordData['phonetic'] = aiData['phonetic'];
             }
-            if (wordData['partOfSpeech'] == null || wordData['partOfSpeech'].toString().isEmpty) {
+            if (wordData['partOfSpeech'] == null ||
+                wordData['partOfSpeech'].toString().isEmpty) {
               wordData['partOfSpeech'] = aiData['partOfSpeech'];
             }
 
@@ -147,7 +173,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
         if (mounted) setState(() => _isLoadingAI = false);
       }
     } catch (e) {
-      print("Lỗi gọi AI: $e");
+      debugPrint("Lỗi gọi AI: $e");
       if (mounted) setState(() => _isLoadingAI = false);
     }
   }
@@ -157,7 +183,9 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     final Color bgColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
-    final Color exampleBgColor = isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F7F4);
+    final Color exampleBgColor = isDarkMode
+        ? const Color(0xFF2C2C2C)
+        : const Color(0xFFF0F7F4);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
@@ -172,8 +200,12 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
           // Thanh kéo
           Center(
             child: Container(
-              width: 50, height: 5,
-              decoration: BoxDecoration(color: isDarkMode ? Colors.grey[700] : Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -188,12 +220,20 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                   children: [
                     Text(
                       wordData['word'] ?? widget.searchWord,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0F8A50)),
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F8A50),
+                      ),
                     ),
                     const SizedBox(height: 5),
                     Text(
                       "/${wordData['phonetic'] ?? '...'} /  •  ${wordData['partOfSpeech'] ?? ''}",
-                      style: TextStyle(fontSize: 16, color: isDarkMode ? Colors.grey[400] : Colors.grey[600], fontStyle: FontStyle.italic),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ),
@@ -206,23 +246,34 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                   Container(
                     margin: const EdgeInsets.only(right: 10),
                     decoration: BoxDecoration(
-                        color: _isSaved ? const Color(0xFF0F8A50) : const Color(0xFF0F8A50).withOpacity(0.1),
-                        shape: BoxShape.circle
+                      color: _isSaved
+                          ? const Color(0xFF0F8A50)
+                          : const Color(0xFF0F8A50).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
                     child: IconButton(
                       icon: Icon(
-                          _isSaved ? Icons.eco : Icons.eco_outlined,
-                          color: _isSaved ? Colors.white : const Color(0xFF0F8A50),
-                          size: 24
+                        _isSaved ? Icons.eco : Icons.eco_outlined,
+                        color: _isSaved
+                            ? Colors.white
+                            : const Color(0xFF0F8A50),
+                        size: 24,
                       ),
                       onPressed: _toggleSave,
                     ),
                   ),
                   // Nút Loa
                   Container(
-                    decoration: BoxDecoration(color: const Color(0xFF0F8A50).withOpacity(0.1), shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F8A50).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
                     child: IconButton(
-                      icon: const Icon(Icons.volume_up, color: Color(0xFF0F8A50), size: 24),
+                      icon: const Icon(
+                        Icons.volume_up,
+                        color: Color(0xFF0F8A50),
+                        size: 24,
+                      ),
                       onPressed: _speakWord,
                     ),
                   ),
@@ -230,7 +281,11 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
               ),
             ],
           ),
-          Divider(height: 30, thickness: 1, color: isDarkMode ? Colors.grey[800] : Colors.grey[200]),
+          Divider(
+            height: 30,
+            thickness: 1,
+            color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+          ),
 
           // CHI TIẾT BÊN DƯỚI
           Expanded(
@@ -242,8 +297,15 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                   // 1. NGHĨA CƠ BẢN (Từ SQLite - Có ngay lập tức)
                   _buildSectionTitle("Nghĩa tiếng Việt"),
                   Text(
-                    _cleanHtml(wordData['meaning'] ?? "Đang cập nhật..."), // Hàm dọn sạch thẻ HTML nếu có
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.4, color: textColor),
+                    _cleanHtml(
+                      wordData['meaning'] ?? "Đang cập nhật...",
+                    ), // Hàm dọn sạch thẻ HTML nếu có
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                      color: textColor,
+                    ),
                   ),
                   const SizedBox(height: 25),
 
@@ -253,34 +315,68 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                       child: Column(
                         children: [
                           const SizedBox(height: 20),
-                          const CircularProgressIndicator(color: Color(0xFF0F8A50), strokeWidth: 3),
+                          const CircularProgressIndicator(
+                            color: Color(0xFF0F8A50),
+                            strokeWidth: 3,
+                          ),
                           const SizedBox(height: 10),
-                          Text("AI đang phân tích ví dụ và từ đồng nghĩa...", style: TextStyle(color: isDarkMode ? Colors.grey[500] : Colors.grey, fontSize: 13, fontStyle: FontStyle.italic))
+                          Text(
+                            "AI đang phân tích ví dụ và từ đồng nghĩa...",
+                            style: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.grey[500]
+                                  : Colors.grey,
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ],
                       ),
-                    )
+                    ),
                   ]
                   // NẾU TẢI XONG -> HIỆN VÍ DỤ VÀ ĐỒNG NGHĨA
                   else ...[
                     // 2. VÍ DỤ (EXAMPLES)
-                    if (wordData['examples'] != null && (wordData['examples'] as List).isNotEmpty) ...[
+                    if (wordData['examples'] != null &&
+                        (wordData['examples'] as List).isNotEmpty) ...[
                       _buildSectionTitle("Ví dụ (Examples)"),
-                      ...(wordData['examples'] as List<dynamic>).map((ex) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(color: exampleBgColor, borderRadius: BorderRadius.circular(12)),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(ex['en'] ?? "", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-                              const SizedBox(height: 6),
-                              Text(ex['vn'] ?? "", style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.grey[400] : Colors.grey[700], fontStyle: FontStyle.italic)),
-                            ],
+                      ...(wordData['examples'] as List<dynamic>).map(
+                        (ex) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: exampleBgColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ex['en'] ?? "",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  ex['vn'] ?? "",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[700],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      )),
+                      ),
                       const SizedBox(height: 15),
                     ],
 
@@ -288,38 +384,72 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (wordData['synonyms'] != null && (wordData['synonyms'] as List).isNotEmpty)
+                        if (wordData['synonyms'] != null &&
+                            (wordData['synonyms'] as List).isNotEmpty)
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildSectionTitle("Đồng nghĩa"),
                                 Wrap(
-                                  spacing: 8, runSpacing: 8,
-                                  children: (wordData['synonyms'] as List<dynamic>).map((s) => Chip(
-                                    label: Text(s.toString()),
-                                    backgroundColor: isDarkMode ? Colors.blue.withOpacity(0.2) : Colors.blue[50], side: BorderSide.none,
-                                    labelStyle: TextStyle(color: isDarkMode ? Colors.blue[200] : Colors.blue, fontWeight: FontWeight.bold),
-                                  )).toList(),
-                                )
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children:
+                                      (wordData['synonyms'] as List<dynamic>)
+                                          .map(
+                                            (s) => Chip(
+                                              label: Text(s.toString()),
+                                              backgroundColor: isDarkMode
+                                                  ? Colors.blue.withValues(
+                                                      alpha: 0.2,
+                                                    )
+                                                  : Colors.blue[50],
+                                              side: BorderSide.none,
+                                              labelStyle: TextStyle(
+                                                color: isDarkMode
+                                                    ? Colors.blue[200]
+                                                    : Colors.blue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                ),
                               ],
                             ),
                           ),
                         const SizedBox(width: 10),
-                        if (wordData['antonyms'] != null && (wordData['antonyms'] as List).isNotEmpty)
+                        if (wordData['antonyms'] != null &&
+                            (wordData['antonyms'] as List).isNotEmpty)
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildSectionTitle("Trái nghĩa"),
                                 Wrap(
-                                  spacing: 8, runSpacing: 8,
-                                  children: (wordData['antonyms'] as List<dynamic>).map((a) => Chip(
-                                    label: Text(a.toString()),
-                                    backgroundColor: isDarkMode ? Colors.red.withOpacity(0.2) : Colors.red[50], side: BorderSide.none,
-                                    labelStyle: TextStyle(color: isDarkMode ? Colors.red[200] : Colors.red, fontWeight: FontWeight.bold),
-                                  )).toList(),
-                                )
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children:
+                                      (wordData['antonyms'] as List<dynamic>)
+                                          .map(
+                                            (a) => Chip(
+                                              label: Text(a.toString()),
+                                              backgroundColor: isDarkMode
+                                                  ? Colors.red.withValues(
+                                                      alpha: 0.2,
+                                                    )
+                                                  : Colors.red[50],
+                                              side: BorderSide.none,
+                                              labelStyle: TextStyle(
+                                                color: isDarkMode
+                                                    ? Colors.red[200]
+                                                    : Colors.red,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                ),
                               ],
                             ),
                           ),
@@ -339,7 +469,15 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
   static Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
-      child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 

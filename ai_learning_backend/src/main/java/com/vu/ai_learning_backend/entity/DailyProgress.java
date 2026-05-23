@@ -6,7 +6,15 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "daily_progress")
+@Table(
+        name = "daily_progress",
+        indexes = {
+                @Index(name = "idx_daily_progress_username_date", columnList = "username, study_date")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_daily_progress_username_date", columnNames = {"username", "study_date"})
+        }
+)
 public class DailyProgress {
 
     @Id
@@ -16,6 +24,7 @@ public class DailyProgress {
     private String username;
 
     // Ngày học (Chỉ lưu ngày, tháng, năm)
+    @Column(name = "study_date")
     private LocalDate studyDate;
 
     // Tổng số phút đã học trong ngày hôm đó

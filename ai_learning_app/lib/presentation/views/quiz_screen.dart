@@ -26,18 +26,27 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Future<void> checkAnswer(BuildContext context, QuizViewModel quizState) async {
+  Future<void> checkAnswer(
+    BuildContext context,
+    QuizViewModel quizState,
+  ) async {
     if (!hasSubmitted) {
       if (selectedOption != null) {
-        String correctAns = quizState.questions[currentQuestionIndex]['correctAnswer'].toString().trim();
-        bool correct = selectedOption!.trim().startsWith(correctAns) || selectedOption!.trim() == correctAns;
+        String correctAns = quizState
+            .questions[currentQuestionIndex]['correctAnswer']
+            .toString()
+            .trim();
+        bool correct =
+            selectedOption!.trim().startsWith(correctAns) ||
+            selectedOption!.trim() == correctAns;
         setState(() {
           hasSubmitted = true;
           isCorrect = correct;
         });
 
         if (correct) {
-          double currentProgress = (currentQuestionIndex + 1) / quizState.questions.length;
+          double currentProgress =
+              (currentQuestionIndex + 1) / quizState.questions.length;
           quizState.updateProgress(currentProgress);
         } else {
           quizState.decreaseLive();
@@ -47,8 +56,8 @@ class _QuizScreenState extends State<QuizScreen> {
         }
       }
     } else {
-      if(currentQuestionIndex < quizState.questions.length-1) {
-        setState((){
+      if (currentQuestionIndex < quizState.questions.length - 1) {
+        setState(() {
           currentQuestionIndex++;
           hasSubmitted = false;
           isCorrect = false;
@@ -57,29 +66,32 @@ class _QuizScreenState extends State<QuizScreen> {
       } else {
         quizState.updateProgress(1.0);
         final String username = "Đặng Thanh Vũ";
-        final String updateUrl = "${ApiConfig.users}/update-progress?username=$username";
+        final String updateUrl =
+            "${ApiConfig.users}/update-progress?username=$username";
 
-        try{
+        try {
           var reponse = await http.put(Uri.parse(updateUrl));
-          if(reponse.statusCode == 200){
+          if (reponse.statusCode == 200) {
             var data = jsonDecode(utf8.decode(reponse.bodyBytes));
             int newXp = data['totalXp'];
             int newStreak = data['streak'];
-            if(context.mounted){
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content:Text("🎉 Tuyệt vời! Bạn được +20 XP.\nTổng: $newXp XP | Chuỗi: 🔥 $newStreak ngày"),
+                  content: Text(
+                    "🎉 Tuyệt vời! Bạn được +20 XP.\nTổng: $newXp XP | Chuỗi: 🔥 $newStreak ngày",
+                  ),
                   duration: const Duration(seconds: 5),
                   backgroundColor: Colors.green,
-                )
+                ),
               );
             }
           }
-        } catch(e){
-          print('lỗi lưu tiến độ');
+        } catch (e) {
+          debugPrint('lỗi lưu tiến độ');
         }
 
-        if(context.mounted){
+        if (context.mounted) {
           Navigator.pop(context);
         }
       }
@@ -110,9 +122,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     final quizState = context.watch<QuizViewModel>();
     if (quizState.questions.isEmpty) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final currentQuestion = quizState.questions[currentQuestionIndex];
@@ -136,7 +146,9 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: LinearProgressIndicator(
                     value: quizState.progress,
                     backgroundColor: Colors.grey[300],
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.greenAccent,
+                    ),
                     minHeight: 15,
                   ),
                 ),
@@ -146,7 +158,14 @@ class _QuizScreenState extends State<QuizScreen> {
                 children: [
                   const Icon(Icons.favorite, color: Colors.red),
                   const SizedBox(width: 5),
-                  Text("${quizState.lives}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
+                  Text(
+                    "${quizState.lives}",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -161,11 +180,17 @@ class _QuizScreenState extends State<QuizScreen> {
             Text(
               currentQuestion['prompt'],
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             const Spacer(flex: 2),
             Column(
-              children: (currentQuestion['options'] as List).map<Widget>((option) {
+              children: (currentQuestion['options'] as List).map<Widget>((
+                option,
+              ) {
                 Color buttonColor = Colors.white;
                 Color textColor = Colors.black87;
                 Color borderColor = Colors.grey[300]!;
@@ -176,8 +201,11 @@ class _QuizScreenState extends State<QuizScreen> {
                 }
 
                 if (hasSubmitted) {
-                  String correctAns = currentQuestion['correctAnswer'].toString().trim();
-                  if (option.toString().trim().startsWith(correctAns) || option.toString().trim() == correctAns) {
+                  String correctAns = currentQuestion['correctAnswer']
+                      .toString()
+                      .trim();
+                  if (option.toString().trim().startsWith(correctAns) ||
+                      option.toString().trim() == correctAns) {
                     borderColor = Colors.greenAccent;
                   } else if (option == selectedOption) {
                     borderColor = Colors.redAccent;
@@ -193,10 +221,15 @@ class _QuizScreenState extends State<QuizScreen> {
                       style: OutlinedButton.styleFrom(
                         backgroundColor: buttonColor,
                         side: BorderSide(color: borderColor, width: 2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                       ),
                       onPressed: () => selectOption(option),
-                      child: Text(option, style: TextStyle(fontSize: 18, color: textColor)),
+                      child: Text(
+                        option,
+                        style: TextStyle(fontSize: 18, color: textColor),
+                      ),
                     ),
                   ),
                 );
@@ -208,7 +241,9 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: hasSubmitted ? (isCorrect ? Colors.lightGreen[100] : Colors.red[100]) : Colors.white,
+          color: hasSubmitted
+              ? (isCorrect ? Colors.lightGreen[100] : Colors.red[100])
+              : Colors.white,
           border: Border(top: BorderSide(color: Colors.grey[200]!)),
         ),
         padding: const EdgeInsets.all(20),
@@ -244,7 +279,10 @@ class _QuizScreenState extends State<QuizScreen> {
                           if (!isCorrect)
                             Text(
                               "Giải thích: ${currentQuestion['explanation']}",
-                              style: TextStyle(color: Colors.red[700], fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.red[700],
+                                fontSize: 14,
+                              ),
                             ),
                         ],
                       ),
@@ -257,14 +295,24 @@ class _QuizScreenState extends State<QuizScreen> {
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: hasSubmitted ? (isCorrect ? Colors.green : Colors.red) : Colors.lightGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  backgroundColor: hasSubmitted
+                      ? (isCorrect ? Colors.green : Colors.red)
+                      : Colors.lightGreen,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                   elevation: hasSubmitted ? 0 : 5,
                 ),
-                onPressed: selectedOption == null ? null : () => checkAnswer(context, quizState),
+                onPressed: selectedOption == null
+                    ? null
+                    : () => checkAnswer(context, quizState),
                 child: Text(
                   hasSubmitted ? "TIẾP TỤC" : "KIỂM TRA",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

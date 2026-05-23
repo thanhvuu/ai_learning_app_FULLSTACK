@@ -32,16 +32,21 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     try {
       // Sử dụng cách xây dựng URI an toàn hơn để xử lý khoảng trắng và ký tự đặc biệt
       final String path = "/api/lessons/roadmap";
-      final String fullUrl = "${ApiConfig.baseUrl}$path?major=${Uri.encodeComponent(widget.major)}";
-      
-      final response = await http.get(
-        Uri.parse(fullUrl),
-      ).timeout(const Duration(seconds: 15)); // Tăng lên 15 giây cho chắc chắn
+      final String fullUrl =
+          "${ApiConfig.baseUrl}$path?major=${Uri.encodeComponent(widget.major)}";
+
+      final response = await http
+          .get(Uri.parse(fullUrl))
+          .timeout(
+            const Duration(seconds: 15),
+          ); // Tăng lên 15 giây cho chắc chắn
 
       if (response.statusCode == 200) {
         if (mounted) {
           setState(() {
-            steps = List<String>.from(jsonDecode(utf8.decode(response.bodyBytes)));
+            steps = List<String>.from(
+              jsonDecode(utf8.decode(response.bodyBytes)),
+            );
             isLoading = false;
           });
         }
@@ -50,7 +55,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
       }
     } catch (e) {
       _handleFetchError("Lỗi kết nối: Hãy kiểm tra IP Backend của bạn");
-      print("Roadmap Error: $e");
+      debugPrint("Roadmap Error: $e");
     }
   }
 
@@ -59,9 +64,11 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message), 
+          content: Text(message),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 5), // Hiện lâu hơn để người dùng kịp đọc
+          duration: const Duration(
+            seconds: 5,
+          ), // Hiện lâu hơn để người dùng kịp đọc
         ),
       );
       // Không tự động pop ngay lập tức để người dùng biết chuyện gì đang xảy ra
@@ -81,7 +88,10 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
               children: [
                 CircularProgressIndicator(color: Colors.green),
                 SizedBox(height: 15),
-                Text("AI đang thiết kế bài giảng...", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  "AI đang thiết kế bài giảng...",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
@@ -110,24 +120,33 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
         List<dynamic> vocabJson = jsonResult['vocabularies'] ?? [];
         List<dynamic> questionsJson = jsonResult['questions'] ?? [];
 
-        List<VocabularyModel> vocabs = vocabJson.map((v) => VocabularyModel.fromJson(v)).toList();
-        List<QuestionModel> questions = questionsJson.map((q) => QuestionModel.fromJson(q)).toList();
+        List<VocabularyModel> vocabs = vocabJson
+            .map((v) => VocabularyModel.fromJson(v))
+            .toList();
+        List<QuestionModel> questions = questionsJson
+            .map((q) => QuestionModel.fromJson(q))
+            .toList();
 
-        Navigator.push(context, MaterialPageRoute(
-          builder: (_) => VocabularyScreen(
-            lessonId: lessonId,
-            topic: topic,
-            content: lessonContent,
-            vocabularies: vocabs,
-            questions: questions,
-            quizType: "multiple_choice",
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VocabularyScreen(
+              lessonId: lessonId,
+              topic: topic,
+              content: lessonContent,
+              vocabularies: vocabs,
+              questions: questions,
+              quizType: "multiple_choice",
+            ),
           ),
-        ));
+        );
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
       }
     }
   }
@@ -142,29 +161,39 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
           IconButton(
             icon: const Icon(Icons.dashboard_rounded),
             onPressed: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(
-                builder: (_) => HomeScreen(username: widget.username, major: widget.major),
-              ));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HomeScreen(
+                    username: widget.username,
+                    major: widget.major,
+                  ),
+                ),
+              );
             },
             tooltip: "Vào Trang chủ",
-          )
+          ),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        itemCount: steps.length,
-        itemBuilder: (context, index) {
-          // Tạo hiệu ứng Zig-zag như Duolingo
-          double offset = 40.0 * math.sin(index * 1.0);
-          
-          return Padding(
-            padding: EdgeInsets.only(left: 50 + offset, right: 50 - offset, bottom: 30),
-            child: _buildStepNode(steps[index], index + 1),
-          );
-        },
-      ),
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              itemCount: steps.length,
+              itemBuilder: (context, index) {
+                // Tạo hiệu ứng Zig-zag như Duolingo
+                double offset = 40.0 * math.sin(index * 1.0);
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: 50 + offset,
+                    right: 50 - offset,
+                    bottom: 30,
+                  ),
+                  child: _buildStepNode(steps[index], index + 1),
+                );
+              },
+            ),
     );
   }
 
@@ -180,14 +209,22 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
               color: Colors.green,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: Colors.green.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 5))
+                BoxShadow(
+                  color: Colors.green.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
               ],
               border: Border.all(color: Colors.white, width: 4),
             ),
             child: Center(
               child: Text(
                 "$stepNumber",
-                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

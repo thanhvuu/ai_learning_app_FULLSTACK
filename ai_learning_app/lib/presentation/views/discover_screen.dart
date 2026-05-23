@@ -3,9 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
 import 'package:ai_learning_app/core/localization/app_localizations.dart';
-import 'package:ai_learning_app/data/models/leaderboard_user_model.dart';
-import 'package:ai_learning_app/data/services/implements/leaderboard_service_impl.dart';
-import 'package:ai_learning_app/presentation/view_models/discover_view_model.dart';
+import 'package:ai_learning_app/features/leaderboard/domain/entities/leaderboard_user.dart';
+import 'package:ai_learning_app/features/leaderboard/presentation/view_models/discover_view_model.dart';
 
 class DiscoverScreen extends StatefulWidget {
   // 1. KHAI BÁO THÊM BIẾN USERNAME Ở ĐÂY
@@ -19,22 +18,13 @@ class DiscoverScreen extends StatefulWidget {
 }
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
-  late final DiscoverViewModel _viewModel;
-
   @override
   void initState() {
     super.initState();
-    _viewModel = DiscoverViewModel(LeaderboardServiceImpl());
-    _viewModel.loadLeaderboard();
+    Future.microtask(context.read<DiscoverViewModel>().loadLeaderboard);
   }
 
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
-  }
-
-  Widget _buildTop3Podium(List<LeaderboardUserModel> leaderboard, Color textColor) {
+  Widget _buildTop3Podium(List<LeaderboardUser> leaderboard, Color textColor) {
     if (leaderboard.isEmpty) return const SizedBox();
     final rank1 = leaderboard.isNotEmpty ? leaderboard[0] : null;
     final rank2 = leaderboard.length > 1 ? leaderboard[1] : null;
@@ -46,17 +36,26 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (rank2 != null) _buildAvatarItem(rank2, 2, 70, Colors.grey[400]!, textColor),
+          if (rank2 != null)
+            _buildAvatarItem(rank2, 2, 70, Colors.grey[400]!, textColor),
           const SizedBox(width: 15),
-          if (rank1 != null) _buildAvatarItem(rank1, 1, 95, Colors.amber, textColor),
+          if (rank1 != null)
+            _buildAvatarItem(rank1, 1, 95, Colors.amber, textColor),
           const SizedBox(width: 15),
-          if (rank3 != null) _buildAvatarItem(rank3, 3, 70, Colors.orange[800]!, textColor),
+          if (rank3 != null)
+            _buildAvatarItem(rank3, 3, 70, Colors.orange[800]!, textColor),
         ],
       ),
     );
   }
 
-  Widget _buildAvatarItem(LeaderboardUserModel user, int rank, double size, Color rankColor, Color textColor) {
+  Widget _buildAvatarItem(
+    LeaderboardUser user,
+    int rank,
+    double size,
+    Color rankColor,
+    Color textColor,
+  ) {
     return Column(
       children: [
         Stack(
@@ -86,30 +85,46 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   "$rank",
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-            )
+            ),
           ],
         ),
         const SizedBox(height: 8),
         Text(
           user.username,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: textColor,
+          ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               "${user.totalXp} XP",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[500], fontSize: 13),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green[500],
+                fontSize: 13,
+              ),
             ),
             const SizedBox(width: 4),
             const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
             const SizedBox(width: 4),
             Text(
               "${user.wateredPlants} 🌱",
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F8A50), fontSize: 13),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F8A50),
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -125,12 +140,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
     final Color cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
-    final Color titleColor = isDarkMode ? Colors.greenAccent : const Color(0xFF0F8A50);
+    final Color titleColor = isDarkMode
+        ? Colors.greenAccent
+        : const Color(0xFF0F8A50);
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: Text(t.translate('leaderboard'), style: TextStyle(fontWeight: FontWeight.bold, color: titleColor)),
+        title: Text(
+          t.translate('leaderboard'),
+          style: TextStyle(fontWeight: FontWeight.bold, color: titleColor),
+        ),
         backgroundColor: Colors.transparent,
         centerTitle: true,
         elevation: 0,
@@ -140,150 +160,282 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             padding: const EdgeInsets.only(right: 15),
             child: Row(
               children: [
-                Icon(Icons.star, color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurpleAccent),
+                Icon(
+                  Icons.star,
+                  color: isDarkMode
+                      ? Colors.deepPurple[200]
+                      : Colors.deepPurpleAccent,
+                ),
                 const SizedBox(width: 5),
-                Text("${t.translate('season')} 12", style: TextStyle(color: isDarkMode ? Colors.deepPurple[200] : Colors.deepPurple, fontWeight: FontWeight.bold)),
+                Text(
+                  "${t.translate('season')} 12",
+                  style: TextStyle(
+                    color: isDarkMode
+                        ? Colors.deepPurple[200]
+                        : Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
-      body: AnimatedBuilder(
-        animation: _viewModel,
-        builder: (context, _) {
-          final leaderboard = _viewModel.leaderboard;
-          final myIndex = leaderboard.indexWhere((u) => u.username == widget.username);
+      body: Consumer<DiscoverViewModel>(
+        builder: (context, viewModel, _) {
+          final leaderboard = viewModel.leaderboard;
+          final myIndex = leaderboard.indexWhere(
+            (u) => u.username == widget.username,
+          );
           final myRank = myIndex >= 0 ? myIndex + 1 : 0;
           final myXp = myIndex >= 0 ? leaderboard[myIndex].totalXp : 0;
-          final myWateredPlants = myIndex >= 0 ? leaderboard[myIndex].wateredPlants : 0;
+          final myWateredPlants = myIndex >= 0
+              ? leaderboard[myIndex].wateredPlants
+              : 0;
 
-          if (_viewModel.isLoading) {
+          if (viewModel.isLoading) {
             return Center(child: CircularProgressIndicator(color: titleColor));
           }
 
-          if (_viewModel.errorMessage != null) {
-            return Center(child: Text(_viewModel.errorMessage!, style: TextStyle(color: textColor)));
+          if (viewModel.errorMessage != null) {
+            return Center(
+              child: Text(
+                viewModel.errorMessage!,
+                style: TextStyle(color: textColor),
+              ),
+            );
           }
 
           return Column(
-        children: [
-          _buildTop3Podium(leaderboard, textColor),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(t.translate('rank_detail'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-                Text(t.translate('updated_ago'), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: leaderboard.length > 3 ? leaderboard.length - 3 : 0,
-              itemBuilder: (context, idx) {
-                int realIndex = idx + 3;
-                final user = leaderboard[realIndex];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(color: isDarkMode ? Colors.black54 : Colors.grey.withOpacity(0.1), blurRadius: 5)
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Text("${realIndex + 1}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey[500])),
-                      const SizedBox(width: 15),
-                      const CircleAvatar(radius: 20, backgroundColor: Colors.blueGrey, child: Icon(Icons.person, color: Colors.white, size: 20)),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Text(user.username, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+            children: [
+              _buildTop3Podium(leaderboard, textColor),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      t.translate('rank_detail'),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text("${user.totalXp} XP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
-                          const SizedBox(width: 6),
-                          const Text("•", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                          const SizedBox(width: 6),
-                          Text("${user.wateredPlants} 🌱", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F8A50))),
+                    ),
+                    Text(
+                      t.translate('updated_ago'),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: leaderboard.length > 3
+                      ? leaderboard.length - 3
+                      : 0,
+                  itemBuilder: (context, idx) {
+                    int realIndex = idx + 3;
+                    final user = leaderboard[realIndex];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 15,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDarkMode
+                                ? Colors.black54
+                                : Colors.grey.withValues(alpha: 0.1),
+                            blurRadius: 5,
+                          ),
                         ],
                       ),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.keyboard_arrow_up, color: Colors.green, size: 20),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF0A5E35) : const Color(0xFF0F8A50),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                  alignment: Alignment.center,
-                  child: Text(
-                    myRank > 0 ? "$myRank" : "-",
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.translate('your_rank'),
-                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10, letterSpacing: 1.2),
+                      child: Row(
+                        children: [
+                          Text(
+                            "${realIndex + 1}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                          const SizedBox(width: 15),
+                          const CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.blueGrey,
+                            child: Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: Text(
+                              user.username,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: textColor,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "${user.totalXp} XP",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                "•",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "${user.wateredPlants} 🌱",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Color(0xFF0F8A50),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.keyboard_arrow_up,
+                            color: Colors.green,
+                            size: 20,
+                          ),
+                        ],
                       ),
-                      Text(
-                        widget.username, // 4. HIỂN THỊ TÊN THẬT Ở ĐÂY
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              ),
+              Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? const Color(0xFF0A5E35)
+                      : const Color(0xFF0F8A50),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
                   children: [
-                    Text(myRank == 1 ? t.translate('leading') : t.translate('keep_trying'), style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    Container(
+                      width: 45,
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        myRank > 0 ? "$myRank" : "-",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.translate('your_rank'),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 10,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          Text(
+                            widget.username, // 4. HIỂN THỊ TÊN THẬT Ở ĐÂY
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          "$myXp XP",
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                          myRank == 1
+                              ? t.translate('leading')
+                              : t.translate('keep_trying'),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 11,
+                          ),
                         ),
-                        const SizedBox(width: 5),
-                        Text("•", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)),
-                        const SizedBox(width: 5),
-                        Text(
-                          "$myWateredPlants 🌱",
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "$myXp XP",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              "•",
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              "$myWateredPlants 🌱",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ],
-      );
+              ),
+            ],
+          );
         },
       ),
     );

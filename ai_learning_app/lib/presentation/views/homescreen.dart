@@ -59,7 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- BIẾN CHO MIC, LOA, CAMERA ---
   final FlutterTts _flutterTts = FlutterTts();
   final SpeechToText _speechToText = SpeechToText();
-  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final TextRecognizer _textRecognizer = TextRecognizer(
+    script: TextRecognitionScript.latin,
+  );
   final ImagePicker _picker = ImagePicker(); // Biến để gọi camera/thư viện ảnh
   bool _isListening = false;
 
@@ -94,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      print('Lỗi lấy dữ liệu: $e');
+      debugPrint('Lỗi lấy dữ liệu: $e');
     }
   }
 
@@ -108,12 +110,18 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
       try {
-        var translation = await _translator.translate(text, from: sourceLangCode, to: targetLangCode);
+        var translation = await _translator.translate(
+          text,
+          from: sourceLangCode,
+          to: targetLangCode,
+        );
         setState(() {
           _outputController.text = translation.text;
         });
       } catch (e) {
-        setState(() => _outputController.text = S.of(context, 'translation_error'));
+        setState(
+          () => _outputController.text = S.of(context, 'translation_error'),
+        );
       }
     });
   }
@@ -156,7 +164,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (image == null) return;
 
     final inputImage = InputImage.fromFilePath(image.path);
-    final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText = await _textRecognizer.processImage(
+      inputImage,
+    );
 
     setState(() {
       _inputController.text = recognizedText.text;
@@ -170,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (searchWord.isEmpty) return;
 
     try {
-      Map<String, dynamic>? wordData = await ServiceLocator.dictionaryService.lookupWordOffline(searchWord);
+      Map<String, dynamic>? wordData = await ServiceLocator.dictionaryService
+          .lookupWordOffline(searchWord);
 
       if (mounted) {
         if (wordData != null) {
@@ -214,7 +225,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showImageSourceActionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => SafeArea(
         child: Wrap(
           children: [
@@ -224,7 +237,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => _processImageForText(ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: Color(0xFF0F8A50)),
+              leading: const Icon(
+                Icons.photo_library,
+                color: Color(0xFF0F8A50),
+              ),
               title: Text(S.of(context, 'choose_from_gallery')),
               onTap: () => _processImageForText(ImageSource.gallery),
             ),
@@ -238,7 +254,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // CÁC HÀM UPLOAD PDF BÀI HỌC CŨ
   // ==========================================
   Future<void> pickPDFAndChooseGame(BuildContext context) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
     if (result != null && result.files.single.path != null) {
       File file = File(result.files.single.path!);
       if (context.mounted) _showGameModeDialog(context, file);
@@ -247,43 +266,99 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showGameModeDialog(BuildContext context, File file) {
     showDialog(
-        context: context,
-        builder: (BuildContext dialogContext) {
-          final isDarkMode = Provider.of<ThemeProvider>(dialogContext, listen: false).isDarkMode;
-          return AlertDialog(
-            backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text(S.of(context, 'choose_study_mode'), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF0F8A50), fontWeight: FontWeight.bold)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(S.of(context, 'ai_design_lesson'), style: const TextStyle(color: Colors.grey, fontSize: 13), textAlign: TextAlign.center),
-                const SizedBox(height: 20),
-                _buildGameOption(dialogContext, file, S.of(context, 'drag_drop_vocab'), Icons.drag_indicator, "drag_drop", isDarkMode),
-                const SizedBox(height: 10),
-                _buildGameOption(dialogContext, file, S.of(context, 'multiple_choice'), Icons.list_alt, "multiple_choice", isDarkMode),
-                const SizedBox(height: 10),
-                _buildGameOption(dialogContext, file, S.of(context, 'fill_blank'), Icons.keyboard, "fill_blank", isDarkMode),
-              ],
+      context: context,
+      builder: (BuildContext dialogContext) {
+        final isDarkMode = Provider.of<ThemeProvider>(
+          dialogContext,
+          listen: false,
+        ).isDarkMode;
+        return AlertDialog(
+          backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            S.of(context, 'choose_study_mode'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF0F8A50),
+              fontWeight: FontWeight.bold,
             ),
-          );
-        }
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                S.of(context, 'ai_design_lesson'),
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              _buildGameOption(
+                dialogContext,
+                file,
+                S.of(context, 'drag_drop_vocab'),
+                Icons.drag_indicator,
+                "drag_drop",
+                isDarkMode,
+              ),
+              const SizedBox(height: 10),
+              _buildGameOption(
+                dialogContext,
+                file,
+                S.of(context, 'multiple_choice'),
+                Icons.list_alt,
+                "multiple_choice",
+                isDarkMode,
+              ),
+              const SizedBox(height: 10),
+              _buildGameOption(
+                dialogContext,
+                file,
+                S.of(context, 'fill_blank'),
+                Icons.keyboard,
+                "fill_blank",
+                isDarkMode,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildGameOption(BuildContext dialogContext, File file, String title, IconData icon, String quizType, bool isDarkMode) {
+  Widget _buildGameOption(
+    BuildContext dialogContext,
+    File file,
+    String title,
+    IconData icon,
+    String quizType,
+    bool isDarkMode,
+  ) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 15),
-          backgroundColor: isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF4FAF5),
+          backgroundColor: isDarkMode
+              ? const Color(0xFF2C2C2C)
+              : const Color(0xFFF4FAF5),
           foregroundColor: const Color(0xFF0F8A50),
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: Colors.green[200]!, width: 1)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+            side: BorderSide(color: Colors.green[200]!, width: 1),
+          ),
         ),
         icon: Icon(icon),
-        label: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDarkMode ? Colors.white : Colors.black87)),
+        label: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+        ),
         onPressed: () {
           Navigator.pop(dialogContext);
           uploadFileAndGetQuiz(context, file, quizType);
@@ -292,12 +367,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> uploadFileAndGetQuiz(BuildContext context, File file, String quizType) async {
+  Future<void> uploadFileAndGetQuiz(
+    BuildContext context,
+    File file,
+    String quizType,
+  ) async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => Center(
-        child: Card(child: Padding(padding: const EdgeInsets.all(20.0), child: Column(mainAxisSize: MainAxisSize.min, children: [const CircularProgressIndicator(color: Colors.green), const SizedBox(height: 15), Text(S.of(context, 'ai_preparing'), style: const TextStyle(fontWeight: FontWeight.bold))]))),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: Colors.green),
+                const SizedBox(height: 15),
+                Text(
+                  S.of(context, 'ai_preparing'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
 
@@ -317,17 +411,45 @@ class _HomeScreenState extends State<HomeScreen> {
         List<dynamic> questionsJson = jsonResult['questions'] ?? [];
 
         if (questionsJson.isNotEmpty && context.mounted) {
-          List<QuestionModel> generatedQuestions = questionsJson.map((q) => QuestionModel.fromJson(q)).toList();
+          List<QuestionModel> generatedQuestions = questionsJson
+              .map((q) => QuestionModel.fromJson(q))
+              .toList();
           if (quizType == "drag_drop") {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => DragDropQuizScreen(questions: generatedQuestions, lessonId: lessonId))).then((_) => fetchUserData());
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DragDropQuizScreen(
+                  questions: generatedQuestions,
+                  lessonId: lessonId,
+                ),
+              ),
+            ).then((_) => fetchUserData());
           } else if (quizType == "multiple_choice") {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => MultipleChoiceScreen(questions: generatedQuestions, lessonId: lessonId))).then((_) => fetchUserData());
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MultipleChoiceScreen(
+                  questions: generatedQuestions,
+                  lessonId: lessonId,
+                ),
+              ),
+            ).then((_) => fetchUserData());
           } else if (quizType == "fill_blank") {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => FillBlankScreen(questions: generatedQuestions, lessonId: lessonId))).then((_) => fetchUserData());
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FillBlankScreen(
+                  questions: generatedQuestions,
+                  lessonId: lessonId,
+                ),
+              ),
+            ).then((_) => fetchUserData());
           }
         }
       } else {
-        if (context.mounted) _showError(context, "Lỗi server: ${response.statusCode}");
+        if (context.mounted) {
+          _showError(context, "Lỗi server: ${response.statusCode}");
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -338,7 +460,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   // ==========================================
@@ -351,10 +478,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final t = AppLocalizations(langProvider.languageCode);
 
     // Cập nhật tên ngôn ngữ theo locale
-    sourceLangName = sourceLangCode == 'en' ? t.translate('english_lang') : t.translate('vietnamese_lang');
-    targetLangName = targetLangCode == 'en' ? t.translate('english_lang') : t.translate('vietnamese_lang');
+    sourceLangName = sourceLangCode == 'en'
+        ? t.translate('english_lang')
+        : t.translate('vietnamese_lang');
+    targetLangName = targetLangCode == 'en'
+        ? t.translate('english_lang')
+        : t.translate('vietnamese_lang');
 
-    final Color bgColor = isDarkMode ? const Color(0xFF121212) : const Color(0xFFF4F9F4);
+    final Color bgColor = isDarkMode
+        ? const Color(0xFF121212)
+        : const Color(0xFFF4F9F4);
     final Color textColor = isDarkMode ? Colors.white : const Color(0xFF1B2A22);
     final Color cardWhite = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     const Color primaryGreen = Color(0xFF0F8A50);
@@ -377,11 +510,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('AI Learning App', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: primaryGreen)),
+                        Text(
+                          'AI Learning App',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: primaryGreen,
+                          ),
+                        ),
                         CircleAvatar(
                           radius: 20,
                           backgroundColor: Colors.grey[300],
-                          backgroundImage: const NetworkImage("https://i.pravatar.cc/150?img=11"),
+                          backgroundImage: const NetworkImage(
+                            "https://i.pravatar.cc/150?img=11",
+                          ),
                         ),
                       ],
                     ),
@@ -392,7 +534,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: cardWhite,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: isDarkMode ? Colors.black26 : Colors.green.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDarkMode
+                              ? Colors.black26
+                              : Colors.green.withValues(alpha: 0.05),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -401,9 +551,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: InputDecoration(
                         hintText: t.translate('search_hint'),
                         hintStyle: TextStyle(color: Colors.grey[400]),
-                        prefixIcon: const Icon(Icons.search, color: primaryGreen),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: primaryGreen,
+                        ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -431,7 +586,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             controller: _outputController,
                             hint: t.translate('translation_result'),
                             isInput: false,
-                            cardColor: isDarkMode ? const Color(0xFF2A2A2A) : const Color(0xFFE8F3ED),
+                            cardColor: isDarkMode
+                                ? const Color(0xFF2A2A2A)
+                                : const Color(0xFFE8F3ED),
                             textColor: textColor,
                             isDarkMode: isDarkMode,
                             context: context,
@@ -446,15 +603,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: isDarkMode ? Colors.black54 : Colors.green.withOpacity(0.15),
+                              color: isDarkMode
+                                  ? Colors.black54
+                                  : Colors.green.withValues(alpha: 0.15),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
-                            )
+                            ),
                           ],
                         ),
                         child: IconButton(
                           onPressed: _swapLanguage,
-                          icon: const Icon(Icons.swap_vert, color: primaryGreen, size: 28),
+                          icon: const Icon(
+                            Icons.swap_vert,
+                            color: primaryGreen,
+                            size: 28,
+                          ),
                           padding: const EdgeInsets.all(12),
                         ),
                       ),
@@ -464,14 +627,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // 5. TÀI LIỆU HỌC TẬP (STUDY MATERIALS - PHỤC HỒI)
                   if (widget.major != null) ...[
-                    Text("Lộ trình học tập", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                    Text(
+                      "Lộ trình học tập",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
                     const SizedBox(height: 15),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => RoadmapScreen(major: widget.major!, username: widget.username),
+                            builder: (context) => RoadmapScreen(
+                              major: widget.major!,
+                              username: widget.username,
+                            ),
                           ),
                         );
                       },
@@ -486,10 +659,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0F8A50).withOpacity(0.3),
+                              color: const Color(
+                                0xFF0F8A50,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 6),
-                            )
+                            ),
                           ],
                         ),
                         child: Padding(
@@ -499,10 +674,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
-                                child: const Icon(Icons.map_rounded, color: Colors.white, size: 28),
+                                child: const Icon(
+                                  Icons.map_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                               ),
                               const SizedBox(width: 20),
                               Expanded(
@@ -511,17 +690,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     Text(
                                       widget.major!,
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     const Text(
                                       "Tiếp tục hành trình học tập của bạn",
-                                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ],
                           ),
                         ),
@@ -530,9 +720,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 35),
                   ],
 
-                  Text(t.translate('study_materials'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                  Text(
+                    t.translate('study_materials'),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(t.translate('study_materials_desc'), style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  Text(
+                    t.translate('study_materials_desc'),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
                   const SizedBox(height: 15),
 
                   GestureDetector(
@@ -540,9 +740,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: isDarkMode ? const Color(0xFF333333) : const Color(0xFFE8F3ED),
+                        color: isDarkMode
+                            ? const Color(0xFF333333)
+                            : const Color(0xFFE8F3ED),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF0F8A50).withOpacity(0.2), width: 1),
+                        border: Border.all(
+                          color: const Color(0xFF0F8A50).withValues(alpha: 0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
@@ -550,17 +755,39 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: const Color(0xFF0F8A50).withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
-                              child: const Icon(Icons.picture_as_pdf, color: Color(0xFF0F8A50), size: 28),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF0F8A50,
+                                ).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: const Icon(
+                                Icons.picture_as_pdf,
+                                color: Color(0xFF0F8A50),
+                                size: 28,
+                              ),
                             ),
                             const SizedBox(width: 20),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(t.translate('upload_pdf'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                                  Text(
+                                    t.translate('upload_pdf'),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
-                                  Text(t.translate('auto_create_quiz'), style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                                  Text(
+                                    t.translate('auto_create_quiz'),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -577,43 +804,82 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(25),
                     decoration: BoxDecoration(
-                      color: isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFE4EEE8),
+                      color: isDarkMode
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFFE4EEE8),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: const Color(0xFFBBE5CE), borderRadius: BorderRadius.circular(20)),
-                          child: Text(t.translate('new_feature'), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF17633D), letterSpacing: 1)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFBBE5CE),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            t.translate('new_feature'),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF17633D),
+                              letterSpacing: 1,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 15),
                         Text(
                           t.translate('vocabulary_garden_title'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: textColor, height: 1.2),
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            color: textColor,
+                            height: 1.2,
+                          ),
                         ),
                         const SizedBox(height: 15),
                         Text(
                           t.translate('vocabulary_garden_desc'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                            height: 1.5,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const VocabularyGardenScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const VocabularyGardenScreen(),
+                              ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryGreen,
-                            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                             elevation: 0,
                           ),
-                          child: Text(t.translate('explore_now'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            t.translate('explore_now'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 25),
                         ClipRRect(
@@ -624,7 +890,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: double.infinity,
                             fit: BoxFit.cover,
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -646,7 +912,15 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-          boxShadow: [BoxShadow(color: isDarkMode ? Colors.black54 : Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -4))],
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? Colors.black54
+                  : Colors.black.withValues(alpha: 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: SafeArea(
           child: Padding(
@@ -654,10 +928,38 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home_rounded, Icons.home_outlined, "Home", 0, primaryGreen, isDarkMode),
-                _buildNavItem(Icons.menu_book_rounded, Icons.menu_book_outlined, "Lessons", 1, primaryGreen, isDarkMode),
-                _buildNavItem(Icons.explore_rounded, Icons.explore_outlined, "Discover", 2, primaryGreen, isDarkMode),
-                _buildNavItem(Icons.person_rounded, Icons.person_outline_rounded, "Profile", 3, primaryGreen, isDarkMode),
+                _buildNavItem(
+                  Icons.home_rounded,
+                  Icons.home_outlined,
+                  "Home",
+                  0,
+                  primaryGreen,
+                  isDarkMode,
+                ),
+                _buildNavItem(
+                  Icons.menu_book_rounded,
+                  Icons.menu_book_outlined,
+                  "Lessons",
+                  1,
+                  primaryGreen,
+                  isDarkMode,
+                ),
+                _buildNavItem(
+                  Icons.explore_rounded,
+                  Icons.explore_outlined,
+                  "Discover",
+                  2,
+                  primaryGreen,
+                  isDarkMode,
+                ),
+                _buildNavItem(
+                  Icons.person_rounded,
+                  Icons.person_outline_rounded,
+                  "Profile",
+                  3,
+                  primaryGreen,
+                  isDarkMode,
+                ),
               ],
             ),
           ),
@@ -675,7 +977,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color cardColor,
     required Color textColor,
     required bool isDarkMode,
-    required BuildContext context
+    required BuildContext context,
   }) {
     const Color primaryGreen = Color(0xFF0F8A50);
 
@@ -683,7 +985,17 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: isInput ? [BoxShadow(color: isDarkMode ? Colors.black26 : Colors.green.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))] : [],
+        boxShadow: isInput
+            ? [
+                BoxShadow(
+                  color: isDarkMode
+                      ? Colors.black26
+                      : Colors.green.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : [],
       ),
       child: Stack(
         children: [
@@ -692,7 +1004,9 @@ class _HomeScreenState extends State<HomeScreen> {
             bottom: -30,
             child: CircleAvatar(
               radius: 70,
-              backgroundColor: primaryGreen.withOpacity(isDarkMode ? 0.05 : 0.08),
+              backgroundColor: primaryGreen.withValues(
+                alpha: isDarkMode ? 0.05 : 0.08,
+              ),
             ),
           ),
           Padding(
@@ -703,42 +1017,80 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryGreen, letterSpacing: 1)),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: primaryGreen,
+                        letterSpacing: 1,
+                      ),
+                    ),
                     Row(
                       children: isInput
                           ? [
-                        // NÚT MIC
-                        IconButton(
-                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : primaryGreen, size: 22),
-                            onPressed: _listenToSpeech, constraints: const BoxConstraints(), padding: EdgeInsets.zero
-                        ),
-                        const SizedBox(width: 15),
-                        // NÚT CAMERA
-                        IconButton(
-                            icon: const Icon(Icons.camera_alt_outlined, color: primaryGreen, size: 22),
-                            onPressed: () => _showImageSourceActionSheet(context), constraints: const BoxConstraints(), padding: EdgeInsets.zero
-                        ),
-                      ]
+                              // NÚT MIC
+                              IconButton(
+                                icon: Icon(
+                                  _isListening ? Icons.mic : Icons.mic_none,
+                                  color: _isListening
+                                      ? Colors.red
+                                      : primaryGreen,
+                                  size: 22,
+                                ),
+                                onPressed: _listenToSpeech,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                              const SizedBox(width: 15),
+                              // NÚT CAMERA
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: primaryGreen,
+                                  size: 22,
+                                ),
+                                onPressed: () =>
+                                    _showImageSourceActionSheet(context),
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ]
                           : [
-                        // NÚT LOA
-                        IconButton(
-                            icon: const Icon(Icons.volume_up_outlined, color: primaryGreen, size: 22),
-                            onPressed: _speakTranslation, constraints: const BoxConstraints(), padding: EdgeInsets.zero
-                        ),
-                      ],
-                    )
+                              // NÚT LOA
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.volume_up_outlined,
+                                  color: primaryGreen,
+                                  size: 22,
+                                ),
+                                onPressed: _speakTranslation,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: controller,
-                  maxLines: 4, minLines: 2,
+                  maxLines: 4,
+                  minLines: 2,
                   readOnly: !isInput,
                   onChanged: isInput ? _onInputTextChanged : null,
-                  style: TextStyle(color: textColor, fontSize: 18, fontStyle: isInput ? FontStyle.normal : FontStyle.italic),
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 18,
+                    fontStyle: isInput ? FontStyle.normal : FontStyle.italic,
+                  ),
                   decoration: InputDecoration(
                     hintText: _isListening ? S.of(context, 'listening') : hint,
-                    hintStyle: TextStyle(color: _isListening ? Colors.red : Colors.grey[500], fontSize: 16, fontStyle: isInput ? FontStyle.normal : FontStyle.italic),
+                    hintStyle: TextStyle(
+                      color: _isListening ? Colors.red : Colors.grey[500],
+                      fontSize: 16,
+                      fontStyle: isInput ? FontStyle.normal : FontStyle.italic,
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
@@ -751,7 +1103,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // --- HÀM VẼ BOTTOM NAV ITEM (4 nút thường) ---
-  Widget _buildNavItem(IconData activeIcon, IconData inactiveIcon, String label, int index, Color activeColor, bool isDarkMode) {
+  Widget _buildNavItem(
+    IconData activeIcon,
+    IconData inactiveIcon,
+    String label,
+    int index,
+    Color activeColor,
+    bool isDarkMode,
+  ) {
     bool isActive = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
@@ -772,7 +1131,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(
               isActive ? activeIcon : inactiveIcon,
-              color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[500]),
+              color: isActive
+                  ? activeColor
+                  : (isDarkMode ? Colors.grey[500] : Colors.grey[500]),
               size: 26,
             ),
             const SizedBox(height: 4),
@@ -781,7 +1142,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? activeColor : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+                color: isActive
+                    ? activeColor
+                    : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
               ),
             ),
           ],
