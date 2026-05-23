@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../api_config.dart';
+import 'package:ai_learning_app/core/config/api_config.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/language_provider.dart';
-import '../l10n/app_localizations.dart';
+import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
+import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
+import 'package:ai_learning_app/core/localization/app_localizations.dart';
 
 class DiscoverScreen extends StatefulWidget {
   // 1. KHAI BÁO THÊM BIẾN USERNAME Ở ĐÂY

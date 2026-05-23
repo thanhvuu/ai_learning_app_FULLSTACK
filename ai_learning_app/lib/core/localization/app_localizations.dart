@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/language_provider.dart';
+import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
 
 class AppLocalizations {
   final String languageCode;

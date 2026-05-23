@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math' as math;
-import '../api_config.dart';
-import '../models/question_model.dart';
-import '../models/vocabulary_model.dart';
+import 'package:ai_learning_app/core/config/api_config.dart';
+import 'package:ai_learning_app/data/models/question_model.dart';
+import 'package:ai_learning_app/data/models/vocabulary_model.dart';
 import 'vocabulary_screen.dart';
 import 'homescreen.dart';
 

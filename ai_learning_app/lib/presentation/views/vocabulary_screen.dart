@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/vocabulary_model.dart';
-import '../models/question_model.dart';
-import '../providers/theme_provider.dart';
+import 'package:ai_learning_app/data/models/vocabulary_model.dart';
+import 'package:ai_learning_app/data/models/question_model.dart';
+import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
 import 'drag_drop_quiz_screen.dart';
 import 'multiple_choice_screen.dart';
 import 'fill_blank_screen.dart';

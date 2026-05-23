@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/dictionary_helper.dart';
+import 'package:ai_learning_app/data/services/dictionary_helper.dart';
 import 'package:http/http.dart' as http;
-import '../api_config.dart';
+import 'package:ai_learning_app/core/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FlashcardScreen extends StatefulWidget {
