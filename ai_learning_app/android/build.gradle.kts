@@ -18,8 +18,14 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
 
+subprojects {
     project.evaluationDependsOn(":app")
+    val flutterExt = rootProject.project(":app").extensions.findByName("flutter")
+    if (flutterExt != null) {
+        project.extra["flutter"] = flutterExt
+    }
 }
 
 tasks.register<Delete>("clean") {

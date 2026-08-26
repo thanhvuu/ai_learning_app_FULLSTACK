@@ -1,36 +1,22 @@
 import 'dart:async';
 import 'dart:ui';
-
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:ai_learning_app/core/network/api_client.dart';
-import 'package:ai_learning_app/features/leaderboard/data/datasources/leaderboard_remote_data_source.dart';
-import 'package:ai_learning_app/features/leaderboard/data/repositories/leaderboard_repository_impl.dart';
-import 'package:ai_learning_app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
-import 'package:ai_learning_app/features/leaderboard/domain/usecases/get_leaderboard.dart';
-import 'package:ai_learning_app/features/leaderboard/presentation/view_models/discover_view_model.dart';
 import 'package:ai_learning_app/firebase_options.dart';
-import 'package:ai_learning_app/presentation/view_models/implements/quiz_viewmodel.dart';
-import 'package:ai_learning_app/presentation/view_models/language_view_model.dart';
-import 'package:ai_learning_app/presentation/view_models/theme_view_model.dart';
-import 'package:ai_learning_app/presentation/views/login_screen.dart';
-import 'package:ai_learning_app/presentation/views/no_internet_screen.dart';
-import 'package:ai_learning_app/presentation/views/welcome_screen.dart';
+import 'package:ai_learning_app/src/common/utils/logger.dart';
+import 'package:ai_learning_app/src/common/utils/service_locator.dart';
+import 'package:ai_learning_app/src/modules/app/presentation/app_widget.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    debugPrint(details.exceptionAsString());
+    AppLogger.error(details.exceptionAsString(), error: details.exception, stackTrace: details.stack);
   };
 
   PlatformDispatcher.instance.onError = (error, stackTrace) {
-    debugPrint('Unhandled platform error: $error');
+    AppLogger.error('Unhandled platform error: $error', error: error, stackTrace: stackTrace);
     return true;
   };
 
@@ -40,134 +26,12 @@ Future<void> main() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
-      runApp(
-        MultiProvider(
-          providers: [
-            Provider(create: (_) => ApiClient()),
-            Provider<LeaderboardRemoteDataSource>(
-              create: (context) =>
-                  LeaderboardRemoteDataSourceImpl(context.read<ApiClient>()),
-            ),
-            Provider<LeaderboardRepository>(
-              create: (context) => LeaderboardRepositoryImpl(
-                context.read<LeaderboardRemoteDataSource>(),
-              ),
-            ),
-            Provider(
-              create: (context) =>
-                  GetLeaderboard(context.read<LeaderboardRepository>()),
-            ),
-            ChangeNotifierProvider(create: (_) => QuizViewModel()),
-            ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => LanguageProvider()),
-            ChangeNotifierProvider(
-              create: (context) =>
-                  DiscoverViewModel(context.read<GetLeaderboard>()),
-            ),
-          ],
-          child: const MyApp(),
-        ),
-      );
+      await ServiceLocator.init();
+
+      runApp(const AppWidget());
     },
     (error, stackTrace) {
-      debugPrint('Unhandled zone error: $error');
+      AppLogger.error('Unhandled zone error: $error', error: error, stackTrace: stackTrace);
     },
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'AI Learning App',
-          theme: ThemeData(
-            brightness: Brightness.light,
-            scaffoldBackgroundColor: const Color(0xFFF4FAF5),
-            primaryColor: const Color(0xFF0F8A50),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: IconThemeData(color: Color(0xFF1B2A22)),
-              titleTextStyle: TextStyle(
-                color: Color(0xFF1B2A22),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            primaryColor: const Color(0xFF18C070),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: IconThemeData(color: Colors.white),
-              titleTextStyle: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          themeMode: themeProvider.themeMode,
-          home: const ConnectivityGate(),
-        );
-      },
-    );
-  }
-}
-
-class ConnectivityGate extends StatelessWidget {
-  const ConnectivityGate({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<ConnectivityResult>>(
-      stream: Connectivity().onConnectivityChanged,
-      builder: (context, snapshot) {
-        final results = snapshot.data ?? const [ConnectivityResult.mobile];
-        final hasInternet = !results.contains(ConnectivityResult.none);
-
-        if (!hasInternet) {
-          return const NoInternetScreen();
-        }
-
-        return const StartupGate();
-      },
-    );
-  }
-}
-
-class StartupGate extends StatelessWidget {
-  const StartupGate({super.key});
-
-  Future<bool> checkFirstTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('first_time') ?? true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: checkFirstTime(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF0F8A50)),
-            ),
-          );
-        }
-
-        final isFirstTime = snapshot.data ?? true;
-        return isFirstTime ? const WelcomeScreen() : const LoginScreen();
-      },
-    );
-  }
 }

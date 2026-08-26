@@ -1,19 +1,19 @@
-import 'package:ai_learning_app/core/error/app_exception.dart';
-import 'package:ai_learning_app/core/result/result.dart';
-import 'package:ai_learning_app/features/leaderboard/domain/entities/leaderboard_user.dart';
-import 'package:ai_learning_app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
-import 'package:ai_learning_app/features/leaderboard/domain/usecases/get_leaderboard.dart';
-import 'package:ai_learning_app/features/leaderboard/presentation/view_models/discover_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ai_learning_app/src/core/domain/app_exception.dart';
+import 'package:ai_learning_app/src/core/domain/result.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/discover_view_model.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/domain/entities/leaderboard_user.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/domain/repositories/leaderboard_repository.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/domain/usecases/get_leaderboard.dart';
 
 void main() {
   test('DiscoverViewModel exposes leaderboard on success', () async {
-    final repository = _FakeLeaderboardRepository(
-      const Success([
+    const repository = _FakeLeaderboardRepository(
+      Success([
         LeaderboardUser(username: 'vu', totalXp: 100, wateredPlants: 5),
       ]),
     );
-    final viewModel = DiscoverViewModel(GetLeaderboard(repository));
+    final viewModel = DiscoverViewModel(const GetLeaderboard(repository));
 
     await viewModel.loadLeaderboard();
 
@@ -23,10 +23,10 @@ void main() {
   });
 
   test('DiscoverViewModel exposes readable error on failure', () async {
-    final repository = _FakeLeaderboardRepository(
-      const Failure(AppException('Server is busy')),
+    const repository = _FakeLeaderboardRepository(
+      Failure(AppException('Server is busy')),
     );
-    final viewModel = DiscoverViewModel(GetLeaderboard(repository));
+    final viewModel = DiscoverViewModel(const GetLeaderboard(repository));
 
     await viewModel.loadLeaderboard();
 

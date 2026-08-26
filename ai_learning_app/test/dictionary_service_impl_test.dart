@@ -1,6 +1,6 @@
-import 'package:ai_learning_app/data/dao/interfaces/dictionary_dao.dart';
-import 'package:ai_learning_app/data/services/implements/dictionary_service_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ai_learning_app/src/core/infrastructure/databases/interfaces/dictionary_dao.dart';
+import 'package:ai_learning_app/src/core/infrastructure/repositories/dictionary_repository_impl.dart';
 
 void main() {
   group('DictionaryServiceImpl', () {
