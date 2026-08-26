@@ -48,7 +48,7 @@ class _MajorSelectionScreenState extends State<MajorSelectionScreen> {
           "${ApiConstants.users}/update-major?username=${widget.username}&major=${Uri.encodeComponent(majorName)}";
       var response = await http.post(Uri.parse(url));
 
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
         if (!mounted) return;
         context.go(
           AppRoutes.roadmap,
