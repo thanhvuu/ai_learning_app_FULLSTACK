@@ -7,6 +7,7 @@ class AppConstants {
   // Storage / Prefs Keys
   static const String prefKeyFirstTime = 'first_time';
   static const String prefKeyThemeMode = 'theme_mode';
+  static const String prefKeyDarkMode = 'is_dark_mode';
   static const String prefKeyLanguage = 'language_code';
   static const String prefKeyAuthToken = 'auth_token';
   static const String prefKeyUsername = 'username';

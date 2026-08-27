@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/vocabulary_model.dart';
@@ -68,7 +68,7 @@ class _VocabularyScreenState extends State<VocabularyScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color bgColor = isDarkMode ? ColorManager.darkBackground : ColorManager.lightBackground;
 

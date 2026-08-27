@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
-import 'package:ai_learning_app/src/core/application/language_provider.dart';
+import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'intl/messages_all.dart';
 
 class S {
@@ -33,7 +33,7 @@ class S {
 
   static String of(BuildContext context, String key) {
     try {
-      final lang = Provider.of<LanguageProvider>(context, listen: false).languageCode;
+      final lang = context.read<LanguageCubit>().state.languageCode;
       _currentLocale = lang;
       return MessagesAll.lookup(lang, key);
     } catch (_) {

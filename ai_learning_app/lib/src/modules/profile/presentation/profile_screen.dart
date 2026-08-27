@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/auth_provider.dart';
-import 'package:ai_learning_app/src/core/application/language_provider.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   final String username;
   final int xp;
   final int streak;
@@ -22,24 +22,18 @@ class ProfileScreen extends StatefulWidget {
   });
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = themeProvider.isDarkMode;
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final langState = context.watch<LanguageCubit>().state;
+    final S s = S(langState.languageCode);
 
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color cardColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
 
-    String formattedXp = widget.xp >= 1000
-        ? '${(widget.xp / 1000).toStringAsFixed(1)}k'
-        : widget.xp.toString();
+    String formattedXp = xp >= 1000
+        ? '${(xp / 1000).toStringAsFixed(1)}k'
+        : xp.toString();
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -60,12 +54,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Column(
           children: [
-            _buildAvatarSection(s),
+            _buildAvatarSection(context, s),
             const SizedBox(height: 15),
             Text(
-              widget.username.isNotEmpty
-                  ? widget.username
-                  : s.translate('student'),
+              username.isNotEmpty ? username : s.translate('student'),
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
@@ -98,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildStatCard(
                   Icons.local_fire_department,
                   ColorManager.orangeAccent,
-                  widget.streak.toString(),
+                  streak.toString(),
                   s.translate('streak'),
                   cardColor,
                   textColor,
@@ -131,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isDarkMode,
                 textColor,
                 (val) {
-                  themeProvider.toggleTheme(val);
+                  context.read<ThemeCubit>().toggleTheme(val);
                   context.showSnackBar(
                     val
                         ? s.translate('dark_mode_on')
@@ -144,8 +136,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icons.language,
                 s.translate('language'),
                 textColor,
-                trailingText: langProvider.languageName,
-                onTap: () => _showLanguageDialog(langProvider, s),
+                trailingText: langState.languageName,
+                onTap: () => _showLanguageDialog(context, s),
               ),
             ]),
             const SizedBox(height: 25),
@@ -162,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icons.info_outline,
                 s.translate('about_us'),
                 textColor,
-                onTap: () => _showAboutDialog(s),
+                onTap: () => _showAboutDialog(context, s),
               ),
             ]),
             const SizedBox(height: 35),
@@ -174,17 +166,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showLanguageDialog(LanguageProvider langProvider, S s) {
-    final isDarkMode = Provider.of<ThemeProvider>(
-      context,
-      listen: false,
-    ).isDarkMode;
+  void _showLanguageDialog(BuildContext context, S s) {
+    final isDarkMode = context.read<ThemeCubit>().state.isDarkMode;
+    final currentCode = context.read<LanguageCubit>().state.languageCode;
     final Color dialogBg = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -201,12 +191,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               flag: '🇻🇳',
               name: 'Tiếng Việt',
               code: 'vi',
-              isSelected: langProvider.languageCode == 'vi',
+              isSelected: currentCode == 'vi',
               textColor: textColor,
               isDarkMode: isDarkMode,
               onTap: () {
-                langProvider.setLanguage('vi');
-                Navigator.pop(context);
+                context.read<LanguageCubit>().setLanguage('vi');
+                Navigator.pop(dialogCtx);
                 context.showSnackBar('${s.translate('language_changed')} Tiếng Việt');
               },
             ),
@@ -215,12 +205,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               flag: '🇺🇸',
               name: 'English',
               code: 'en',
-              isSelected: langProvider.languageCode == 'en',
+              isSelected: currentCode == 'en',
               textColor: textColor,
               isDarkMode: isDarkMode,
               onTap: () {
-                langProvider.setLanguage('en');
-                Navigator.pop(context);
+                context.read<LanguageCubit>().setLanguage('en');
+                Navigator.pop(dialogCtx);
                 context.showSnackBar('${s.translate('language_changed')} English');
               },
             ),
@@ -281,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showAboutDialog(S s) {
+  void _showAboutDialog(BuildContext context, S s) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -307,10 +297,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _handleLogout(S s) {
+  void _handleLogout(BuildContext context, S s) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -325,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: Text(s.translate('logout_confirm_message')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogCtx),
             child: Text(
               s.translate('cancel'),
               style: const TextStyle(color: Colors.grey),
@@ -339,8 +329,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             onPressed: () async {
-              Navigator.pop(context);
-              await context.read<AuthProvider>().logout();
+              Navigator.pop(dialogCtx);
+              await context.read<AuthCubit>().logout();
               if (context.mounted) {
                 context.go(AppRoutes.welcome);
                 context.showSnackBar(s.translate('logout_success'));
@@ -356,7 +346,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildAvatarSection(S s) {
+  Widget _buildAvatarSection(BuildContext context, S s) {
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -586,7 +576,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     S s,
   ) {
     return GestureDetector(
-      onTap: () => _handleLogout(s),
+      onTap: () => _handleLogout(context, s),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),

@@ -1,12 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
-import 'package:ai_learning_app/src/modules/explore_lessons/application/quiz_view_model.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final List<Map<String, dynamic>> questions;
+  final int lessonId;
+
+  const QuizScreen({
+    super.key,
+    this.questions = const [],
+    this.lessonId = 0,
+  });
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -17,6 +22,8 @@ class _QuizScreenState extends State<QuizScreen> {
   String? selectedOption;
   bool hasSubmitted = false;
   bool isCorrect = false;
+  int lives = 5;
+  double progress = 0.0;
 
   void selectOption(String option) {
     if (!hasSubmitted) {
@@ -26,18 +33,16 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Future<void> checkAnswer(
-    BuildContext context,
-    QuizViewModel quizState,
-  ) async {
+  Future<void> checkAnswer(BuildContext context) async {
+    if (widget.questions.isEmpty) return;
+
     if (!hasSubmitted) {
       if (selectedOption != null) {
-        String correctAns = quizState
+        String correctAns = widget
             .questions[currentQuestionIndex]['correctAnswer']
             .toString()
             .trim();
-        bool correct =
-            selectedOption!.trim().startsWith(correctAns) ||
+        bool correct = selectedOption!.trim().startsWith(correctAns) ||
             selectedOption!.trim() == correctAns;
         setState(() {
           hasSubmitted = true;
@@ -45,18 +50,16 @@ class _QuizScreenState extends State<QuizScreen> {
         });
 
         if (correct) {
-          double currentProgress =
-              (currentQuestionIndex + 1) / quizState.questions.length;
-          quizState.updateProgress(currentProgress);
+          progress = (currentQuestionIndex + 1) / widget.questions.length;
         } else {
-          quizState.decreaseLive();
-          if (quizState.lives == 0) {
+          lives--;
+          if (lives == 0) {
             _showGameOverDialog(context);
           }
         }
       }
     } else {
-      if (currentQuestionIndex < quizState.questions.length - 1) {
+      if (currentQuestionIndex < widget.questions.length - 1) {
         setState(() {
           currentQuestionIndex++;
           hasSubmitted = false;
@@ -64,7 +67,7 @@ class _QuizScreenState extends State<QuizScreen> {
           selectedOption = null;
         });
       } else {
-        quizState.updateProgress(1.0);
+        progress = 1.0;
         const String username = "Đặng Thanh Vũ";
         final String updateUrl =
             "${ApiConstants.users}/update-progress?username=$username";
@@ -120,12 +123,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final quizState = context.watch<QuizViewModel>();
-    if (quizState.questions.isEmpty) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (widget.questions.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text("Không có câu hỏi")),
+      );
     }
 
-    final currentQuestion = quizState.questions[currentQuestionIndex];
+    final currentQuestion = widget.questions[currentQuestionIndex];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -144,7 +148,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: LinearProgressIndicator(
-                    value: quizState.progress,
+                    value: progress,
                     backgroundColor: Colors.grey[300],
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       Colors.greenAccent,
@@ -159,7 +163,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   const Icon(Icons.favorite, color: Colors.red),
                   const SizedBox(width: 5),
                   Text(
-                    "${quizState.lives}",
+                    "$lives",
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -305,7 +309,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
                 onPressed: selectedOption == null
                     ? null
-                    : () => checkAnswer(context, quizState),
+                    : () => checkAnswer(context),
                 child: Text(
                   hasSubmitted ? "TIẾP TỤC" : "KIỂM TRA",
                   style: const TextStyle(

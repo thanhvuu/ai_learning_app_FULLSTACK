@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/language_provider.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/application/discover_view_model.dart';
+import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/discover_cubit/discover_leaderboard_cubit.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/discover_cubit/discover_leaderboard_state.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/domain/entities/leaderboard_user.dart';
 
 class DiscoverScreen extends StatefulWidget {
@@ -20,7 +21,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(context.read<DiscoverViewModel>().loadLeaderboard);
+    context.read<DiscoverLeaderboardCubit>().loadLeaderboard();
   }
 
   Widget _buildTop3Podium(List<LeaderboardUser> leaderboard, Color textColor) {
@@ -133,9 +134,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final langCode = context.watch<LanguageCubit>().state.languageCode;
+    final S s = S(langCode);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color cardColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
@@ -180,9 +181,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           ),
         ],
       ),
-      body: Consumer<DiscoverViewModel>(
-        builder: (context, viewModel, _) {
-          final leaderboard = viewModel.leaderboard;
+      body: BlocBuilder<DiscoverLeaderboardCubit, DiscoverLeaderboardState>(
+        builder: (context, state) {
+          final leaderboard = state.leaderboard;
           final myIndex = leaderboard.indexWhere(
             (u) => u.username == widget.username,
           );
@@ -192,14 +193,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ? leaderboard[myIndex].wateredPlants
               : 0;
 
-          if (viewModel.isLoading) {
+          if (state.isLoading) {
             return Center(child: CircularProgressIndicator(color: titleColor));
           }
 
-          if (viewModel.errorMessage != null) {
+          if (state.errorMessage != null && leaderboard.isEmpty) {
             return Center(
               child: Text(
-                viewModel.errorMessage!,
+                state.errorMessage!,
                 style: TextStyle(color: textColor),
               ),
             );

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/generated/assets.gen.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/language_provider.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -26,9 +26,9 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final langCode = context.watch<LanguageCubit>().state.languageCode;
+    final S s = S(langCode);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
 
     final Color primaryColor = isDarkMode
@@ -58,74 +58,75 @@ class WelcomeScreen extends StatelessWidget {
             Text(
               "AI Learning App",
               style: TextStyle(
-                color: primaryColor,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
+                color: primaryColor,
               ),
             ),
             const SizedBox(height: 10),
             Text(
-              s.translate('learn_free'),
+              s.translate('welcome_title'),
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color: subtitleColor,
                 fontSize: 16,
+                color: subtitleColor,
               ),
             ),
             const Spacer(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  minimumSize: const Size(double.infinity, 55),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => _completeWelcomeAndNavigate(
+                        context,
+                        AppRoutes.login,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        s.translate('login'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  _completeWelcomeAndNavigate(
-                    context,
-                    AppRoutes.register,
-                  );
-                },
-                child: Text(
-                  s.translate('get_started'),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.black : Colors.white,
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => _completeWelcomeAndNavigate(
+                        context,
+                        AppRoutes.register,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: primaryColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        s.translate('register'),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: primaryColor,
-                    width: 2,
-                  ),
-                  minimumSize: const Size(double.infinity, 55),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                onPressed: () {
-                  _completeWelcomeAndNavigate(
-                    context,
-                    AppRoutes.login,
-                  );
-                },
-                child: Text(
-                  s.translate('have_account'),
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                ],
               ),
             ),
             const SizedBox(height: 30),

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/discover_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/my_lessons_screen.dart';
@@ -28,7 +29,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _selectedIndex;
-  final GlobalKey<State<MyLessonsScreen>> _lessonsKey = GlobalKey();
   int _streak = 0;
   int _xp = 0;
 
@@ -46,10 +46,16 @@ class _MainScreenState extends State<MainScreen> {
       if (response.statusCode == 200) {
         var data = jsonDecode(utf8.decode(response.bodyBytes));
         if (mounted) {
+          final streak = data['streak'] ?? 0;
+          final totalXp = data['totalXp'] ?? 0;
           setState(() {
-            _streak = data['streak'] ?? 0;
-            _xp = data['totalXp'] ?? 0;
+            _streak = streak;
+            _xp = totalXp;
           });
+          context.read<AuthCubit>().updateXpAndStreak(
+                totalXp: totalXp,
+                streak: streak,
+              );
         }
       }
     } catch (e) {
@@ -59,7 +65,15 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final user = context.watch<AuthCubit>().state.user;
+    final currentUsername = user?.username.isNotEmpty == true
+        ? user!.username
+        : widget.username;
+    final currentMajor = user?.major ?? widget.major;
+    final currentXp = user?.totalXp ?? _xp;
+    final currentStreak = user?.streak ?? _streak;
+
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     const Color primaryGreen = ColorManager.primaryGreen;
 
@@ -69,15 +83,15 @@ class _MainScreenState extends State<MainScreen> {
         index: _selectedIndex,
         children: [
           HomeScreen(
-            username: widget.username,
-            major: widget.major,
+            username: currentUsername,
+            major: currentMajor,
           ),
-          MyLessonsScreen(key: _lessonsKey, username: widget.username),
-          DiscoverScreen(username: widget.username),
+          MyLessonsScreen(username: currentUsername),
+          DiscoverScreen(username: currentUsername),
           ProfileScreen(
-            username: widget.username,
-            xp: _xp,
-            streak: _streak,
+            username: currentUsername,
+            xp: currentXp,
+            streak: currentStreak,
           ),
         ],
       ),
@@ -153,13 +167,6 @@ class _MainScreenState extends State<MainScreen> {
     return GestureDetector(
       onTap: () {
         setState(() => _selectedIndex = index);
-        if (index == 1) {
-          final dynamic lessonsState = _lessonsKey.currentState;
-          if (lessonsState != null) {
-            lessonsState.fetchMyLessons();
-            lessonsState.fetchProgress();
-          }
-        }
         if (index == 3) {
           fetchUserData();
         }

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 
@@ -239,7 +239,7 @@ class _FillBlankScreenState extends State<FillBlankScreen> {
     bool isCorrect =
         _answerController.text.trim().toLowerCase() ==
         currentQ.correctAnswer.trim().toLowerCase();
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
 

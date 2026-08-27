@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/validator.dart';
 import 'package:ai_learning_app/src/common/widgets/custom_button.dart';
 import 'package:ai_learning_app/src/common/widgets/custom_text_field.dart';
-import 'package:ai_learning_app/src/core/application/auth_provider.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_state.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -33,8 +34,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.register(
+    final authCubit = context.read<AuthCubit>();
+    final success = await authCubit.register(
       username: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
@@ -45,8 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AppRoutes.majorSelection,
         extra: _nameController.text.trim(),
       );
-    } else if (mounted && authProvider.errorMessage != null) {
-      context.showErrorSnackBar(authProvider.errorMessage!);
+    } else if (mounted && authCubit.state.errorMessage != null) {
+      context.showErrorSnackBar(authCubit.state.errorMessage!);
     }
   }
 
@@ -56,7 +57,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final cardColor = isDark ? ColorManager.darkCard : ColorManager.lightCard;
     final textColor = isDark ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[700]!;
-    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
       body: Container(
@@ -92,8 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: (isDark ? ColorManager.primaryGreen : ColorManager.primaryGreen)
-                            .withOpacity(0.12),
+                        color: ColorManager.primaryGreen.withOpacity(0.12),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -188,10 +187,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             validator: Validator.validatePassword,
                           ),
                           const SizedBox(height: 25),
-                          CustomButton(
-                            text: 'Đăng ký',
-                            onPressed: _handleRegister,
-                            isLoading: authProvider.isLoading,
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, state) {
+                              return CustomButton(
+                                text: 'Đăng ký',
+                                onPressed: _handleRegister,
+                                isLoading: state.isLoading,
+                              );
+                            },
                           ),
                         ],
                       ),

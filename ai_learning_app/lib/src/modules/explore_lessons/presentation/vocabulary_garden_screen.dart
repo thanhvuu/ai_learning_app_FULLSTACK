@@ -1,110 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
-import 'package:ai_learning_app/src/core/application/language_provider.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/vocabulary_garden_cubit/vocabulary_garden_cubit.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/vocabulary_garden_cubit/vocabulary_garden_state.dart';
 
-class VocabularyGardenScreen extends StatefulWidget {
+class VocabularyGardenScreen extends StatelessWidget {
   const VocabularyGardenScreen({super.key});
 
   @override
-  State<VocabularyGardenScreen> createState() => _VocabularyGardenScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => VocabularyGardenCubit(
+        savedWordDao: ServiceLocator.savedWordDao,
+      )..loadGarden(),
+      child: const _VocabularyGardenView(),
+    );
+  }
 }
 
-class _VocabularyGardenScreenState extends State<VocabularyGardenScreen> {
-  List<Map<String, dynamic>> _gardenWords = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadGarden();
-  }
-
-  void _loadGarden() async {
-    setState(() => _isLoading = true);
-    final words = await ServiceLocator.dictionaryService.getGardenWords();
-    if (mounted) {
-      setState(() {
-        _gardenWords = words;
-        _isLoading = false;
-      });
-    }
-  }
-
-  List<Map<String, dynamic>> get _wordsToReview {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return _gardenWords.where((word) {
-      final level = word['level'] ?? 0;
-      final lastReviewed = word['last_reviewed'] ?? 0;
-      int intervalHours = 0;
-      if (level == 0) intervalHours = 0;
-      if (level == 1) intervalHours = 24;
-      if (level == 2) intervalHours = 72;
-      if (level == 3) intervalHours = 168;
-
-      final diffHours = (now - lastReviewed) / (1000 * 60 * 60);
-      return diffHours >= intervalHours;
-    }).toList();
-  }
+class _VocabularyGardenView extends StatelessWidget {
+  const _VocabularyGardenView();
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final langCode = context.watch<LanguageCubit>().state.languageCode;
+    final S s = S(langCode);
     const Color primaryGreen = ColorManager.primaryGreen;
     final Color bgColor = isDarkMode
         ? ColorManager.darkBackground
         : ColorManager.lightBackground;
-    final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
+    final Color textColor = isDarkMode
+        ? ColorManager.darkTextPrimary
+        : ColorManager.lightTextPrimary;
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        title: Text(
-          s.translate('garden_title'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: ColorManager.primaryGreen))
-          : _gardenWords.isEmpty
-              ? _buildEmptyGarden(context, textColor)
-              : _buildGardenList(isDarkMode, textColor),
-      floatingActionButton: _gardenWords.isEmpty
-          ? null
-          : _wordsToReview.isNotEmpty
-              ? FloatingActionButton.extended(
-                  onPressed: () async {
-                    final result = await context.push(
-                      AppRoutes.flashcardQuiz,
-                      extra: _wordsToReview,
-                    );
-                    if (result == true) _loadGarden();
-                  },
-                  backgroundColor: primaryGreen,
-                  icon: const Icon(Icons.water_drop, color: Colors.white),
-                  label: Text(
-                    "${s.translate('water_trees')} ${_wordsToReview.length} ${s.translate('trees_unit')}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+    return BlocBuilder<VocabularyGardenCubit, VocabularyGardenState>(
+      builder: (context, state) {
+        final words = state.gardenWords;
+        final wordsToReview = state.wordsToReview;
+
+        return Scaffold(
+          backgroundColor: bgColor,
+          appBar: AppBar(
+            title: Text(
+              s.translate('garden_title'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            centerTitle: true,
+          ),
+          body: state.isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: ColorManager.primaryGreen),
                 )
-              : null,
+              : words.isEmpty
+                  ? _buildEmptyGarden(s, textColor)
+                  : _buildGardenList(context, state, s, isDarkMode, textColor),
+          floatingActionButton: words.isEmpty
+              ? null
+              : wordsToReview.isNotEmpty
+                  ? FloatingActionButton.extended(
+                      onPressed: () async {
+                        final rawWords =
+                            wordsToReview.map((w) => w.toJson()).toList();
+                        final result = await context.push(
+                          AppRoutes.flashcardQuiz,
+                          extra: rawWords,
+                        );
+                        if (result == true && context.mounted) {
+                          context.read<VocabularyGardenCubit>().loadGarden();
+                        }
+                      },
+                      backgroundColor: primaryGreen,
+                      icon: const Icon(Icons.water_drop, color: Colors.white),
+                      label: Text(
+                        "${s.translate('water_trees')} ${wordsToReview.length} ${s.translate('trees_unit')}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  : null,
+        );
+      },
     );
   }
 
-  Widget _buildEmptyGarden(BuildContext context, Color textColor) {
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+  Widget _buildEmptyGarden(S s, Color textColor) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -129,15 +117,20 @@ class _VocabularyGardenScreenState extends State<VocabularyGardenScreen> {
     );
   }
 
-  Widget _buildGardenList(bool isDarkMode, Color textColor) {
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+  Widget _buildGardenList(
+    BuildContext context,
+    VocabularyGardenState state,
+    S s,
+    bool isDarkMode,
+    Color textColor,
+  ) {
+    final words = state.gardenWords;
     return ListView.builder(
       padding: const EdgeInsets.all(15),
-      itemCount: _gardenWords.length,
+      itemCount: words.length,
       itemBuilder: (context, index) {
-        final item = _gardenWords[index];
-        final level = item['level'] ?? 0;
+        final item = words[index];
+        final level = item.level;
 
         String plantState = s.translate('sprout');
         String plantEmoji = "🌱";
@@ -170,8 +163,12 @@ class _VocabularyGardenScreenState extends State<VocabularyGardenScreen> {
               child: Text(plantEmoji, style: const TextStyle(fontSize: 22)),
             ),
             title: Text(
-              item['word'],
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor),
+              item.word,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: textColor,
+              ),
             ),
             subtitle: Text(
               "${s.translate('growth_stage')}: $plantState",

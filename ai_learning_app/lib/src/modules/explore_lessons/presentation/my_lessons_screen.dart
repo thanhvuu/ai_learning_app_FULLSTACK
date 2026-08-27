@@ -1,112 +1,42 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
-import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/language_provider.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
-import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
+import 'package:ai_learning_app/src/common/utils/service_locator.dart';
+import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lessons_cubit/my_lessons_cubit.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lessons_cubit/my_lessons_state.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/vocabulary_model.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/infrastructure/repositories/lesson_repository_impl.dart';
 
-class MyLessonsScreen extends StatefulWidget {
+class MyLessonsScreen extends StatelessWidget {
   final String username;
   const MyLessonsScreen({super.key, required this.username});
 
   @override
-  State<MyLessonsScreen> createState() => _MyLessonsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => MyLessonsCubit(
+        lessonRepository: LessonRepositoryImpl(
+          lessonDao: ServiceLocator.cachedLessonDao,
+        ),
+      )..loadLessons(username),
+      child: _MyLessonsView(username: username),
+    );
+  }
 }
 
-class _MyLessonsScreenState extends State<MyLessonsScreen> {
-  List<Map<String, dynamic>> activeCourses = [];
-  bool isLoading = true;
-  int minutesLearned = 0;
-  int dailyGoal = 45;
-  int streakCount = 0;
+class _MyLessonsView extends StatelessWidget {
+  final String username;
+  const _MyLessonsView({required this.username});
 
-  @override
-  void initState() {
-    super.initState();
-    fetchMyLessons();
-    fetchProgress();
-  }
-
-  Future<void> fetchMyLessons() async {
-    final String encodedUsername = Uri.encodeComponent(widget.username);
-    final String url =
-        "${ApiConstants.lessons}/my-lessons?username=$encodedUsername";
-
-    try {
-      var response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-
-        setState(() {
-          activeCourses = data.map((item) {
-            String type = item['quizType'] ?? 'unknown';
-
-            List<dynamic> vocabJson = item['vocabularies'] ?? [];
-            List<dynamic> questionsJson = item['questions'] ?? [];
-
-            return {
-              "id": item['id'],
-              "title": item['title'] ?? "Bài học mới",
-              "content": item['content'] ?? "",
-              "subtitle": _getSubtitleForType(type),
-              "progress": (item['progress'] ?? 0) / 100.0,
-              "isCompleted": item['progress'] == 100,
-              "gradient": _getGradientForType(type),
-              "icon": _getIconForType(type),
-              "quizType": type,
-              "vocabularies": vocabJson
-                  .map((v) => VocabularyModel.fromJson(v))
-                  .toList(),
-              "questions": questionsJson
-                  .map((q) => QuestionModel.fromJson(q))
-                  .toList(),
-            };
-          }).toList();
-          isLoading = false;
-        });
-      } else {
-        setState(() => isLoading = false);
-        debugPrint("Lỗi server: ${response.statusCode}");
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      debugPrint("Lỗi kết nối: $e");
-      _loadDummyData();
-    }
-  }
-
-  Future<void> fetchProgress() async {
-    final String encodedUsername = Uri.encodeComponent(widget.username);
-    final String url = "${ApiConstants.progress}/today?username=$encodedUsername";
-    try {
-      var response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        var data = jsonDecode(utf8.decode(response.bodyBytes));
-        if (mounted) {
-          setState(() {
-            minutesLearned = data['minutesLearned'] ?? 0;
-            dailyGoal = data['dailyGoal'] ?? 45;
-            streakCount = data['streakCount'] ?? 0;
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Lỗi kết nối: $e");
-    }
-  }
-
-  String _getSubtitleForType(String type) {
-    final s = S(
-      LanguageProvider.safeOf(context, listen: false).languageCode,
-    );
+  String _getSubtitleForType(BuildContext context, String type) {
+    final langCode = context.read<LanguageCubit>().state.languageCode;
+    final s = S(langCode);
     if (type == 'drag_drop') return s.translate('drag_drop_type');
     if (type == 'multiple_choice') return s.translate('multiple_choice_type');
     if (type == 'fill_blank') return s.translate('fill_blank_type');
@@ -133,51 +63,15 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
     return Icons.menu_book;
   }
 
-  void _loadDummyData() {
-    setState(() {
-      activeCourses = [
-        {
-          "id": 1,
-          "title": "Business English",
-          "content": "Learn business vocabulary",
-          "subtitle": "Mẫu (Đang lỗi API)",
-          "progress": 0.75,
-          "isCompleted": false,
-          "gradient": const [Color(0xFF2E86C1), Color(0xFF85C1E9)],
-          "icon": Icons.business_center,
-          "vocabularies": <VocabularyModel>[],
-          "questions": <QuestionModel>[],
-          "quizType": "multiple_choice",
-        },
-        {
-          "id": 2,
-          "title": "IT Vocabulary",
-          "content": "Learn IT terms",
-          "subtitle": "Mẫu (Đang lỗi API)",
-          "progress": 0.40,
-          "isCompleted": false,
-          "gradient": const [Color(0xFF17202A), Color(0xFF5D6D7E)],
-          "icon": Icons.memory,
-          "vocabularies": <VocabularyModel>[],
-          "questions": <QuestionModel>[],
-          "quizType": "fill_blank",
-        },
-      ];
-      isLoading = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-    final langProvider = LanguageProvider.safeOf(context);
-    final S s = S(langProvider.languageCode);
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final langCode = context.watch<LanguageCubit>().state.languageCode;
+    final S s = S(langCode);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color cardColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
-    final Color subtitleColor = isDarkMode
-        ? Colors.grey[400]!
-        : Colors.grey[700]!;
+    final Color subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
     const Color greenAccent = ColorManager.primaryGreen;
 
     return Scaffold(
@@ -205,84 +99,94 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: greenAccent))
-          : RefreshIndicator(
-              onRefresh: () async {
-                await fetchMyLessons();
-                await fetchProgress();
-              },
-              color: greenAccent,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDailyGoalCard(
+      body: BlocBuilder<MyLessonsCubit, MyLessonsState>(
+        builder: (context, state) {
+          if (state.isLoading) {
+            return const Center(child: CircularProgressIndicator(color: greenAccent));
+          }
+
+          final lessons = state.lessons;
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              await context.read<MyLessonsCubit>().loadLessons(username);
+            },
+            color: greenAccent,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 10,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDailyGoalCard(
+                    context,
+                    cardColor,
+                    textColor,
+                    greenAccent,
+                    isDarkMode,
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        s.translate('active_courses'),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          s.translate('view_all'),
+                          style: const TextStyle(
+                            color: greenAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (lessons.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          s.translate('no_lessons'),
+                          style: TextStyle(color: subtitleColor),
+                        ),
+                      ),
+                    ),
+                  ...lessons.map(
+                    (course) => _buildCourseCard(
+                      context,
+                      course,
                       cardColor,
                       textColor,
+                      subtitleColor,
                       greenAccent,
                       isDarkMode,
                     ),
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          s.translate('active_courses'),
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            s.translate('view_all'),
-                            style: const TextStyle(
-                              color: greenAccent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    if (activeCourses.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Text(
-                            s.translate('no_lessons'),
-                            style: TextStyle(color: subtitleColor),
-                          ),
-                        ),
-                      ),
-                    ...activeCourses.map(
-                      (course) => _buildCourseCard(
-                        course,
-                        cardColor,
-                        textColor,
-                        subtitleColor,
-                        greenAccent,
-                        isDarkMode,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildDailyGoalCard(
+    BuildContext context,
     Color cardColor,
     Color textColor,
     Color greenAccent,
@@ -323,7 +227,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    "$minutesLearned",
+                    "25",
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.w900,
@@ -331,7 +235,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                     ),
                   ),
                   Text(
-                    "/$dailyGoal min",
+                    "/45 min",
                     style: TextStyle(
                       fontSize: 16,
                       color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
@@ -364,7 +268,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      "$streakCount ${S.of(context, 'day_streak')}",
+                      "3 ${S.of(context, 'day_streak')}",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -385,7 +289,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
               fit: StackFit.expand,
               children: [
                 CircularProgressIndicator(
-                  value: dailyGoal > 0 ? (minutesLearned / dailyGoal).clamp(0.0, 1.0) : 0.0,
+                  value: 0.55,
                   strokeWidth: 10,
                   backgroundColor: isDarkMode
                       ? Colors.grey[800]
@@ -395,7 +299,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                 ),
                 Center(
                   child: Text(
-                    "${dailyGoal > 0 ? ((minutesLearned / dailyGoal) * 100).toInt() : 0}%",
+                    "55%",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
@@ -412,6 +316,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
   }
 
   Widget _buildCourseCard(
+    BuildContext context,
     Map<String, dynamic> course,
     Color cardColor,
     Color textColor,
@@ -419,18 +324,37 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
     Color greenAccent,
     bool isDarkMode,
   ) {
-    bool isCompleted = course['isCompleted'];
+    final String type = course['quizType'] ?? 'multiple_choice';
+    final double progress = ((course['progress'] as num?)?.toDouble() ?? 0.0).clamp(0.0, 1.0);
+    final bool isCompleted = progress >= 1.0;
+    final String title = course['title'] ?? course['topic'] ?? "Bài học";
+    final String subtitle = _getSubtitleForType(context, type);
+    final List<Color> gradient = _getGradientForType(type);
+    final IconData icon = _getIconForType(type);
+
+    final vocabulariesJson = (course['vocabularies'] as List?) ?? [];
+    final questionsJson = (course['questions'] as List?) ?? [];
+
+    final vocabularies = vocabulariesJson
+        .map((v) => v is Map ? VocabularyModel.fromJson(Map<String, dynamic>.from(v)) : null)
+        .whereType<VocabularyModel>()
+        .toList();
+    final questions = questionsJson
+        .map((q) => q is Map ? QuestionModel.fromJson(Map<String, dynamic>.from(q)) : null)
+        .whereType<QuestionModel>()
+        .toList();
+
     return InkWell(
       onTap: () {
         context.push(
           AppRoutes.vocabulary,
           extra: {
-            'lessonId': course['id'],
-            'topic': course['title'],
+            'lessonId': int.tryParse(course['id']?.toString() ?? '0') ?? 0,
+            'topic': title,
             'content': course['content'] ?? "",
-            'vocabularies': List<VocabularyModel>.from(course['vocabularies']),
-            'questions': List<QuestionModel>.from(course['questions']),
-            'quizType': course['quizType'],
+            'vocabularies': vocabularies,
+            'questions': questions,
+            'quizType': type,
           },
         );
       },
@@ -463,11 +387,11 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: course['gradient'],
+                      colors: gradient,
                     ),
                   ),
                   child: Icon(
-                    course['icon'],
+                    icon,
                     color: Colors.white.withOpacity(0.8),
                     size: 30,
                   ),
@@ -478,7 +402,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        course['title'],
+                        title,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -487,7 +411,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        course['subtitle'],
+                        subtitle,
                         style: TextStyle(
                           color: subtitleColor,
                           fontSize: 14,
@@ -533,7 +457,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
                   ),
                 ),
                 Text(
-                  "${(course['progress'] * 100).toInt()}%",
+                  "${(progress * 100).toInt()}%",
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
@@ -544,7 +468,7 @@ class _MyLessonsScreenState extends State<MyLessonsScreen> {
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
-              value: course['progress'],
+              value: progress,
               minHeight: 8,
               backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
               valueColor: AlwaysStoppedAnimation<Color>(greenAccent),

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/validator.dart';
 import 'package:ai_learning_app/src/common/widgets/custom_button.dart';
 import 'package:ai_learning_app/src/common/widgets/custom_text_field.dart';
-import 'package:ai_learning_app/src/core/application/auth_provider.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_state.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,14 +32,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.login(
+    final authCubit = context.read<AuthCubit>();
+    final success = await authCubit.login(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
 
     if (success && mounted) {
-      final user = authProvider.currentUser;
+      final user = authCubit.state.user;
       final username = user?.username.isNotEmpty == true
           ? user!.username
           : _emailController.text.trim().split('@')[0];
@@ -58,8 +59,8 @@ class _LoginScreenState extends State<LoginScreen> {
           extra: username,
         );
       }
-    } else if (mounted && authProvider.errorMessage != null) {
-      context.showErrorSnackBar(authProvider.errorMessage!);
+    } else if (mounted && authCubit.state.errorMessage != null) {
+      context.showErrorSnackBar(authCubit.state.errorMessage!);
     }
   }
 
@@ -69,7 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final cardColor = isDark ? ColorManager.darkCard : ColorManager.lightCard;
     final textColor = isDark ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[700]!;
-    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
       body: Container(
@@ -105,8 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: (isDark ? ColorManager.primaryGreen : ColorManager.primaryGreen)
-                            .withOpacity(0.12),
+                        color: ColorManager.primaryGreen.withOpacity(0.12),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -210,10 +209,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             validator: Validator.validatePassword,
                           ),
                           const SizedBox(height: 25),
-                          CustomButton(
-                            text: 'Đăng nhập',
-                            onPressed: _handleLogin,
-                            isLoading: authProvider.isLoading,
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, state) {
+                              return CustomButton(
+                                text: 'Đăng nhập',
+                                onPressed: _handleLogin,
+                                isLoading: state.isLoading,
+                              );
+                            },
                           ),
                         ],
                       ),

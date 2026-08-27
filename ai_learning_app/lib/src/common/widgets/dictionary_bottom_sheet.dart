@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
 
 class DictionaryBottomSheet {
@@ -158,7 +158,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
     final Color bgColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color exampleBgColor = isDarkMode ? ColorManager.darkInputBg : ColorManager.lightCardAlt;

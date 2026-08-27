@@ -41,6 +41,10 @@ extension BuildContextExt on BuildContext {
     showSnackBar(message, backgroundColor: const Color(0xFF0F8A50));
   }
 
+  void showInfoSnackBar(String message) {
+    showSnackBar(message, backgroundColor: Colors.blueGrey);
+  }
+
   void safePop<T>([T? result]) {
     if (GoRouter.of(this).canPop()) {
       GoRouter.of(this).pop<T>(result);

@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/theme_provider.dart';
+import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 
 class GameModeDialog extends StatelessWidget {
   final File file;
@@ -31,7 +31,7 @@ class GameModeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+    final isDarkMode = context.read<ThemeCubit>().state.isDarkMode;
     return AlertDialog(
       backgroundColor: isDarkMode ? ColorManager.darkCard : ColorManager.lightCard,
       shape: RoundedRectangleBorder(
