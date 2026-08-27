@@ -19,13 +19,6 @@ class UserDao extends BaseDao<UserEntity> {
     await clear();
   }
 
-  Future<void> updateMajor(String major) async {
-    final current = await getCurrentUser();
-    if (current != null) {
-      await update(current.copyWith(major: major));
-    }
-  }
-
   Future<void> updateXpAndStreak({required int totalXp, required int streak}) async {
     final current = await getCurrentUser();
     if (current != null) {

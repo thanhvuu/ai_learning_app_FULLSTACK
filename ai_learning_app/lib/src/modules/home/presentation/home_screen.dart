@@ -25,12 +25,10 @@ import 'widgets/translation_card.dart';
 
 class HomeScreen extends StatelessWidget {
   final String username;
-  final String? major;
 
   const HomeScreen({
     super.key,
     required this.username,
-    this.major,
   });
 
   @override
@@ -51,16 +49,15 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ],
-      child: _HomeView(username: username, major: major),
+      child: _HomeView(username: username),
     );
   }
 }
 
 class _HomeView extends StatefulWidget {
   final String username;
-  final String? major;
 
-  const _HomeView({required this.username, this.major});
+  const _HomeView({required this.username});
 
   @override
   State<_HomeView> createState() => _HomeViewState();
@@ -334,95 +331,6 @@ class _HomeViewState extends State<_HomeView> {
               },
             ),
             const SizedBox(height: 35),
-            if (widget.major != null) ...[
-              Text(
-                "Lộ trình học tập",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 15),
-              GestureDetector(
-                onTap: () {
-                  context.push(
-                    AppRoutes.roadmap,
-                    extra: {
-                      'major': widget.major!,
-                      'username': widget.username,
-                    },
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0F8A50), Color(0xFF18C070)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0F8A50).withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Icon(
-                            Icons.map_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.major!,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                "Tiếp tục hành trình học tập của bạn",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 35),
-            ],
             Text(
               s.translate('study_materials'),
               style: TextStyle(

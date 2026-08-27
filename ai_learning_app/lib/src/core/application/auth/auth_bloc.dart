@@ -1,22 +1,30 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/core/domain/interfaces/i_auth_repository.dart';
 import 'package:ai_learning_app/src/core/infrastructure/databases/hive/daos/user_dao.dart';
+import 'auth_event.dart';
 import 'auth_state.dart';
 
-class AuthCubit extends Cubit<AuthState> {
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final IAuthRepository _authRepository;
   final UserDao _userDao;
 
-  AuthCubit({
+  AuthBloc({
     required IAuthRepository authRepository,
     required UserDao userDao,
   })  : _authRepository = authRepository,
         _userDao = userDao,
         super(const AuthState()) {
-    checkAuthStatus();
+    on<AuthCheckRequested>(_onAuthCheckRequested);
+    on<AuthLoginWithEmailSubmitted>(_onLoginWithEmailSubmitted);
+    on<AuthRegisterWithEmailSubmitted>(_onRegisterWithEmailSubmitted);
+    on<AuthUserStatsUpdated>(_onUserStatsUpdated);
+    on<AuthLogoutRequested>(_onLogoutRequested);
   }
 
-  Future<void> checkAuthStatus() async {
+  Future<void> _onAuthCheckRequested(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     final cachedUser = await _userDao.getCurrentUser();
     if (cachedUser != null) {
       emit(AuthState(status: AuthStatus.authenticated, user: cachedUser));
@@ -31,18 +39,20 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<bool> login({required String email, required String password}) async {
+  Future<void> _onLoginWithEmailSubmitted(
+    AuthLoginWithEmailSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
 
     final result = await _authRepository.signInWithEmailAndPassword(
-      email: email,
-      password: password,
+      email: event.email,
+      password: event.password,
     );
 
-    return result.when(
+    result.when(
       success: (user) {
         emit(AuthState(status: AuthStatus.authenticated, user: user));
-        return true;
       },
       failure: (error) {
         emit(AuthState(
@@ -50,28 +60,25 @@ class AuthCubit extends Cubit<AuthState> {
           errorMessage: error.message,
           user: null,
         ));
-        return false;
       },
     );
   }
 
-  Future<bool> register({
-    required String username,
-    required String email,
-    required String password,
-  }) async {
+  Future<void> _onRegisterWithEmailSubmitted(
+    AuthRegisterWithEmailSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
 
     final result = await _authRepository.registerWithEmailAndPassword(
-      username: username,
-      email: email,
-      password: password,
+      username: event.username,
+      email: event.email,
+      password: event.password,
     );
 
-    return result.when(
+    result.when(
       success: (user) {
         emit(AuthState(status: AuthStatus.authenticated, user: user));
-        return true;
       },
       failure: (error) {
         emit(AuthState(
@@ -79,28 +86,29 @@ class AuthCubit extends Cubit<AuthState> {
           errorMessage: error.message,
           user: null,
         ));
-        return false;
       },
     );
   }
 
-  Future<void> updateUserMajor(String major) async {
-    if (state.user != null) {
-      final updated = state.user!.copyWith(major: major);
+  Future<void> _onUserStatsUpdated(
+    AuthUserStatsUpdated event,
+    Emitter<AuthState> emit,
+  ) async {
+    final currentUser = state.user ?? await _userDao.getCurrentUser();
+    if (currentUser != null) {
+      final updated = currentUser.copyWith(
+        totalXp: event.totalXp,
+        streak: event.streak,
+      );
       await _userDao.saveUser(updated);
       emit(state.copyWith(user: updated));
     }
   }
 
-  Future<void> updateXpAndStreak({required int totalXp, required int streak}) async {
-    if (state.user != null) {
-      final updated = state.user!.copyWith(totalXp: totalXp, streak: streak);
-      await _userDao.saveUser(updated);
-      emit(state.copyWith(user: updated));
-    }
-  }
-
-  Future<void> logout() async {
+  Future<void> _onLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     await _authRepository.signOut();
     emit(const AuthState(status: AuthStatus.unauthenticated));
   }

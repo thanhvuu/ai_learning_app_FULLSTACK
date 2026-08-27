@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_learning_app/src/core/domain/result.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/application/major_selection_cubit/major_selection_cubit.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/application/major_selection_cubit/major_selection_state.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lessons_cubit/my_lessons_cubit.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lessons_cubit/my_lessons_state.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/application/quiz_cubit/quiz_cubit.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/application/roadmap_cubit/roadmap_cubit.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/application/roadmap_cubit/roadmap_state.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/domain/repositories/lesson_repository.dart';
 
 void main() {
@@ -38,63 +36,35 @@ void main() {
     });
   });
 
-  group('MajorSelectionCubit Tests', () {
-    test('Select major emits success state on valid selection', () async {
+  group('MyLessonsCubit Tests', () {
+    test('Load lessons emits success state on valid fetch', () async {
       final fakeRepo = _FakeLessonRepository();
-      final cubit = MajorSelectionCubit(lessonRepository: fakeRepo);
+      final cubit = MyLessonsCubit(lessonRepository: fakeRepo);
 
-      await cubit.selectMajor(
-        username: 'test_user',
-        major: 'Information Technology',
-      );
+      await cubit.loadLessons('test_user');
 
-      expect(cubit.state.status, MajorSelectionStatus.success);
-      expect(cubit.state.selectedMajor, 'Information Technology');
-    });
-  });
-
-  group('RoadmapCubit Tests', () {
-    test('Load roadmap emits loaded state with steps', () async {
-      final fakeRepo = _FakeLessonRepository();
-      final cubit = RoadmapCubit(lessonRepository: fakeRepo);
-
-      await cubit.loadRoadmap('Information Technology');
-
-      expect(cubit.state.status, RoadmapStatus.loaded);
-      expect(cubit.state.steps.length, 2);
+      expect(cubit.state.status, MyLessonsStatus.success);
+      expect(cubit.state.lessons.length, 1);
+      expect(cubit.state.lessons.first['topic'], 'Flutter Basics');
     });
   });
 }
 
 class _FakeLessonRepository implements LessonRepository {
   @override
-  Future<Result<List<dynamic>>> fetchRoadmap(String major) async {
-    return const Result.success([
-      {'topic': 'Topic 1'},
-      {'topic': 'Topic 2'},
-    ]);
-  }
-
-  @override
   Future<Result<List<Map<String, dynamic>>>> fetchMyLessons(String username) async {
-    return const Result.success(<Map<String, dynamic>>[]);
+    return const Result.success(<Map<String, dynamic>>[
+      {'id': 1, 'topic': 'Flutter Basics', 'content': 'Learn widgets'},
+    ]);
   }
 
   @override
   Future<Result<Map<String, dynamic>>> generateLessonByTopic({
     required String topic,
     required String username,
-    required String major,
     required String quizType,
+    String? category,
   }) async {
     return const Result.success(<String, dynamic>{'id': 1, 'questions': [], 'vocabularies': []});
-  }
-
-  @override
-  Future<Result<void>> updateMajor({
-    required String username,
-    required String major,
-  }) async {
-    return const Result.success(null);
   }
 }

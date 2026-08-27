@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/theme/app_theme.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
-import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_bloc.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_event.dart';
 import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/language/language_state.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
@@ -22,12 +23,12 @@ class AppWidget extends StatelessWidget {
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => LanguageCubit()),
         BlocProvider(
-          create: (_) => AuthCubit(
+          create: (_) => AuthBloc(
             authRepository: AuthRepositoryImpl(
               userDao: ServiceLocator.userDao,
             ),
             userDao: ServiceLocator.userDao,
-          ),
+          )..add(const AuthCheckRequested()),
         ),
         BlocProvider(
           create: (_) => DiscoverLeaderboardCubit(ServiceLocator.getLeaderboard),

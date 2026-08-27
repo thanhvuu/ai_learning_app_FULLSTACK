@@ -14,83 +14,6 @@ class LessonRepositoryImpl implements LessonRepository {
       : _lessonDao = lessonDao;
 
   @override
-  Future<Result<List<dynamic>>> fetchRoadmap(String major) async {
-    try {
-      const String path = "/api/lessons/roadmap";
-      final String fullUrl =
-          "${ApiConstants.baseUrl}$path?major=${Uri.encodeComponent(major)}";
-
-      var response = await http.get(Uri.parse(fullUrl));
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(utf8.decode(response.bodyBytes));
-        return Result.success((data['steps'] as List<dynamic>?) ?? []);
-      } else {
-        return Result.failure(
-          AppException.server(
-            'Lỗi server (${response.statusCode})',
-            statusCode: response.statusCode,
-          ),
-        );
-      }
-    } catch (e) {
-      return Result.failure(AppException.network('Lỗi kết nối: $e'));
-    }
-  }
-
-  @override
-  Future<Result<Map<String, dynamic>>> generateLessonByTopic({
-    required String topic,
-    required String username,
-    required String major,
-    required String quizType,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse("${ApiConstants.lessons}/generate-by-topic"),
-        body: {
-          "topic": topic,
-          "username": username,
-          "category": major,
-          "quizType": quizType,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        var jsonResult = jsonDecode(utf8.decode(response.bodyBytes));
-
-        // Cache into Hive
-        final lessonId = jsonResult['id'] ?? 0;
-        await _lessonDao.insertOne(
-          CachedLessonEntity(
-            id: '$lessonId',
-            topic: topic,
-            major: major,
-            content: jsonResult['content'] ?? '',
-            quizType: quizType,
-            vocabularies: ((jsonResult['vocabularies'] as List<dynamic>?) ?? [])
-                .cast<Map<dynamic, dynamic>>(),
-            questions: ((jsonResult['questions'] as List<dynamic>?) ?? [])
-                .cast<Map<dynamic, dynamic>>(),
-            createdAt: DateTime.now().millisecondsSinceEpoch,
-          ),
-        );
-
-        return Result.success(jsonResult as Map<String, dynamic>);
-      } else {
-        return Result.failure(
-          AppException.server(
-            'Lỗi server: ${response.statusCode}',
-            statusCode: response.statusCode,
-          ),
-        );
-      }
-    } catch (e) {
-      return Result.failure(AppException.network('Lỗi kết nối: $e'));
-    }
-  }
-
-  @override
   Future<Result<List<Map<String, dynamic>>>> fetchMyLessons(String username) async {
     try {
       final String fullUrl =
@@ -127,20 +50,50 @@ class LessonRepositoryImpl implements LessonRepository {
   }
 
   @override
-  Future<Result<void>> updateMajor({
+  Future<Result<Map<String, dynamic>>> generateLessonByTopic({
+    required String topic,
     required String username,
-    required String major,
+    required String quizType,
+    String? category,
   }) async {
     try {
-      final String url =
-          "${ApiConstants.users}/update-major?username=${Uri.encodeComponent(username)}&major=${Uri.encodeComponent(major)}";
-      var response = await http.post(Uri.parse(url));
+      final response = await http.post(
+        Uri.parse("${ApiConstants.lessons}/generate-by-topic"),
+        body: {
+          "topic": topic,
+          "username": username,
+          "category": category ?? "General",
+          "quizType": quizType,
+        },
+      );
 
       if (response.statusCode == 200) {
-        return const Result.success(null);
+        var jsonResult = jsonDecode(utf8.decode(response.bodyBytes));
+
+        // Cache into Hive
+        final lessonId = jsonResult['id'] ?? 0;
+        await _lessonDao.insertOne(
+          CachedLessonEntity(
+            id: '$lessonId',
+            topic: topic,
+            major: category ?? "General",
+            content: jsonResult['content'] ?? '',
+            quizType: quizType,
+            vocabularies: ((jsonResult['vocabularies'] as List<dynamic>?) ?? [])
+                .cast<Map<dynamic, dynamic>>(),
+            questions: ((jsonResult['questions'] as List<dynamic>?) ?? [])
+                .cast<Map<dynamic, dynamic>>(),
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+        );
+
+        return Result.success(jsonResult as Map<String, dynamic>);
       } else {
         return Result.failure(
-          AppException.server('Không thể lưu chuyên ngành (${response.statusCode})'),
+          AppException.server(
+            'Lỗi server: ${response.statusCode}',
+            statusCode: response.statusCode,
+          ),
         );
       }
     } catch (e) {

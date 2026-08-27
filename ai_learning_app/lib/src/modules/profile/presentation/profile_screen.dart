@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_bloc.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_event.dart';
 import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
@@ -328,9 +329,9 @@ class ProfileScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(dialogCtx);
-              await context.read<AuthCubit>().logout();
+              context.read<AuthBloc>().add(const AuthLogoutRequested());
               if (context.mounted) {
                 context.go(AppRoutes.welcome);
                 context.showSnackBar(s.translate('logout_success'));

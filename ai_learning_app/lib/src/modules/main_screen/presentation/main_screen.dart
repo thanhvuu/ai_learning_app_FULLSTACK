@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/auth/auth_cubit.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_bloc.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_event.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/discover_screen.dart';
@@ -13,13 +14,11 @@ import 'package:ai_learning_app/src/modules/profile/presentation/profile_screen.
 
 class MainScreen extends StatefulWidget {
   final String username;
-  final String? major;
   final int initialIndex;
 
   const MainScreen({
     super.key,
     required this.username,
-    this.major,
     this.initialIndex = 0,
   });
 
@@ -52,9 +51,11 @@ class _MainScreenState extends State<MainScreen> {
             _streak = streak;
             _xp = totalXp;
           });
-          context.read<AuthCubit>().updateXpAndStreak(
-                totalXp: totalXp,
-                streak: streak,
+          context.read<AuthBloc>().add(
+                AuthUserStatsUpdated(
+                  totalXp: totalXp,
+                  streak: streak,
+                ),
               );
         }
       }
@@ -66,11 +67,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
-    final user = context.watch<AuthCubit>().state.user;
+    final user = context.watch<AuthBloc>().state.user;
     final currentUsername = user?.username.isNotEmpty == true
         ? user!.username
         : widget.username;
-    final currentMajor = user?.major ?? widget.major;
     final currentXp = user?.totalXp ?? _xp;
     final currentStreak = user?.streak ?? _streak;
 
@@ -84,7 +84,6 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           HomeScreen(
             username: currentUsername,
-            major: currentMajor,
           ),
           MyLessonsScreen(username: currentUsername),
           DiscoverScreen(username: currentUsername),

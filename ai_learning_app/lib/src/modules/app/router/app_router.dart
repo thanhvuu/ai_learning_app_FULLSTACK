@@ -5,14 +5,12 @@ import 'package:ai_learning_app/src/modules/contact/presentation/contact_screen.
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/vocabulary_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/discover_screen.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/presentation/major_selection_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/my_lessons_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/quiz/drag_drop_quiz_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/quiz/fill_blank_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/quiz/flashcard_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/quiz/multiple_choice_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/quiz/quiz_screen.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/presentation/roadmap_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/vocabulary_garden_screen.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/vocabulary_screen.dart';
 import 'package:ai_learning_app/src/modules/forgot_password/presentation/forgot_password_screen.dart';
@@ -43,8 +41,6 @@ class AppRoutes {
   static const String myLessons = '/my-lessons';
   static const String discover = '/discover';
   static const String profile = '/profile';
-  static const String majorSelection = '/major-selection';
-  static const String roadmap = '/roadmap';
   static const String vocabulary = '/vocabulary';
   static const String vocabularyGarden = '/vocabulary-garden';
   static const String playlist = '/playlist';
@@ -117,14 +113,12 @@ class AppRouter {
           final username = extra?['username'] ??
               state.uri.queryParameters['username'] ??
               'User';
-          final major = extra?['major'] ?? state.uri.queryParameters['major'];
           final initialIndex = extra?['initialIndex'] ??
               int.tryParse(state.uri.queryParameters['initialIndex'] ?? '0') ??
               0;
 
           return MainScreen(
             username: username,
-            major: major,
             initialIndex: initialIndex,
           );
         },
@@ -136,8 +130,7 @@ class AppRouter {
           final username = extra?['username'] ??
               state.uri.queryParameters['username'] ??
               'User';
-          final major = extra?['major'] ?? state.uri.queryParameters['major'];
-          return HomeScreen(username: username, major: major);
+          return HomeScreen(username: username);
         },
       ),
       GoRoute(
@@ -174,29 +167,6 @@ class AppRouter {
               int.tryParse(state.uri.queryParameters['streak'] ?? '0') ??
               0;
           return ProfileScreen(username: username, xp: xp, streak: streak);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.majorSelection,
-        builder: (context, state) {
-          final extra = state.extra;
-          final username = extra is String
-              ? extra
-              : state.uri.queryParameters['username'] ?? 'User';
-          return MajorSelectionScreen(username: username);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.roadmap,
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          final major = extra?['major'] ??
-              state.uri.queryParameters['major'] ??
-              'General';
-          final username = extra?['username'] ??
-              state.uri.queryParameters['username'] ??
-              'User';
-          return RoadmapScreen(major: major, username: username);
         },
       ),
       GoRoute(

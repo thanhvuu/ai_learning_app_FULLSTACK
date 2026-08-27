@@ -69,18 +69,20 @@ void main() {
       expect(retrieved?.totalXp, 150);
     });
 
-    test('updateMajor updates major property', () async {
+    test('updateXpAndStreak updates totalXp and streak property', () async {
       const user = UserEntity(
         id: 'u1',
         username: 'test_user',
         email: 'test@example.com',
-        major: 'General',
+        totalXp: 10,
+        streak: 1,
       );
       await userDao.saveUser(user);
-      await userDao.updateMajor('Medical & Healthcare');
+      await userDao.updateXpAndStreak(totalXp: 50, streak: 3);
 
       final updated = await userDao.getCurrentUser();
-      expect(updated?.major, 'Medical & Healthcare');
+      expect(updated?.totalXp, 50);
+      expect(updated?.streak, 3);
     });
   });
 

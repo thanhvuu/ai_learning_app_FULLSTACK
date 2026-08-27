@@ -47,7 +47,6 @@ class AuthRepositoryImpl implements IAuthRepository {
       );
 
       final username = credential.user?.displayName ?? email.split('@')[0];
-      String? major;
       int totalXp = 0;
       int streak = 0;
 
@@ -60,7 +59,6 @@ class AuthRepositoryImpl implements IAuthRepository {
         );
         if (res.statusCode == 200) {
           final data = jsonDecode(utf8.decode(res.bodyBytes));
-          major = data['major'];
           totalXp = (data['totalXp'] as num?)?.toInt() ?? 0;
           streak = (data['streak'] as num?)?.toInt() ?? 0;
         }
@@ -70,7 +68,6 @@ class AuthRepositoryImpl implements IAuthRepository {
         id: credential.user!.uid,
         username: username,
         email: email.trim(),
-        major: major,
         totalXp: totalXp,
         streak: streak,
       );
