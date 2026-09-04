@@ -12,7 +12,12 @@
           "package_name": "com.example.ai_learning_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "152003370954-odi8at2a3vr7t3g0i8td41hedmg6at24.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDCDzHp1hMZRF3IW1_3xH5wDHGb-7fRmg4"
@@ -20,7 +25,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "152003370954-odi8at2a3vr7t3g0i8td41hedmg6at24.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "152003370954-012ukub4asm7i5g9qtlr6fn2sir9tm0d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.aiLearningApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152003370954:android:59d9363d05c7b0d29b3933",
+        "android_client_info": {
+          "package_name": "org.ai_learning.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "152003370954-rc347us22l565e1b3k62tvs9tve7uh0d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.ai_learning.app",
+            "certificate_hash": "abb8b5a5cc4dd15df89dd3e1b314f6e9623d0c06"
+          }
+        },
+        {
+          "client_id": "152003370954-odi8at2a3vr7t3g0i8td41hedmg6at24.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCDzHp1hMZRF3IW1_3xH5wDHGb-7fRmg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "152003370954-odi8at2a3vr7t3g0i8td41hedmg6at24.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "152003370954-012ukub4asm7i5g9qtlr6fn2sir9tm0d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.aiLearningApp"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/app_exception.dart';
 import 'package:ai_learning_app/src/core/domain/result.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/api_client.dart';
@@ -7,6 +8,7 @@ abstract class LeaderboardRemoteDataSource {
   Future<Result<List<LeaderboardUserDto>>> fetchLeaderboard();
 }
 
+@LazySingleton(as: LeaderboardRemoteDataSource)
 class LeaderboardRemoteDataSourceImpl implements LeaderboardRemoteDataSource {
   const LeaderboardRemoteDataSourceImpl(this._apiClient);
 

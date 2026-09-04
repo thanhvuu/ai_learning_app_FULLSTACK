@@ -1,7 +1,9 @@
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/entities/saved_word_entity.dart';
 import '../base_dao.dart';
 import '../database_service.dart';
 
+@lazySingleton
 class SavedWordDao extends BaseDao<SavedWordEntity> {
   SavedWordDao() : super(DatabaseService.savedWordsBox);
 

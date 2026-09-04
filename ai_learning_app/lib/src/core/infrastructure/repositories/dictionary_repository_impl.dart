@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/app_exception.dart';
 import 'package:ai_learning_app/src/core/domain/entities/dictionary_word.dart';
 import 'package:ai_learning_app/src/core/domain/interfaces/i_dictionary_repository.dart';
@@ -13,6 +14,7 @@ abstract class IDictionaryService {
   Future<void> updateWordProgress(String word, int currentLevel, bool isRemembered);
 }
 
+@LazySingleton(as: IDictionaryService)
 class DictionaryServiceImpl implements IDictionaryService {
   DictionaryServiceImpl({DictionaryDao? dictionaryDao})
       : _dictionaryDao = dictionaryDao ?? SqfliteDictionaryDao();

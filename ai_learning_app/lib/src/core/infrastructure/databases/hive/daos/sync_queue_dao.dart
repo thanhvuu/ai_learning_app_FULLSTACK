@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/entities/sync_queue_entity.dart';
 import '../base_dao.dart';
 import '../database_service.dart';
 
+@lazySingleton
 class SyncQueueDao extends BaseDao<SyncQueueEntity> {
   SyncQueueDao() : super(DatabaseService.syncQueueBox);
 

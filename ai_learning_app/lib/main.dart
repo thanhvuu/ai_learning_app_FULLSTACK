@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:ai_learning_app/firebase_options.dart';
 import 'package:ai_learning_app/src/common/utils/logger.dart';
-import 'package:ai_learning_app/src/common/utils/service_locator.dart';
+import 'package:ai_learning_app/src/core/di/injection.dart';
 import 'package:ai_learning_app/src/modules/app/presentation/app_widget.dart';
 
 Future<void> main() async {
@@ -26,7 +26,7 @@ Future<void> main() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
-      await ServiceLocator.init();
+      await configureDependencies();
 
       runApp(const AppWidget());
     },

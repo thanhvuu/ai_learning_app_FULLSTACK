@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:injectable/injectable.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:ai_learning_app/generated/assets.gen.dart';
-import 'interfaces/dictionary_dao.dart';
+import 'package:ai_learning_app/src/core/infrastructure/databases/interfaces/dictionary_dao.dart';
 
+@LazySingleton(as: DictionaryDao)
 class SqfliteDictionaryDao implements DictionaryDao {
   Database? _db;
 

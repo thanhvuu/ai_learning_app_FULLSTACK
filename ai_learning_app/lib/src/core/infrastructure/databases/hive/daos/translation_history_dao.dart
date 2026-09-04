@@ -1,7 +1,9 @@
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/entities/translation_history_entity.dart';
 import '../base_dao.dart';
 import '../database_service.dart';
 
+@lazySingleton
 class TranslationHistoryDao extends BaseDao<TranslationHistoryEntity> {
   TranslationHistoryDao() : super(DatabaseService.translationHistoryBox);
 

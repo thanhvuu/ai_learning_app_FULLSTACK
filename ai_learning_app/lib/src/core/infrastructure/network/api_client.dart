@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:dio/dio.dart' as dio;
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/core/domain/app_exception.dart';
 import 'package:ai_learning_app/src/core/domain/result.dart';
 
+@lazySingleton
 class ApiClient {
   ApiClient({dio.Dio? dioClient})
       : _dio = dioClient ??

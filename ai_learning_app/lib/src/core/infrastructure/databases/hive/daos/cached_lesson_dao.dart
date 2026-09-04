@@ -1,7 +1,9 @@
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/entities/cached_lesson_entity.dart';
 import '../base_dao.dart';
 import '../database_service.dart';
 
+@lazySingleton
 class CachedLessonDao extends BaseDao<CachedLessonEntity> {
   CachedLessonDao() : super(DatabaseService.cachedLessonsBox);
 

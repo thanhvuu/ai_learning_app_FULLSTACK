@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/core/domain/result.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/datasources/leaderboard_remote_data_source.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/domain/entities/leaderboard_user.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/domain/repositories/leaderboard_repository.dart';
 
+@LazySingleton(as: LeaderboardRepository)
 class LeaderboardRepositoryImpl implements LeaderboardRepository {
   const LeaderboardRepositoryImpl(this._remoteDataSource);
 

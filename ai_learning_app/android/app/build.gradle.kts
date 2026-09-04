@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -7,8 +10,15 @@ plugins {
     // END: FlutterFire Configuration
 }
 
+//read file key.properties if exist
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if(keystorePropertiesFile.exist()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.example.ai_learning_app"
+    namespace = "org.ai_learning.app"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -22,17 +32,34 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.ai_learning_app"
+        applicationId = "org.ai_learning.app"
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode()
         versionName = flutter.versionName()
     }
 
+       signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            signingConfig = signingConfigs.getByName("debug")
+            // Tự động dùng release key nếu có key.properties, ngược lại dùng debug
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+            
+            // Bật tối ưu hóa mã nguồn khi release
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
