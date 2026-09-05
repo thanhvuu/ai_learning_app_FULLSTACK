@@ -1,3 +1,15 @@
 .vscode/
 .DS_Store
 **/.DS_Store
+
+
+
+# Keystore and Release Signing credentials
+**/key.properties
+**/*.keystore
+**/*.jks
+
+# Environment files
+**/env/.*.env
+**/env/*.env
+!**/env/.alpha.env

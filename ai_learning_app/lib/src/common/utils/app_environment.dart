@@ -17,25 +17,11 @@ class AppEnvironment {
   static const environments = [alpha, dev, prg, uat, prd];
 
   // Đọc cấu hình từ file .env (hỗ trợ linh hoạt cả FLAVOR hoặc ENV)
-  static const flavor = String.fromEnvironment(
-    'FLAVOR',
-    defaultValue: String.fromEnvironment('ENV', defaultValue: dev),
-  );
-  
+  static const flavor = String.fromEnvironment('FLAVOR', defaultValue: String.fromEnvironment('ENV', defaultValue: dev),);
   static const packageName = String.fromEnvironment('PACKAGE_NAME', defaultValue: 'org.ai_learning.app');
   static const bundleId = String.fromEnvironment('BUNDLE_ID', defaultValue: 'org.ai_learning.app');
-  
-  // Hỗ trợ đọc cả API_URL lẫn BASE_URL trong file .env
-  static const apiUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: String.fromEnvironment('BASE_URL', defaultValue: 'http://10.0.2.2:8080'),
-  );
-  
-  static const appName = String.fromEnvironment(
-    'APP_NAME',
-    defaultValue: String.fromEnvironment('APP_TITLE', defaultValue: 'AI Learning App'),
-  );
-
+  static const apiUrl = String.fromEnvironment('API_URL', defaultValue: String.fromEnvironment('BASE_URL', defaultValue: 'http://10.0.2.2:8080'),);
+  static const appName = String.fromEnvironment('APP_NAME', defaultValue: String.fromEnvironment('APP_TITLE', defaultValue: 'AI Learning App'),);
   static const googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
   static const iosClientId = String.fromEnvironment('IOS_CLIENT_ID');
   static const appleServiceId = String.fromEnvironment('APPLE_SERVICE_ID');
