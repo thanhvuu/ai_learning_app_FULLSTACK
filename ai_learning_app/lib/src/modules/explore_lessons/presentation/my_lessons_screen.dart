@@ -11,7 +11,6 @@ import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lesso
 import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lessons_cubit/my_lessons_state.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/vocabulary_model.dart';
-import 'package:ai_learning_app/src/modules/explore_lessons/infrastructure/repositories/lesson_repository_impl.dart';
 
 class MyLessonsScreen extends StatelessWidget {
   final String username;
@@ -21,9 +20,7 @@ class MyLessonsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => MyLessonsCubit(
-        lessonRepository: LessonRepositoryImpl(
-          lessonDao: ServiceLocator.cachedLessonDao,
-        ),
+        lessonRepository: ServiceLocator.lessonRepository,
       )..loadLessons(username),
       child: _MyLessonsView(username: username),
     );

@@ -67,4 +67,7 @@ class _FakeLessonRepository implements LessonRepository {
   }) async {
     return const Result.success(<String, dynamic>{'id': 1, 'questions': [], 'vocabularies': []});
   }
+
+  @override
+  Future<int> getCachedLessonCount() async => 1;
 }

@@ -9,4 +9,6 @@ abstract class LessonRepository {
     required String quizType,
     String? category,
   });
+
+  Future<int> getCachedLessonCount();
 }

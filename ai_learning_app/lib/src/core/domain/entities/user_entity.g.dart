@@ -21,8 +21,8 @@ class UserEntityAdapter extends TypeAdapter<UserEntity> {
       username: fields[1] as String,
       email: fields[2] as String,
       major: fields[3] as String?,
-      totalXp: fields[4] as int,
-      streak: fields[5] as int,
+      totalXp: (fields[4] as num).toInt(),
+      streak: (fields[5] as num).toInt(),
     );
   }
 

@@ -23,7 +23,7 @@ class TranslationHistoryEntityAdapter
       translatedText: fields[2] as String,
       sourceLang: fields[3] as String,
       targetLang: fields[4] as String,
-      timestamp: fields[5] as int,
+      timestamp: (fields[5] as num).toInt(),
     );
   }
 

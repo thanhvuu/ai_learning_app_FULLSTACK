@@ -1,11 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
+import 'package:ai_learning_app/src/common/utils/user_session_helper.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
-import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
+import 'package:ai_learning_app/src/modules/explore_lessons/application/quiz_cubit/quiz_cubit.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 
 class MultipleChoiceScreen extends StatefulWidget {
@@ -74,32 +72,13 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
     }
   }
 
-  Future<void> _updateLessonProgress() async {
-    final String url = "${ApiConstants.lessons}/update-progress";
-    try {
-      await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"lessonId": widget.lessonId, "progress": 100}),
-      );
-    } catch (e) {
-      debugPrint("Lỗi cập nhật tiến độ bài học: $e");
-    }
-  }
-
-  Future<void> _addStudyTime() async {
-    final String url = "${ApiConstants.progress}/add-time";
-    String username =
-        FirebaseAuth.instance.currentUser?.displayName ?? "Đặng Thanh Vũ";
-    try {
-      await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"username": username, "minutes": 5}),
-      );
-    } catch (e) {
-      debugPrint("Lỗi cộng giờ học: $e");
-    }
+  Future<void> _completeLessonAndProgress() async {
+    final String username = UserSessionHelper.getUsername(context);
+    await context.read<QuizCubit>().completeLesson(
+      username: username,
+      lessonId: widget.lessonId,
+      minutes: 5,
+    );
   }
 
   void _showGameOverDialog() {
@@ -187,8 +166,7 @@ class _MultipleChoiceScreenState extends State<MultipleChoiceScreen> {
                       ? null
                       : () async {
                           setStateDialog(() => isSavingProgress = true);
-                          await _addStudyTime();
-                          await _updateLessonProgress();
+                          await _completeLessonAndProgress();
                           if (context.mounted) {
                             Navigator.pop(context);
                             Navigator.pop(context);

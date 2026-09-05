@@ -22,8 +22,8 @@ class SavedWordEntityAdapter extends TypeAdapter<SavedWordEntity> {
       phonetic: fields[2] as String?,
       meaning: fields[3] as String,
       example: fields[4] as String?,
-      level: fields[5] as int,
-      lastReviewed: fields[6] as int,
+      level: (fields[5] as num).toInt(),
+      lastReviewed: (fields[6] as num).toInt(),
     );
   }
 

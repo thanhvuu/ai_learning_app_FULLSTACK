@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ai_learning_app/src/common/utils/service_locator.dart';
 import 'package:ai_learning_app/src/modules/change_password/presentation/change_password_screen.dart';
 import 'package:ai_learning_app/src/modules/contact/presentation/contact_screen.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/quiz_cubit/quiz_cubit.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/question_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/models/vocabulary_model.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/presentation/discover_screen.dart';
@@ -209,7 +212,13 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.quiz,
-        builder: (context, state) => const QuizScreen(),
+        builder: (context, state) => BlocProvider(
+          create: (_) => QuizCubit(
+            totalQuestions: 10,
+            quizRepository: ServiceLocator.quizRepository,
+          ),
+          child: const QuizScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.dragDropQuiz,
@@ -225,7 +234,13 @@ class AppRouter {
                       .toList() ??
                   [];
           final lessonId = (extra?['lessonId'] as num?)?.toInt() ?? 0;
-          return DragDropQuizScreen(questions: questions, lessonId: lessonId);
+          return BlocProvider(
+            create: (_) => QuizCubit(
+              totalQuestions: questions.length,
+              quizRepository: ServiceLocator.quizRepository,
+            ),
+            child: DragDropQuizScreen(questions: questions, lessonId: lessonId),
+          );
         },
       ),
       GoRoute(
@@ -242,7 +257,13 @@ class AppRouter {
                       .toList() ??
                   [];
           final lessonId = (extra?['lessonId'] as num?)?.toInt() ?? 0;
-          return MultipleChoiceScreen(questions: questions, lessonId: lessonId);
+          return BlocProvider(
+            create: (_) => QuizCubit(
+              totalQuestions: questions.length,
+              quizRepository: ServiceLocator.quizRepository,
+            ),
+            child: MultipleChoiceScreen(questions: questions, lessonId: lessonId),
+          );
         },
       ),
       GoRoute(
@@ -259,7 +280,13 @@ class AppRouter {
                       .toList() ??
                   [];
           final lessonId = (extra?['lessonId'] as num?)?.toInt() ?? 0;
-          return FillBlankScreen(questions: questions, lessonId: lessonId);
+          return BlocProvider(
+            create: (_) => QuizCubit(
+              totalQuestions: questions.length,
+              quizRepository: ServiceLocator.quizRepository,
+            ),
+            child: FillBlankScreen(questions: questions, lessonId: lessonId),
+          );
         },
       ),
       GoRoute(
@@ -274,7 +301,13 @@ class AppRouter {
                     ?.cast<Map<String, dynamic>>() ??
                 [];
           }
-          return FlashcardScreen(reviewWords: reviewWords);
+          return BlocProvider(
+            create: (_) => QuizCubit(
+              totalQuestions: reviewWords.length,
+              quizRepository: ServiceLocator.quizRepository,
+            ),
+            child: FlashcardScreen(reviewWords: reviewWords),
+          );
         },
       ),
     ],

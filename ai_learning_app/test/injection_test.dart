@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
 import 'package:ai_learning_app/src/core/di/injection.dart';
 import 'package:ai_learning_app/src/core/infrastructure/databases/hive/database_service.dart';

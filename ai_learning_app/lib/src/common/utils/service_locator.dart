@@ -6,10 +6,14 @@ import 'package:ai_learning_app/src/core/infrastructure/databases/hive/daos/sync
 import 'package:ai_learning_app/src/core/infrastructure/databases/hive/daos/translation_history_dao.dart';
 import 'package:ai_learning_app/src/core/infrastructure/databases/hive/daos/user_dao.dart';
 import 'package:ai_learning_app/src/core/infrastructure/databases/interfaces/dictionary_dao.dart';
+import 'package:ai_learning_app/src/core/domain/interfaces/i_auth_repository.dart';
 import 'package:ai_learning_app/src/core/infrastructure/network/api_client.dart';
 import 'package:ai_learning_app/src/core/infrastructure/repositories/dictionary_repository_impl.dart';
+import 'package:ai_learning_app/src/core/infrastructure/sync/sync_service.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/data/datasources/leaderboard_remote_data_source.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/domain/repositories/leaderboard_repository.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/domain/repositories/lesson_repository.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/domain/repositories/quiz_repository.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/domain/usecases/get_leaderboard.dart';
 
 class ServiceLocator {
@@ -23,19 +27,23 @@ class ServiceLocator {
   static TranslationHistoryDao get translationHistoryDao =>
       getIt<TranslationHistoryDao>();
   static SyncQueueDao get syncQueueDao => getIt<SyncQueueDao>();
+  static SyncService get syncService => getIt<SyncService>();
 
   // Legacy/SQLite DAOs & Services
   static DictionaryDao get dictionaryDao => getIt<DictionaryDao>();
   static IDictionaryService get dictionaryService =>
       getIt<IDictionaryService>();
 
-  // Network & Feature UseCases
+  // Auth & Network & Feature UseCases
+  static IAuthRepository get authRepository => getIt<IAuthRepository>();
   static ApiClient get apiClient => getIt<ApiClient>();
   static LeaderboardRemoteDataSource get leaderboardRemoteDataSource =>
       getIt<LeaderboardRemoteDataSource>();
   static LeaderboardRepository get leaderboardRepository =>
       getIt<LeaderboardRepository>();
   static GetLeaderboard get getLeaderboard => getIt<GetLeaderboard>();
+  static QuizRepository get quizRepository => getIt<QuizRepository>();
+  static LessonRepository get lessonRepository => getIt<LessonRepository>();
 
   static Future<void> init() async {
     await configureDependencies();

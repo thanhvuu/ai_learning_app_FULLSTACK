@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
+import 'package:ai_learning_app/src/common/utils/service_locator.dart';
 import 'package:ai_learning_app/src/core/application/auth/auth_bloc.dart';
 import 'package:ai_learning_app/src/core/application/auth/auth_event.dart';
 import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
@@ -24,17 +25,24 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
     final langState = context.watch<LanguageCubit>().state;
     final S s = S(langState.languageCode);
+
+    final currentUsername = (authState.user?.username.isNotEmpty == true)
+        ? authState.user!.username
+        : (username.isNotEmpty ? username : s.translate('student'));
+    final currentXp = authState.user?.totalXp ?? xp;
+    final currentStreak = authState.user?.streak ?? streak;
 
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color cardColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
 
-    String formattedXp = xp >= 1000
-        ? '${(xp / 1000).toStringAsFixed(1)}k'
-        : xp.toString();
+    String formattedXp = currentXp >= 1000
+        ? '${(currentXp / 1000).toStringAsFixed(1)}k'
+        : currentXp.toString();
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -58,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
             _buildAvatarSection(context, s),
             const SizedBox(height: 15),
             Text(
-              username.isNotEmpty ? username : s.translate('student'),
+              currentUsername,
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
@@ -79,19 +87,25 @@ class ProfileScreen extends StatelessWidget {
                   textColor,
                 ),
                 const SizedBox(width: 10),
-                _buildStatCard(
-                  Icons.menu_book,
-                  ColorManager.purpleAccent,
-                  "48",
-                  s.translate('lessons'),
-                  cardColor,
-                  textColor,
+                FutureBuilder<int>(
+                  future: ServiceLocator.lessonRepository.getCachedLessonCount(),
+                  builder: (context, snapshot) {
+                    final lessonCount = snapshot.hasData ? snapshot.data!.toString() : '...';
+                    return _buildStatCard(
+                      Icons.menu_book,
+                      ColorManager.purpleAccent,
+                      lessonCount,
+                      s.translate('lessons'),
+                      cardColor,
+                      textColor,
+                    );
+                  },
                 ),
                 const SizedBox(width: 10),
                 _buildStatCard(
                   Icons.local_fire_department,
                   ColorManager.orangeAccent,
-                  streak.toString(),
+                  currentStreak.toString(),
                   s.translate('streak'),
                   cardColor,
                   textColor,
@@ -105,7 +119,7 @@ class ProfileScreen extends StatelessWidget {
                 Icons.person,
                 s.translate('change_account_info'),
                 textColor,
-                onTap: () => context.showSnackBar(s.translate('opening_account_info')),
+                onTap: () => _showEditProfileDialog(context, s, currentUsername),
               ),
               _buildDivider(),
               _buildListTile(
@@ -113,6 +127,13 @@ class ProfileScreen extends StatelessWidget {
                 'Đổi mật khẩu',
                 textColor,
                 onTap: () => context.push(AppRoutes.changePassword),
+              ),
+              _buildDivider(),
+              _buildListTile(
+                Icons.delete_forever,
+                'Xóa tài khoản',
+                Colors.red,
+                onTap: () => _handleDeleteAccount(context, s),
               ),
             ]),
             const SizedBox(height: 25),
@@ -156,6 +177,13 @@ class ProfileScreen extends StatelessWidget {
                 s.translate('about_us'),
                 textColor,
                 onTap: () => _showAboutDialog(context, s),
+              ),
+              _buildDivider(),
+              _buildListTile(
+                Icons.privacy_tip_outlined,
+                'Chính sách quyền riêng tư',
+                textColor,
+                onTap: () => _showPrivacyPolicyDialog(context, s),
               ),
             ]),
             const SizedBox(height: 35),
@@ -298,6 +326,151 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  void _showEditProfileDialog(BuildContext context, S s, String initialName) {
+    final nameController = TextEditingController(text: initialName);
+    final formKey = GlobalKey<FormState>();
+    final isDarkMode = context.read<ThemeCubit>().state.isDarkMode;
+    final dialogBg = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
+    final textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: dialogBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.person, color: ColorManager.primaryGreen),
+            const SizedBox(width: 10),
+            Text(
+              s.translate('change_account_info'),
+              style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                style: TextStyle(color: textColor),
+                decoration: InputDecoration(
+                  labelText: 'Tên hiển thị',
+                  labelStyle: TextStyle(color: textColor.withOpacity(0.7)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: ColorManager.primaryGreen, width: 2),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Tên không được để trống';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(s.translate('cancel'), style: const TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorManager.primaryGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                final newName = nameController.text.trim();
+                Navigator.pop(dialogCtx);
+                context.read<AuthBloc>().add(AuthProfileUpdated(username: newName));
+                context.showSnackBar('Cập nhật thông tin thành công!');
+              }
+            },
+            child: const Text('Lưu', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicyDialog(BuildContext context, S s) {
+    final isDarkMode = context.read<ThemeCubit>().state.isDarkMode;
+    final dialogBg = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
+    final textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: dialogBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.privacy_tip_outlined, color: ColorManager.primaryGreen),
+            const SizedBox(width: 10),
+            Text(
+              'Chính sách quyền riêng tư',
+              style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 18),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '1. Dữ liệu thu thập & Sử dụng',
+                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Ứng dụng thu thập thông tin tài khoản (email, tên hiển thị) và tiến trình học tập (điểm XP, chuỗi ngày streak, bài học đã hoàn thành) nhằm đồng bộ kết quả cá nhân.',
+                style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '2. Quyền Thiết bị',
+                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '• Micro: Được sử dụng độc quyền để nhận diện giọng nói khi thực hành phát âm (Speaking quiz). Ứng dụng không ghi âm hoặc lưu trữ file giọng nói của bạn ra bên ngoài.\n• Bộ nhớ / Ảnh: Được dùng khi bạn chọn tải tài liệu học tập hoặc thay đổi ảnh đại diện.',
+                style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '3. Bảo mật & Xóa tài khoản',
+                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Mật khẩu và thông tin của bạn được bảo mật an toàn. Bạn có toàn quyền xóa vĩnh viễn tài khoản và mọi dữ liệu liên quan bất kỳ lúc nào tại mục "Xóa tài khoản".',
+                style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorManager.primaryGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(s.translate('close'), style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _handleLogout(BuildContext context, S s) {
     showDialog(
       context: context,
@@ -340,6 +513,57 @@ class ProfileScreen extends StatelessWidget {
             child: Text(
               s.translate('logout_confirm_title'),
               style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleDeleteAccount(BuildContext context, S s) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 10),
+            Text(
+              'Xóa tài khoản',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Hành động này sẽ xóa vĩnh viễn tài khoản và toàn bộ tiến trình học tập của bạn. Bạn có chắc chắn muốn xóa không?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(
+              s.translate('cancel'),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
+              if (context.mounted) {
+                context.go(AppRoutes.welcome);
+                context.showSnackBar('Tài khoản đã được xóa thành công.');
+              }
+            },
+            child: const Text(
+              'Xác nhận xóa',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],

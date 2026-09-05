@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:ai_learning_app/src/core/domain/entities/cached_lesson_entity.dart';
 import 'package:ai_learning_app/src/core/domain/entities/saved_word_entity.dart';
 import 'package:ai_learning_app/src/core/domain/entities/sync_queue_entity.dart';

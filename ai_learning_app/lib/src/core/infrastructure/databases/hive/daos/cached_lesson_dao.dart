@@ -19,11 +19,11 @@ class CachedLessonDao extends BaseDao<CachedLessonEntity> {
   }
 
   Future<void> updateLessonProgress({
-    required String lessonId,
+    required dynamic lessonId,
     required double progress,
     required bool isCompleted,
   }) async {
-    final existing = await getById(lessonId);
+    final existing = await getById(lessonId.toString());
     if (existing != null) {
       await update(
         existing.copyWith(

@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'base_entity.dart';
 
 part 'sync_queue_entity.g.dart';

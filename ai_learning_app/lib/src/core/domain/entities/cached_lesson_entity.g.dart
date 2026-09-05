@@ -23,14 +23,14 @@ class CachedLessonEntityAdapter extends TypeAdapter<CachedLessonEntity> {
       content: fields[3] as String,
       quizType: fields[4] as String,
       vocabularies: (fields[5] as List)
-          .map((dynamic e) => (e as Map).cast<dynamic, dynamic>())
+          .map((e) => (e as Map).cast<dynamic, dynamic>())
           .toList(),
       questions: (fields[6] as List)
-          .map((dynamic e) => (e as Map).cast<dynamic, dynamic>())
+          .map((e) => (e as Map).cast<dynamic, dynamic>())
           .toList(),
-      progress: fields[7] as double,
+      progress: (fields[7] as num).toDouble(),
       isCompleted: fields[8] as bool,
-      createdAt: fields[9] as int,
+      createdAt: (fields[9] as num).toInt(),
     );
   }
 

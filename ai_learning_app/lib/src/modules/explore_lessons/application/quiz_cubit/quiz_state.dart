@@ -7,6 +7,10 @@ class QuizState extends Equatable {
   final bool isCorrect;
   final int correctCount;
   final bool isQuizCompleted;
+  final bool isSubmitting;
+  final bool? submissionSuccess;
+  final Map<String, dynamic>? submissionResult;
+  final String? errorMessage;
 
   const QuizState({
     this.currentQuestionIndex = 0,
@@ -15,6 +19,10 @@ class QuizState extends Equatable {
     this.isCorrect = false,
     this.correctCount = 0,
     this.isQuizCompleted = false,
+    this.isSubmitting = false,
+    this.submissionSuccess,
+    this.submissionResult,
+    this.errorMessage,
   });
 
   QuizState copyWith({
@@ -25,6 +33,10 @@ class QuizState extends Equatable {
     bool? isCorrect,
     int? correctCount,
     bool? isQuizCompleted,
+    bool? isSubmitting,
+    bool? submissionSuccess,
+    Map<String, dynamic>? submissionResult,
+    String? errorMessage,
   }) {
     return QuizState(
       currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
@@ -33,6 +45,10 @@ class QuizState extends Equatable {
       isCorrect: isCorrect ?? this.isCorrect,
       correctCount: correctCount ?? this.correctCount,
       isQuizCompleted: isQuizCompleted ?? this.isQuizCompleted,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
+      submissionSuccess: submissionSuccess ?? this.submissionSuccess,
+      submissionResult: submissionResult ?? this.submissionResult,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
@@ -44,5 +60,9 @@ class QuizState extends Equatable {
         isCorrect,
         correctCount,
         isQuizCompleted,
+        isSubmitting,
+        submissionSuccess,
+        submissionResult,
+        errorMessage,
       ];
 }

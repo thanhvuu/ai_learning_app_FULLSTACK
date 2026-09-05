@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:ai_learning_app/src/core/infrastructure/datasources/remote/api/services/auth/models/login_request.dart';
+import 'package:ai_learning_app/src/core/infrastructure/datasources/remote/api/services/auth/models/register_request.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
@@ -10,6 +12,26 @@ abstract class AuthEvent extends Equatable {
 /// Request checking current auth state from Hive cache and Firebase Auth
 class AuthCheckRequested extends AuthEvent {
   const AuthCheckRequested();
+}
+
+/// Request login using LoginRequest model
+class AuthLoginRequested extends AuthEvent {
+  final LoginRequest request;
+
+  const AuthLoginRequested(this.request);
+
+  @override
+  List<Object?> get props => [request];
+}
+
+/// Request registration using RegisterRequest model
+class AuthRegisterRequested extends AuthEvent {
+  final RegisterRequest request;
+
+  const AuthRegisterRequested(this.request);
+
+  @override
+  List<Object?> get props => [request];
 }
 
 /// Request login with Email & Password
@@ -93,4 +115,29 @@ class AuthUserStatsUpdated extends AuthEvent {
 /// Request logout
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
+}
+
+/// Update user profile (e.g. username)
+class AuthProfileUpdated extends AuthEvent {
+  final String username;
+
+  const AuthProfileUpdated({required this.username});
+
+  @override
+  List<Object?> get props => [username];
+}
+
+/// Request fetching user profile from server / repository
+class AuthUserProfileFetchRequested extends AuthEvent {
+  final String username;
+
+  const AuthUserProfileFetchRequested({required this.username});
+
+  @override
+  List<Object?> get props => [username];
+}
+
+/// Request permanent account deletion
+class AuthDeleteAccountRequested extends AuthEvent {
+  const AuthDeleteAccountRequested();
 }

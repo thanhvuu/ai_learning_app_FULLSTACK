@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'base_entity.dart';
 
 part 'cached_lesson_entity.g.dart';

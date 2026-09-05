@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ai_learning_app/src/common/constants/api_constants.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/common/utils/service_locator.dart';
-import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
+import 'package:ai_learning_app/src/common/utils/user_session_helper.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/quiz_cubit/quiz_cubit.dart';
 
 class FlashcardScreen extends StatefulWidget {
   final List<Map<String, dynamic>> reviewWords;
@@ -19,17 +19,21 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   int _wateredCount = 0;
 
   void _nextCard(bool isRemembered) async {
-    var currentWord = widget.reviewWords[_currentIndex];
+    final currentWord = widget.reviewWords[_currentIndex];
+    final quizCubit = context.read<QuizCubit>();
+    final username = UserSessionHelper.getUsername(context);
 
-    await ServiceLocator.dictionaryService.updateWordProgress(
-      currentWord['word'],
-      currentWord['level'] ?? 0,
-      isRemembered,
+    await quizCubit.updateWordReview(
+      word: currentWord['word'],
+      currentLevel: currentWord['level'] ?? 0,
+      isRemembered: isRemembered,
     );
 
     if (isRemembered) {
       _wateredCount++;
     }
+
+    if (!mounted) return;
 
     if (_currentIndex < widget.reviewWords.length - 1) {
       setState(() {
@@ -37,23 +41,15 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         _isFlipped = false;
       });
     } else {
-      await _pushWateredPlantsToServer();
-      _showCompletionDialog();
-    }
-  }
-
-  Future<void> _pushWateredPlantsToServer() async {
-    if (_wateredCount == 0) return;
-
-    try {
-      String username = "Đặng Thanh Vũ";
-      final String url =
-          "${ApiConstants.baseUrl}/api/users/update-plants?username=$username&plants=$_wateredCount";
-
-      await http.post(Uri.parse(url));
-      debugPrint("Đã cộng $_wateredCount cây lên server!");
-    } catch (e) {
-      debugPrint("Lỗi khi gửi thành tích lên server: $e");
+      if (_wateredCount > 0) {
+        await quizCubit.finishWateringGarden(
+          username: username,
+          plants: _wateredCount,
+        );
+      }
+      if (mounted) {
+        _showCompletionDialog();
+      }
     }
   }
 

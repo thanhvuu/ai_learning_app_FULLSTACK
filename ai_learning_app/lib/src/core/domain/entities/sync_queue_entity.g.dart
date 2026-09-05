@@ -20,8 +20,8 @@ class SyncQueueEntityAdapter extends TypeAdapter<SyncQueueEntity> {
       id: fields[0] as String,
       actionType: fields[1] as String,
       payloadJson: fields[2] as String,
-      createdAt: fields[3] as int,
-      retryCount: fields[4] as int,
+      createdAt: (fields[3] as num).toInt(),
+      retryCount: (fields[4] as num).toInt(),
     );
   }
 

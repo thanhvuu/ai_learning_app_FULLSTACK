@@ -1,7 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:ai_learning_app/src/common/constants/api_constants.dart';
-import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ai_learning_app/src/common/utils/user_session_helper.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_bloc.dart';
+import 'package:ai_learning_app/src/core/application/auth/auth_event.dart';
+import 'package:ai_learning_app/src/modules/explore_lessons/application/quiz_cubit/quiz_cubit.dart';
 
 class QuizScreen extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
@@ -68,30 +70,28 @@ class _QuizScreenState extends State<QuizScreen> {
         });
       } else {
         progress = 1.0;
-        const String username = "Đặng Thanh Vũ";
-        final String updateUrl =
-            "${ApiConstants.users}/update-progress?username=$username";
+        final String username = UserSessionHelper.getUsername(context);
 
-        try {
-          var reponse = await http.put(Uri.parse(updateUrl));
-          if (reponse.statusCode == 200) {
-            var data = jsonDecode(utf8.decode(reponse.bodyBytes));
-            int newXp = data['totalXp'];
-            int newStreak = data['streak'];
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    "🎉 Tuyệt vời! Bạn được +20 XP.\nTổng: $newXp XP | Chuỗi: 🔥 $newStreak ngày",
-                  ),
-                  duration: const Duration(seconds: 5),
-                  backgroundColor: Colors.green,
+        final cubit = context.read<QuizCubit>();
+        final data = await cubit.completeUserProgress(username: username);
+        if (data != null && context.mounted) {
+          final newXp = (data['totalXp'] as num?)?.toInt() ?? 0;
+          final newStreak = (data['streak'] as num?)?.toInt() ?? 0;
+          context.read<AuthBloc>().add(
+                AuthUserStatsUpdated(
+                  totalXp: newXp,
+                  streak: newStreak,
                 ),
               );
-            }
-          }
-        } catch (e) {
-          debugPrint('lỗi lưu tiến độ: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "🎉 Tuyệt vời! Bạn được +20 XP.\nTổng: $newXp XP | Chuỗi: 🔥 $newStreak ngày",
+              ),
+              duration: const Duration(seconds: 5),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
 
         if (context.mounted) {

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:ai_learning_app/src/core/domain/entities/cached_lesson_entity.dart';
 import 'package:ai_learning_app/src/core/domain/entities/saved_word_entity.dart';
 import 'package:ai_learning_app/src/core/domain/entities/sync_queue_entity.dart';
@@ -71,13 +71,13 @@ class DatabaseService {
   }
 
   Future<void> clearAll() async {
-    await Future.wait([
-      if (Hive.isBoxOpen(userBox)) getBox<UserEntity>(userBox).clear(),
-      if (Hive.isBoxOpen(savedWordsBox)) getBox<SavedWordEntity>(savedWordsBox).clear(),
-      if (Hive.isBoxOpen(cachedLessonsBox)) getBox<CachedLessonEntity>(cachedLessonsBox).clear(),
-      if (Hive.isBoxOpen(translationHistoryBox)) getBox<TranslationHistoryEntity>(translationHistoryBox).clear(),
-      if (Hive.isBoxOpen(syncQueueBox)) getBox<SyncQueueEntity>(syncQueueBox).clear(),
-    ]);
+    final tasks = <Future<dynamic>>[];
+    if (Hive.isBoxOpen(userBox)) tasks.add(getBox<UserEntity>(userBox).clear());
+    if (Hive.isBoxOpen(savedWordsBox)) tasks.add(getBox<SavedWordEntity>(savedWordsBox).clear());
+    if (Hive.isBoxOpen(cachedLessonsBox)) tasks.add(getBox<CachedLessonEntity>(cachedLessonsBox).clear());
+    if (Hive.isBoxOpen(translationHistoryBox)) tasks.add(getBox<TranslationHistoryEntity>(translationHistoryBox).clear());
+    if (Hive.isBoxOpen(syncQueueBox)) tasks.add(getBox<SyncQueueEntity>(syncQueueBox).clear());
+    await Future.wait(tasks);
   }
 
   Future<void> close() async {

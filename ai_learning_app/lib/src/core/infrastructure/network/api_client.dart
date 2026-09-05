@@ -4,6 +4,8 @@ import 'package:injectable/injectable.dart';
 import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/core/domain/app_exception.dart';
 import 'package:ai_learning_app/src/core/domain/result.dart';
+import 'package:ai_learning_app/src/core/infrastructure/network/interceptors/auth_interceptor.dart';
+import 'package:ai_learning_app/src/core/infrastructure/network/interceptors/error_interceptor.dart';
 
 @lazySingleton
 class ApiClient {
@@ -18,7 +20,14 @@ class ApiClient {
                 responseType: dio.ResponseType.json,
                 headers: const {'Accept': 'application/json'},
               ),
-            );
+            ) {
+    if (dioClient == null) {
+      _dio.interceptors.addAll([
+        AuthInterceptor(),
+        ErrorInterceptor(),
+      ]);
+    }
+  }
 
   final dio.Dio _dio;
 
@@ -95,6 +104,48 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return Success(response.data);
+    } on dio.DioException catch (e, st) {
+      return Failure(_mapDioException(e, st));
+    } catch (e, st) {
+      return Failure(AppException(e.toString(), cause: e, stackTrace: st));
+    }
+  }
+
+  Future<Result<dynamic>> put(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    dio.Options? options,
+  }) async {
+    try {
+      final response = await _dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return Success(response.data);
+    } on dio.DioException catch (e, st) {
+      return Failure(_mapDioException(e, st));
+    } catch (e, st) {
+      return Failure(AppException(e.toString(), cause: e, stackTrace: st));
+    }
+  }
+
+  Future<Result<dynamic>> delete(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    dio.Options? options,
+  }) async {
+    try {
+      final response = await _dio.delete(
         path,
         data: data,
         queryParameters: queryParameters,

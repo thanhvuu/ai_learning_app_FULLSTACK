@@ -1,12 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ai_learning_app/src/common/constants/api_constants.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/common/utils/service_locator.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
-import 'package:ai_learning_app/src/core/infrastructure/network/http_compat.dart' as http;
+import 'package:ai_learning_app/src/modules/explore_lessons/application/dictionary_cubit/dictionary_cubit.dart';
 
 class DictionaryBottomSheet {
   static void show(
@@ -19,9 +16,14 @@ class DictionaryBottomSheet {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return _DictionarySheetContent(
-          initialData: initialData,
-          searchWord: searchWord,
+        return BlocProvider(
+          create: (_) => DictionaryCubit(
+            initialData: initialData,
+            searchWord: searchWord,
+          ),
+          child: _DictionarySheetContent(
+            searchWord: searchWord,
+          ),
         );
       },
     );
@@ -29,11 +31,9 @@ class DictionaryBottomSheet {
 }
 
 class _DictionarySheetContent extends StatefulWidget {
-  final Map<String, dynamic> initialData;
   final String searchWord;
 
   const _DictionarySheetContent({
-    required this.initialData,
     required this.searchWord,
   });
 
@@ -42,38 +42,37 @@ class _DictionarySheetContent extends StatefulWidget {
 }
 
 class _DictionarySheetContentState extends State<_DictionarySheetContent> {
-  late Map<String, dynamic> wordData;
-  bool _isLoadingAI = true;
   final FlutterTts flutterTts = FlutterTts();
-  bool _isSaved = false;
 
   @override
   void initState() {
     super.initState();
-    wordData = Map<String, dynamic>.from(widget.initialData);
-    _fetchAdvancedDataFromAI();
     _initTts();
-    _checkSavedStatus();
   }
 
-  Future<void> _checkSavedStatus() async {
-    String word = wordData['word'] ?? widget.searchWord;
-    bool saved = await ServiceLocator.dictionaryService.isWordSaved(word);
-    if (mounted) {
-      setState(() => _isSaved = saved);
+  @override
+  void dispose() {
+    flutterTts.stop();
+    super.dispose();
+  }
+
+  Future<void> _initTts() async {
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.setVolume(1.0);
+    await flutterTts.setPitch(1.0);
+  }
+
+  Future<void> _speakWord(String textToSpeak) async {
+    if (textToSpeak.isNotEmpty) {
+      await flutterTts.speak(textToSpeak);
     }
   }
 
-  Future<void> _toggleSave() async {
-    String word = wordData['word'] ?? widget.searchWord;
-    String meaning = wordData['meaning'] ?? "Không có nghĩa";
-    bool newState = await ServiceLocator.dictionaryService.toggleSaveWord(
-      word,
-      meaning,
-    );
+  Future<void> _toggleSave(String word) async {
+    final newState = await context.read<DictionaryCubit>().toggleSave(widget.searchWord);
 
     if (mounted) {
-      setState(() => _isSaved = newState);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -100,65 +99,15 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
     }
   }
 
-  Future<void> _initTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
-  }
-
-  Future<void> _speakWord() async {
-    String textToSpeak = wordData['word'] ?? widget.searchWord;
-    if (textToSpeak.isNotEmpty) {
-      await flutterTts.speak(textToSpeak);
-    }
-  }
-
-  Future<void> _fetchAdvancedDataFromAI() async {
-    try {
-      final String searchUrl =
-          "${ApiConstants.baseUrl}/api/dictionary/lookup?word=${Uri.encodeComponent(widget.searchWord)}";
-      var response = await http.get(Uri.parse(searchUrl));
-
-      if (response.statusCode == 200) {
-        var aiData = jsonDecode(utf8.decode(response.bodyBytes));
-
-        if (mounted) {
-          setState(() {
-            wordData['examples'] = aiData['examples'];
-            wordData['synonyms'] = aiData['synonyms'];
-            wordData['antonyms'] = aiData['antonyms'];
-
-            if (wordData['meaning'] == "Đang nhờ AI phân tích cụm từ này..." ||
-                wordData['meaning'] == null ||
-                wordData['meaning'].toString().isEmpty) {
-              wordData['meaning'] = aiData['meaning'];
-            }
-
-            if (wordData['phonetic'] == null ||
-                wordData['phonetic'].toString().isEmpty) {
-              wordData['phonetic'] = aiData['phonetic'];
-            }
-            if (wordData['partOfSpeech'] == null ||
-                wordData['partOfSpeech'].toString().isEmpty) {
-              wordData['partOfSpeech'] = aiData['partOfSpeech'];
-            }
-
-            _isLoadingAI = false;
-          });
-        }
-      } else {
-        if (mounted) setState(() => _isLoadingAI = false);
-      }
-    } catch (e) {
-      debugPrint("Lỗi gọi AI: $e");
-      if (mounted) setState(() => _isLoadingAI = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
+    final dictState = context.watch<DictionaryCubit>().state;
+    final wordData = dictState.wordData;
+    final isLoadingAI = dictState.isLoadingAI;
+    final isSaved = dictState.isSaved;
+    final currentWord = wordData['word'] ?? widget.searchWord;
+
     final Color bgColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color exampleBgColor = isDarkMode ? ColorManager.darkInputBg : ColorManager.lightCardAlt;
@@ -192,7 +141,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      wordData['word'] ?? widget.searchWord,
+                      currentWord,
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -216,18 +165,18 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                   Container(
                     margin: const EdgeInsets.only(right: 10),
                     decoration: BoxDecoration(
-                      color: _isSaved
+                      color: isSaved
                           ? ColorManager.primaryGreen
                           : ColorManager.primaryGreen.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
                       icon: Icon(
-                        _isSaved ? Icons.eco : Icons.eco_outlined,
-                        color: _isSaved ? Colors.white : ColorManager.primaryGreen,
+                        isSaved ? Icons.eco : Icons.eco_outlined,
+                        color: isSaved ? Colors.white : ColorManager.primaryGreen,
                         size: 24,
                       ),
-                      onPressed: _toggleSave,
+                      onPressed: () => _toggleSave(currentWord),
                     ),
                   ),
                   Container(
@@ -241,7 +190,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                         color: ColorManager.primaryGreen,
                         size: 24,
                       ),
-                      onPressed: _speakWord,
+                      onPressed: () => _speakWord(currentWord),
                     ),
                   ),
                 ],
@@ -272,7 +221,7 @@ class _DictionarySheetContentState extends State<_DictionarySheetContent> {
                     ),
                   ),
                   const SizedBox(height: 25),
-                  if (_isLoadingAI) ...[
+                  if (isLoadingAI) ...[
                     Center(
                       child: Column(
                         children: [
