@@ -10,7 +10,6 @@ import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
 import 'package:ai_learning_app/src/common/widgets/dictionary_bottom_sheet.dart';
-import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 import 'package:ai_learning_app/src/modules/home/application/home_translation_cubit/home_translation_cubit.dart';
@@ -75,6 +74,7 @@ class _HomeViewState extends State<_HomeView> {
     _searchController.dispose();
     _inputController.dispose();
     _outputController.dispose();
+    _speechToText.stop();
     super.dispose();
   }
 
@@ -143,8 +143,7 @@ class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
-    final langCode = context.watch<LanguageCubit>().state.languageCode;
-    final S s = S(langCode);
+    final S s = S.of(context);
 
     final Color primaryGreen = isDarkMode
         ? ColorManager.primaryGreenLight

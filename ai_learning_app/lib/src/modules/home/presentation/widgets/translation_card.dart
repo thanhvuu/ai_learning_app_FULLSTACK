@@ -136,7 +136,7 @@ class TranslationCard extends StatelessWidget {
                     fontStyle: isInput ? FontStyle.normal : FontStyle.italic,
                   ),
                   decoration: InputDecoration(
-                    hintText: isListening ? S.of(context, 'listening') : hint,
+                    hintText: isListening ? S.of(context).listening : hint,
                     hintStyle: TextStyle(
                       color: isListening ? Colors.red : Colors.grey[500],
                       fontSize: 16,

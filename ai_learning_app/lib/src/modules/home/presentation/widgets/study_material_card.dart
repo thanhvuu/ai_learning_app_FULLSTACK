@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
+import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 
 class StudyMaterialCard extends StatelessWidget {
@@ -16,7 +17,7 @@ class StudyMaterialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = S(Localizations.localeOf(context).languageCode);
+    final s = S.of(context);
 
     return GestureDetector(
       onTap: onTap,

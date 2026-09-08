@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
 import 'package:ai_learning_app/src/common/theme/app_theme.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
@@ -51,8 +52,13 @@ class AppWidget extends StatelessWidget {
                   darkTheme: AppTheme.darkTheme,
                   themeMode: themeState.themeMode,
                   locale: langState.locale,
-                  supportedLocales: S.supportedLocales,
-                  localizationsDelegates: S.localizationsDelegates,
+                  supportedLocales: S.delegate.supportedLocales,
+                  localizationsDelegates: const [
+                    S.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
                 );
               },
             );

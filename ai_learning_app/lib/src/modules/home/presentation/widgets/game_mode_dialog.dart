@@ -38,7 +38,7 @@ class GameModeDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       title: Text(
-        S.of(context, 'choose_study_mode'),
+        S.of(context).choose_study_mode,
         textAlign: TextAlign.center,
         style: const TextStyle(
           color: ColorManager.primaryGreen,
@@ -49,7 +49,7 @@ class GameModeDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            S.of(context, 'ai_design_lesson'),
+            S.of(context).ai_design_lesson,
             style: const TextStyle(color: Colors.grey, fontSize: 13),
             textAlign: TextAlign.center,
           ),
@@ -57,7 +57,7 @@ class GameModeDialog extends StatelessWidget {
           _buildGameOption(
             context,
             file,
-            S.of(context, 'drag_drop_vocab'),
+            S.of(context).drag_drop_vocab,
             Icons.drag_indicator,
             "drag_drop",
             isDarkMode,
@@ -66,7 +66,7 @@ class GameModeDialog extends StatelessWidget {
           _buildGameOption(
             context,
             file,
-            S.of(context, 'multiple_choice'),
+            S.of(context).multiple_choice,
             Icons.list_alt,
             "multiple_choice",
             isDarkMode,
@@ -75,7 +75,7 @@ class GameModeDialog extends StatelessWidget {
           _buildGameOption(
             context,
             file,
-            S.of(context, 'fill_blank'),
+            S.of(context).fill_blank,
             Icons.keyboard,
             "fill_blank",
             isDarkMode,

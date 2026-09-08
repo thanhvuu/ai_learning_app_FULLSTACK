@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
+import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
-import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/application/my_lessons_cubit/my_lessons_cubit.dart';
@@ -32,8 +32,7 @@ class _MyLessonsView extends StatelessWidget {
   const _MyLessonsView({required this.username});
 
   String _getSubtitleForType(BuildContext context, String type) {
-    final langCode = context.read<LanguageCubit>().state.languageCode;
-    final s = S(langCode);
+    final s = S.of(context);
     if (type == 'drag_drop') return s.translate('drag_drop_type');
     if (type == 'multiple_choice') return s.translate('multiple_choice_type');
     if (type == 'fill_blank') return s.translate('fill_blank_type');
@@ -63,8 +62,7 @@ class _MyLessonsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
-    final langCode = context.watch<LanguageCubit>().state.languageCode;
-    final S s = S(langCode);
+    final S s = S.of(context);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color cardColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;
@@ -211,7 +209,7 @@ class _MyLessonsView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                S.of(context, 'daily_goal'),
+                context.l10n.daily_goal,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -265,7 +263,7 @@ class _MyLessonsView extends StatelessWidget {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      "3 ${S.of(context, 'day_streak')}",
+                      "3 ${context.l10n.day_streak}",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -445,7 +443,7 @@ class _MyLessonsView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  S.of(context, 'progress'),
+                  context.l10n.progress,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,

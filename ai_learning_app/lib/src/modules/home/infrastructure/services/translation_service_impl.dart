@@ -58,5 +58,6 @@ class TranslationServiceImpl implements ITranslationService {
 
   void dispose() {
     _textRecognizer.close();
+    _flutterTts.stop();
   }
 }

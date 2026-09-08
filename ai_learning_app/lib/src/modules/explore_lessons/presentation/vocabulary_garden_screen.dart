@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
+import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
 import 'package:ai_learning_app/src/common/utils/service_locator.dart';
-import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/application/vocabulary_garden_cubit/vocabulary_garden_cubit.dart';
@@ -30,8 +30,7 @@ class _VocabularyGardenView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
-    final langCode = context.watch<LanguageCubit>().state.languageCode;
-    final S s = S(langCode);
+    final S s = S.of(context);
     const Color primaryGreen = ColorManager.primaryGreen;
     final Color bgColor = isDarkMode
         ? ColorManager.darkBackground

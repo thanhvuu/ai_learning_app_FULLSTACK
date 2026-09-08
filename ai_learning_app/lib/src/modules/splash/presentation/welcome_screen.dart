@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ai_learning_app/generated/assets.gen.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
+import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/app/router/app_router.dart';
 
@@ -27,8 +27,7 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
-    final langCode = context.watch<LanguageCubit>().state.languageCode;
-    final S s = S(langCode);
+    final S s = S.of(context);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
 
     final Color primaryColor = isDarkMode
@@ -46,7 +45,7 @@ class WelcomeScreen extends StatelessWidget {
           children: [
             const Spacer(),
             Image.asset(
-              const $AssetsImageGen().logo,
+              Assets.image.logo.path,
               height: 120,
               errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.school,

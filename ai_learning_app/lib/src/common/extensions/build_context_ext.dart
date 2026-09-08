@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
+import 'l10n_extension.dart';
+export 'l10n_extension.dart';
 
 extension BuildContextExt on BuildContext {
   ThemeData get theme => Theme.of(this);
@@ -14,7 +16,8 @@ extension BuildContextExt on BuildContext {
   double get screenWidth => MediaQuery.of(this).size.width;
   double get screenHeight => MediaQuery.of(this).size.height;
 
-  String tr(String key) => S.of(this, key);
+  S get l10n => S.of(this);
+  String tr(String key) => S.of(this).translate(key);
 
   void showSnackBar(
     String message, {

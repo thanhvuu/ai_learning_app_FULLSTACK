@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_learning_app/generated/l10n.dart';
+import 'package:ai_learning_app/src/common/extensions/build_context_ext.dart';
 import 'package:ai_learning_app/src/common/theme/color_manager.dart';
-import 'package:ai_learning_app/src/core/application/language/language_cubit.dart';
 import 'package:ai_learning_app/src/core/application/theme/theme_cubit.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/application/discover_cubit/discover_leaderboard_cubit.dart';
 import 'package:ai_learning_app/src/modules/explore_lessons/application/discover_cubit/discover_leaderboard_state.dart';
@@ -135,8 +135,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
-    final langCode = context.watch<LanguageCubit>().state.languageCode;
-    final S s = S(langCode);
+    final S s = S.of(context);
     final Color bgColor = Theme.of(context).scaffoldBackgroundColor;
     final Color textColor = isDarkMode ? ColorManager.darkTextPrimary : ColorManager.lightTextPrimary;
     final Color cardColor = isDarkMode ? ColorManager.darkCard : ColorManager.lightCard;

@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              const $AssetsImageGen().logo,
+              Assets.image.logo.path,
               width: 100,
               height: 100,
               errorBuilder: (_, __, ___) => const Icon(

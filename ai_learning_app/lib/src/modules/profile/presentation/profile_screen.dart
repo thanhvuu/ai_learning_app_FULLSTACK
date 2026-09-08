@@ -28,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
     final authState = context.watch<AuthBloc>().state;
     final isDarkMode = context.watch<ThemeCubit>().state.isDarkMode;
     final langState = context.watch<LanguageCubit>().state;
-    final S s = S(langState.languageCode);
+    final S s = S.of(context);
 
     final currentUsername = (authState.user?.username.isNotEmpty == true)
         ? authState.user!.username
@@ -397,7 +397,9 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+    });
   }
 
   void _showPrivacyPolicyDialog(BuildContext context, S s) {
